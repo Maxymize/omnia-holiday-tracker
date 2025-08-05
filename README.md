@@ -37,9 +37,53 @@ A modern, mobile-first SaaS application for managing employee holiday requests, 
 - Node.js 18+ 
 - npm or yarn
 - Netlify CLI
-- Neon PostgreSQL database
+- GitHub account
+- Netlify account
 
-### Installation
+### Initial Setup (First Time)
+
+**Step 1: Repository & Platform Setup**
+```bash
+# Create GitHub repository with name "omnia-holiday-tracker"
+# Create Netlify project with name "omnia-holiday-tracker"
+# Setup manual webhook connection from GitHub to Netlify for auto-deployment
+```
+
+**Step 2: Local Development Setup**
+```bash
+# Clone the repository
+git clone https://github.com/your-username/omnia-holiday-tracker.git
+cd omnia-holiday-tracker
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+**Step 3: Database Setup**
+```bash
+# Primary method: Use Netlify database integration
+npx netlify db init
+
+# Fallback method: If netlify db command fails
+# 1. Manually create Neon database at https://neon.tech
+# 2. Copy connection string to DATABASE_URL in .env file
+```
+
+**Step 4: Development**
+```bash
+# Setup database schema
+npm run db:push
+npm run db:migrate
+
+# Start development server
+npm run dev
+```
+
+### Installation (Subsequent Setups)
 
 ```bash
 # Clone the repository
@@ -74,8 +118,8 @@ Language is automatically detected from browser preferences and can be manually 
 
 ## 🔐 Authentication & Security
 
-- **Domain Restriction**: Only `@ominiaservice.net` email addresses can register
-- **Admin Access**: `max.giurastante@ominiaservice.net` has super admin privileges
+- **Multi-Domain Access**: Configurable email domains for OmniaGroup and partners
+- **Admin Access**: `max.giurastante@omniaservices.net` has super admin privileges
 - **Role-Based Access**: Clear separation between employee and admin capabilities
 - **JWT Security**: Secure token-based authentication with proper expiration
 - **Audit Logging**: All admin actions and approvals are logged for compliance
@@ -163,7 +207,7 @@ RESEND_API_KEY=your_resend_key_for_emails
 1. Create Neon PostgreSQL database
 2. Configure connection string in environment
 3. Run migrations: `npm run db:migrate`
-4. Create admin account for max.giurastante@ominiaservice.net
+4. Create admin account for max.giurastante@omniaservices.net
 
 ## 📚 Documentation
 
@@ -210,7 +254,7 @@ Internal OmniaGroup project - All rights reserved.
 ## 📞 Support
 
 For technical issues or questions:
-- **Primary Admin**: max.giurastante@ominiaservice.net
+- **Primary Admin**: max.giurastante@omniaservices.net
 - **Development Team**: Internal OmniaGroup developers
 - **Documentation**: Check CLAUDE.md for detailed development guidelines
 

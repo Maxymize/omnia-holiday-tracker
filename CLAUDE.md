@@ -11,7 +11,7 @@
 - **Frontend**: Next.js 15 with App Router, TypeScript, **regular deployment** (NOT static export)
 - **Backend**: Netlify Functions (serverless) in `/netlify/functions/`
 - **Database**: Neon PostgreSQL with Drizzle ORM
-- **Auth**: Custom authentication with JWT (admin: max.giurastante@ominiaservice.net)
+- **Auth**: Custom authentication with JWT (admin: max.giurastante@omniaservices.net)
 - **Storage**: Local file storage for small reports/exports (no PDF storage needed)
 - **Email**: Simple notification system (optional - can use browser notifications)
 - **Payments**: NOT NEEDED - internal company tool
@@ -141,8 +141,8 @@ __tests__/
 - **Always validate input** on both client and server using Zod schemas
 - **Implement proper authorization checks** in Netlify Functions using JWT tokens
 - **Employee data isolation**: Employees can only see own data (unless admin settings allow)
-- **Admin role verification**: Only max.giurastante@ominiaservice.net can perform admin actions initially
-- **Domain validation**: Only @ominiaservice.net emails can register
+- **Admin role verification**: Only max.giurastante@omniaservices.net can perform admin actions initially
+- **Multi-domain validation**: Configurable email domains for OmniaGroup and partners
 - **Department-based access**: Employees can see department colleagues if enabled
 - **Rate limiting**: Implement rate limiting for registration and request creation
 - **CORS configuration**: Properly configure CORS for Netlify Functions
@@ -454,6 +454,40 @@ Before any commit involving translations:
 - **Consider serverless limitations**: execution time limits, memory constraints, cold starts
 - **Respect monorepo structure** - keep all code in single repository with clear separation
 
+## 🚀 Deployment & DevOps (Updated with GitHub/Netlify Setup)
+
+### **Initial Platform Setup Process**
+1. **GitHub Repository Setup**:
+   - Create repository with exact name: "omnia-holiday-tracker"
+   - Initialize with README and .gitignore
+   - Set main branch as default
+
+2. **Netlify Project Setup**:
+   - Create Netlify project with exact name: "omnia-holiday-tracker"
+   - **Important**: Do NOT auto-connect GitHub initially
+   - Manual webhook setup required for controlled deployment
+
+3. **Manual Webhook Connection**:
+   - Connect GitHub repository to Netlify project manually
+   - Configure auto-deployment on main branch commits
+   - Setup branch deploy previews for feature branches
+
+### **Database Integration Workflow**
+```bash
+# Primary method (recommended)
+npx netlify db init
+
+# Expected outcome: Neon database automatically configured
+# Environment variables automatically added to Netlify
+```
+
+**If `npx netlify db init` fails**:
+1. Manually create Neon database at https://neon.tech
+2. Copy connection string from Neon dashboard
+3. Add `DATABASE_URL` to both:
+   - Local `.env` file for development
+   - Netlify environment variables for production
+
 ## 🔧 Development Workflow
 1. **Local development**: Use `netlify dev` for local function testing
 2. **Environment variables**: Use `.env` for local, Netlify dashboard for production
@@ -469,7 +503,7 @@ Before any commit involving translations:
 - Reference TASK.md items in commits when applicable
 
 ## ⚠️ Critical Business Rules for OmniaGroup
-- **NEVER allow non-OmniaGroup access** - strict domain validation on @ominiaservice.net
+- **NEVER allow non-OmniaGroup access** - configurable domain validation system
 - **PROTECT admin functions** with role-based access control
 - **SANITIZE all user input** before database storage to prevent injection attacks
 - **IMPLEMENT rate limiting** on registration and request creation to prevent abuse
@@ -479,8 +513,8 @@ Before any commit involving translations:
 - **Data retention**: Implement data retention policies for employee records
 
 ## 🌍 OmniaGroup Specific Requirements
-- **Primary admin**: max.giurastante@ominiaservice.net has full access
-- **Employee validation**: All employees must have @ominiaservice.net email
+- **Primary admin**: max.giurastante@omniaservices.net has full access
+- **Multi-domain validation**: Configurable allowed domains for employee registration
 - **Department structure**: Support for multiple office locations and departments
 - **Holiday policies**: Support for different holiday allowances per employee/department
 - **Compliance**: Track holiday requests for Italian labor law compliance

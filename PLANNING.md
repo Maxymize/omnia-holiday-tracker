@@ -101,10 +101,11 @@ xl: 1280px  /* Large desktop */
 ### **Authentication & Authorization**
 - **Custom JWT tokens** with proper expiration
 - **Role-based access control**: employee/admin
-- **Domain restriction**: Only @ominiaservice.net emails allowed
+- **Multi-domain access**: Configurable email domains for OmniaGroup and partners
+- **Admin controls**: max.giurastante@omniaservices.net has super admin privileges
 - **Rate limiting**: Per IP and per user
 - **Session management**: Secure token refresh
-- **Admin controls**: Configurable visibility and approval settings
+- **Domain configuration**: Admin can configure allowed email domains
 
 ### **API Security**
 - **CORS configuration**: Proper origin restrictions
@@ -123,12 +124,13 @@ Manager Approval (if enabled) → Calendar Update → Notifications
 
 ### **User Roles & Permissions**
 - **Employee**: Create holiday requests, view own holidays, view team holidays (if enabled)
-- **Admin (max.giurastante@ominiaservice.net)**: 
+- **Admin (max.giurastante@omniaservices.net)**: 
   - Approve employee registrations
-  - Configure system settings (visibility, approval mode)
+  - Configure system settings (visibility, approval mode, allowed domains)
   - Manage all holiday requests
   - Create and manage departments
   - View all employee data and statistics
+  - Configure allowed email domains for registration
 
 ### **System Configuration Options**
 - **Visibility Mode**: 
@@ -248,6 +250,21 @@ t('holidays.requestVacation')
 - **Date calculations**: Working days, weekend handling
 
 ## 🚀 Deployment & DevOps
+
+### **Repository & Platform Setup**
+- **GitHub Repository**: Create repository with name "omnia-holiday-tracker"
+- **Netlify Project**: Create Netlify project with name "omnia-holiday-tracker"
+- **Auto-Deployment**: Manual webhook connection from GitHub to Netlify for automatic deployment on every commit
+- **Domain**: Custom OmniaGroup subdomain will be configured after initial setup
+
+### **Database Setup**
+- **Primary Method**: Use `npx netlify db init` to create Neon database integration
+- **Fallback Method**: If netlify db command fails, manually create Neon database and copy environment variables to `.env`
+- **Environment Variables**: 
+  ```bash
+  DATABASE_URL=your_neon_database_url_from_netlify_or_manual_setup
+  JWT_SECRET=your_generated_jwt_secret
+  ```
 
 ### **Git Workflow**
 - **Main Branch**: Production-ready code only

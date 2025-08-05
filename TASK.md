@@ -93,23 +93,27 @@
 ### 2.1 Database Integration & Connection ⏳
 **Added**: 2025-08-05  
 **Priority**: High  
-**Estimated Time**: 2 hours
+**Estimated Time**: 3 hours
 
-- [ ] Create Neon database via Netlify interface
-- [ ] Configure DATABASE_URL environment variable
-- [ ] Install @netlify/neon package for optimized queries
+- [ ] Create GitHub repository with name "omnia-holiday-tracker" (if not done in 1.1)
+- [ ] Create Netlify project with name "omnia-holiday-tracker" (if not done in 1.1)
+- [ ] Setup manual webhook connection from GitHub to Netlify for auto-deployment
+- [ ] Initialize Neon database integration with `npx netlify db init`
+- [ ] **Fallback**: If netlify db command fails, manually create Neon database
+- [ ] Configure DATABASE_URL environment variable in .env file
+- [ ] Install @netlify/neon package for optimized queries (if available)
 - [ ] Create database helper functions
 - [ ] Execute Drizzle migrations to create all tables
 
 **Dependencies**: 1.4  
-**Validation**: Database connection working with all required tables
+**Validation**: Database connection working with all required tables, GitHub/Netlify deployment pipeline active
 
 ### 2.2 Authentication Functions ⏳
 **Added**: 2025-08-05  
 **Priority**: High  
 **Estimated Time**: 5 hours
 
-- [ ] Create register.ts - Employee registration with @ominiaservice.net validation
+- [ ] Create register.ts - Employee registration with configurable domain validation
 - [ ] Create login.ts - JWT-based authentication
 - [ ] Create admin-approve.ts - Admin approval for new employee accounts
 - [ ] Create profile.ts - Employee profile management
@@ -409,7 +413,7 @@
 **Priority**: Medium  
 **Estimated Time**: 2 hours
 
-- [ ] Create admin account (max.giurastante@ominiaservice.net)
+- [ ] Create admin account (max.giurastante@omniaservices.net)
 - [ ] Setup initial departments and settings
 - [ ] Create sample data for testing
 - [ ] Document data structure and admin procedures
@@ -526,7 +530,7 @@ const nextConfig = {
 - Organized tasks in logical phases for holiday management system
 - Prioritized authentication and calendar functionality as core features
 - Included comprehensive testing and security phases
-- Prepared for OmniaGroup-specific requirements (@ominiaservice.net domain)
+- Prepared for OmniaGroup-specific requirements (configurable domain system)
 
 ### Key Architectural Decisions
 - **Regular Next.js deployment**: No static export conflicts

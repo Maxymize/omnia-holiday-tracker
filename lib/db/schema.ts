@@ -51,12 +51,18 @@ export const holidays = pgTable('holidays', {
 // System Settings Table
 export const settings = pgTable('settings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  key: text('key').notNull().unique(),
-  value: text('value').notNull(),
+  key: text('key').notNull().unique(), // 'allowed_domains', 'visibility_mode', 'approval_mode'
+  value: text('value').notNull(), // JSON string for complex values like arrays
   description: text('description'),
   updatedBy: uuid('updated_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+// Default settings for initialization:
+// allowed_domains: ["omniaservices.net", "partnerdomain.com"] - configurable domains
+// visibility_mode: "admin_only" or "all_see_all"
+// approval_mode: "manual" or "auto"
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
