@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import { defaultLocale } from '@/lib/i18n/config';
 
-export default function HomePage() {
-  redirect(`/${defaultLocale}`);
+export default function RootPage() {
+  // Redirect to Italian login page
+  redirect('/it/login');
 }

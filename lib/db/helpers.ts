@@ -1,6 +1,6 @@
 import { db } from './index';
 import { users, departments, holidays, settings } from './schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray, ilike, or } from 'drizzle-orm';
 import type { NewUser, NewDepartment, NewHoliday, NewSetting } from './schema';
 
 // User helpers
@@ -84,6 +84,101 @@ export async function updateSetting(key: string, value: string, updatedBy: strin
     .where(eq(settings.key, key))
     .returning();
   return result[0];
+}
+
+// Additional department helpers (removing duplicates from above)
+export async function getDepartmentByName(name: string) {
+  const result = await db.select().from(departments).where(eq(departments.name, name)).limit(1);
+  return result[0] || null;
+}
+
+export async function updateDepartment(id: string, updateData: Partial<NewDepartment>) {
+  const result = await db.update(departments)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(departments.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function deleteDepartment(id: string) {
+  const result = await db.delete(departments).where(eq(departments.id, id)).returning();
+  return result[0];
+}
+
+// Additional settings helpers
+export async function getAllSettings() {
+  return await db.select().from(settings);
+}
+
+export async function upsertSetting(key: string, value: string, description: string, updatedBy: string) {
+  const existing = await getSettingByKey(key);
+  
+  if (existing) {
+    return await updateSetting(key, value, updatedBy);
+  } else {
+    return await createSetting({
+      key,
+      value,
+      description,
+      updatedBy
+    });
+  }
+}
+
+export async function getSettingsByKeys(keys: string[]) {
+  const result = await db.select().from(settings).where(inArray(settings.key, keys));
+  return result;
+}
+
+// Additional user management helpers
+export async function getAllUsers() {
+  return await db.select().from(users);
+}
+
+export async function getUsersByStatus(status: 'pending' | 'active' | 'inactive') {
+  return await db.select().from(users).where(eq(users.status, status));
+}
+
+export async function getUsersByRole(role: 'employee' | 'admin') {
+  return await db.select().from(users).where(eq(users.role, role));
+}
+
+export async function getUsersByDepartment(departmentId: string) {
+  return await db.select().from(users).where(eq(users.departmentId, departmentId));
+}
+
+export async function updateUserProfile(id: string, updateData: Partial<NewUser>) {
+  const result = await db.update(users)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(users.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function updateUserHolidayAllowance(id: string, holidayAllowance: number) {
+  const result = await db.update(users)
+    .set({ holidayAllowance, updatedAt: new Date() })
+    .where(eq(users.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function updateUserLastLogin(id: string) {
+  const result = await db.update(users)
+    .set({ updatedAt: new Date() })
+    .where(eq(users.id, id))
+    .returning();
+  return result[0];
+}
+
+export async function searchUsersByNameOrEmail(searchTerm: string) {
+  const term = `%${searchTerm.toLowerCase()}%`;
+  return await db.select().from(users).where(
+    or(
+      ilike(users.name, term),
+      ilike(users.email, term)
+    )
+  );
 }
 
 // Test database connection

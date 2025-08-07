@@ -63,3 +63,6 @@ export function useTranslation() {
   }
   return context;
 }
+
+// Export alias for consistency
+export const useI18n = useTranslation;

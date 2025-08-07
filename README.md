@@ -4,6 +4,24 @@
 
 A modern, mobile-first SaaS application for managing employee holiday requests, approvals, and calendar visualization built specifically for OmniaGroup's internal use.
 
+## 🤖 Development with AI Agents & MCP Tools
+
+This project leverages specialized AI agents and MCP research tools for optimal development:
+
+### **AI Agents Available**
+- **backend-api-specialist**: Server-side development and Netlify Functions
+- **frontend-react-specialist**: React components and Next.js implementation
+- **database-specialist**: Database design and Drizzle ORM optimization  
+- **security-auth-specialist**: Authentication systems and security
+- **seo-engineer**: Performance optimization and accessibility
+- **web-copywriter**: User interface text and content
+
+### **MCP Research Tools**
+- **context7**: Documentation and best practices for any library/framework
+- Check available MCPs: Use MCP list command in development
+
+**For Developers**: Always research with context7 and utilize specialized agents for their expertise areas.
+
 ## 🌟 Features
 
 ### For Employees

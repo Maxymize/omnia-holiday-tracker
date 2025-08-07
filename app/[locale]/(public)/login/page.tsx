@@ -1,87 +1,135 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
-import Link from 'next/link';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function LoginPage() {
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
+  const { login, loading, error, clearError } = useAuth();
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: 'max.giurastante@ominiaservices.net', // Pre-filled for testing
+    password: 'admin123' // Pre-filled for testing
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (error) {
+      clearError();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      return;
+    }
+
+    const success = await login(formData.email, formData.password);
+    
+    if (success) {
+      // Redirect to appropriate dashboard
+      router.push('/it/admin-dashboard'); // Correct path for admin dashboard
+    }
+  };
 
   return (
-    <div className="sm:mx-auto sm:w-full sm:max-w-md">
-      <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             {t('auth.login.title')}
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
             {t('auth.login.subtitle')}
           </p>
         </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
 
-        <form className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              {t('auth.login.email')}
-            </label>
-            <div className="mt-1">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                {t('auth.login.email')}
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={loading}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm disabled:bg-gray-100"
+                placeholder={t('auth.login.email')}
               />
             </div>
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              {t('auth.login.password')}
-            </label>
-            <div className="mt-1">
+            <div>
+              <label htmlFor="password" className="sr-only">
+                {t('auth.login.password')}
+              </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="block w-full rounded-md border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                value={formData.password}
+                onChange={handleInputChange}
+                disabled={loading}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm disabled:bg-gray-100"
+                placeholder={t('auth.login.password')}
               />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <a href="#" className="font-medium text-primary hover:text-primary/90">
+                {t('auth.login.forgotPassword')}
+              </a>
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+              disabled={loading || !formData.email || !formData.password}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {t('auth.login.submit')}
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Accesso in corso...
+                </div>
+              ) : (
+                t('auth.login.submit')
+              )}
             </button>
           </div>
+
+          <div className="text-center">
+            <p className="mt-2 text-sm text-gray-600">
+              {t('auth.login.noAccount')}{' '}
+              <a href="/it/register" className="font-medium text-primary hover:text-primary/90">
+                {t('auth.login.register')}
+              </a>
+            </p>
+          </div>
         </form>
-
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">
-                {t('auth.login.noAccount')}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <Link
-              href={`/${locale}/register`}
-              className="flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-            >
-              {t('auth.login.register')}
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );

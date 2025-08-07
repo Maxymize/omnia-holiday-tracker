@@ -1,5 +1,41 @@
 # Omnia Holiday Tracker - Project Planning
 
+## 🤖 Development Tools & AI Agents
+
+### **Specialized AI Agents (MUST USE)**
+Claude Code has access to specialized agents that MUST be actively utilized:
+
+- **backend-api-specialist**: Expert in server-side development
+  - Use for: Netlify Functions implementation, API design, server logic
+  - Critical for: Authentication systems, database operations, business logic
+
+- **frontend-react-specialist**: Expert in modern React development  
+  - Use for: Component architecture, Next.js 15 features, UI implementation
+  - Critical for: Calendar components, responsive design, state management
+
+- **database-specialist**: Expert in database design and optimization
+  - Use for: Drizzle ORM schemas, migrations, query performance
+  - Critical for: Holiday tracking data model, relationship optimization
+
+- **security-auth-specialist**: Expert in authentication and security
+  - Use for: JWT implementation, role-based access, input validation
+  - Critical for: OmniaGroup domain restrictions, admin controls
+
+- **seo-engineer**: Expert in performance and accessibility
+  - Use for: Core Web Vitals, accessibility compliance, meta tags
+  - Critical for: Mobile optimization, search engine visibility
+
+- **web-copywriter**: Expert in user-facing content
+  - Use for: UI text, error messages, user guidance
+  - Critical for: Multi-language content (IT/EN/ES), professional tone
+
+### **MCP Research Tools**
+- **context7**: Documentation and best practices research
+  - Use BEFORE implementing any new library or framework
+  - Essential for: Next.js 15, Drizzle ORM, React Big Calendar, Netlify specifics
+
+**CRITICAL RULE**: Always research with context7 and delegate to specialists proactively!
+
 ## 🎯 Project Overview
 
 **Project Name**: Omnia Holiday Tracker  
@@ -345,12 +381,14 @@ t('holidays.requestVacation')
 - **Department Variations**: Different allowances per department/role
 - **Approval Hierarchy**: Manager approval, admin override capabilities
 - **Legal Compliance**: Track for Italian labor law reporting
+- **Multi-domain Support**: Configurable email domain whitelist for all OmniaGroup companies
 
 ### **Integration Readiness**
 - **Future HR Systems**: API-ready for integration
 - **Email Systems**: Optional integration with company email
 - **Calendar Systems**: Export capabilities for Outlook/Google Calendar
 - **Reporting**: Export capabilities for HR reporting
+- **Domain Configuration**: Admin can add/remove allowed email domains (omniaservices.net, omniaelectronics.com, etc.)
 
 ## 📊 Database Schema Design
 
