@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   ChevronLeft, 
@@ -85,6 +85,7 @@ export function IntegratedCalendar({
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<HolidayEvent | null>(null)
   const [selectedDateRange, setSelectedDateRange] = useState<{start?: Date; end?: Date} | null>(null)
+  const [dayEventsDialog, setDayEventsDialog] = useState<{date: Date; events: HolidayEvent[]} | null>(null)
 
   // Get date-fns locale
   const getDateFnsLocale = () => {
@@ -203,6 +204,57 @@ export function IntegratedCalendar({
   useEffect(() => {
     fetchHolidays()
   }, [fetchHolidays])
+
+  // Effect to add click handlers to "more" links after FullCalendar renders
+  useEffect(() => {
+    const handleMoreLinkClick = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const target = e.target as HTMLElement;
+      if (target && target.classList.contains('fc-more-link')) {
+        // Find the parent day cell to get the date
+        const dayCell = target.closest('.fc-daygrid-day');
+        if (dayCell) {
+          const dateAttr = dayCell.getAttribute('data-date');
+          if (dateAttr) {
+            const clickedDate = new Date(dateAttr + 'T12:00:00'); // Add time to avoid timezone issues
+            
+            const eventsForDate = filteredEvents.filter(event => {
+              const eventStart = new Date(event.start.getTime());
+              // For all-day events, FullCalendar sets end to the day AFTER, so we need to subtract 1 day
+              // But for comparison, we need to check if the clicked date falls within the actual event range
+              const eventEndActual = new Date(event.end.getTime() - 24 * 60 * 60 * 1000);
+              
+              // Create date-only versions for comparison (ignore time)
+              const clickedDateOnly = new Date(clickedDate.getFullYear(), clickedDate.getMonth(), clickedDate.getDate());
+              const eventStartOnly = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+              const eventEndOnly = new Date(eventEndActual.getFullYear(), eventEndActual.getMonth(), eventEndActual.getDate());
+              
+              return clickedDateOnly >= eventStartOnly && clickedDateOnly <= eventEndOnly;
+            });
+            
+            if (eventsForDate.length > 0) {
+              setDayEventsDialog({
+                date: clickedDate,
+                events: eventsForDate
+              });
+            }
+          }
+        }
+      }
+    };
+
+    // Add event listeners to the calendar container
+    const calendarContainer = document.querySelector('.fullcalendar-container');
+    if (calendarContainer) {
+      calendarContainer.addEventListener('click', handleMoreLinkClick, true);
+      
+      return () => {
+        calendarContainer.removeEventListener('click', handleMoreLinkClick, true);
+      };
+    }
+  }, [filteredEvents]) // Re-run when events change
 
   // Get status color for events
   const getStatusColor = (status: string) => {
@@ -523,13 +575,21 @@ export function IntegratedCalendar({
                       allDay: event.allDay,
                       backgroundColor: getStatusColor(event.resource.status),
                       borderColor: getStatusColor(event.resource.status),
-                      textColor: 'white'
+                      textColor: 'white',
+                      extendedProps: {
+                        employeeName: event.resource.userName,
+                        status: event.resource.status,
+                        type: event.resource.type,
+                        workingDays: event.resource.workingDays,
+                        notes: event.resource.notes
+                      }
                     }))}
                     eventClick={handleEventClick}
                     select={handleDateSelect}
                     selectable={true}
                     selectMirror={true}
-                    dayMaxEvents={true}
+                    dayMaxEvents={5} // Show up to 5 events, then +N more
+                    dayMaxEventRows={5} // Limit rows to prevent calendar becoming too tall
                     weekends={true}
                     headerToolbar={false} // We use custom toolbar
                     locale={locale}
@@ -537,6 +597,24 @@ export function IntegratedCalendar({
                     eventDisplay="block"
                     displayEventTime={false}
                     eventClassNames="holiday-event"
+                    moreLinkClick="none" // Disable all popover behavior
+                    eventDidMount={(info) => {
+                      // Add tooltip with full information
+                      const { employeeName, status, type, workingDays, notes } = info.event.extendedProps;
+                      const startDate = format(info.event.start!, 'dd/MM/yyyy', { locale: getDateFnsLocale() });
+                      const endDate = format(info.event.end ? new Date(info.event.end.getTime() - 24 * 60 * 60 * 1000) : info.event.start!, 'dd/MM/yyyy', { locale: getDateFnsLocale() });
+                      
+                      const tooltipContent = `
+                        ${employeeName}
+                        ${t(`holidays.request.types.${type}`)}
+                        ${startDate} - ${endDate}
+                        ${workingDays} ${workingDays === 1 ? 'giorno' : 'giorni'}
+                        Stato: ${t(`dashboard.calendar.legend.${status}`)}
+                        ${notes ? `Note: ${notes}` : ''}
+                      `.trim();
+                      
+                      info.el.title = tooltipContent;
+                    }}
                     datesSet={(dateInfo) => {
                       // Update current date when calendar view changes
                       setCurrentDate(dateInfo.view.currentStart)
@@ -553,6 +631,9 @@ export function IntegratedCalendar({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle>{t('holidays.request.title')}</DialogTitle>
+            <DialogDescription>
+              Compila il modulo per richiedere un nuovo periodo di ferie
+            </DialogDescription>
           </DialogHeader>
           <MultiStepHolidayRequest
             defaultValues={{
@@ -587,6 +668,9 @@ export function IntegratedCalendar({
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Dettagli Ferie</DialogTitle>
+            <DialogDescription>
+              Informazioni complete sulla richiesta di ferie selezionata
+            </DialogDescription>
           </DialogHeader>
           {selectedEvent && (
             <div className="space-y-4">
@@ -631,6 +715,55 @@ export function IntegratedCalendar({
         </DialogContent>
       </Dialog>
 
+      {/* Day Events Dialog */}
+      <Dialog open={!!dayEventsDialog} onOpenChange={() => setDayEventsDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Ferie del {dayEventsDialog && format(dayEventsDialog.date, 'dd MMMM yyyy', { locale: getDateFnsLocale() })}
+            </DialogTitle>
+            <DialogDescription>
+              Elenco completo di tutti i dipendenti in ferie in questa data
+            </DialogDescription>
+          </DialogHeader>
+          {dayEventsDialog && (
+            <div className="space-y-3">
+              {dayEventsDialog.events.map((event) => (
+                <div 
+                  key={event.id} 
+                  className="flex items-center space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50"
+                  onClick={() => {
+                    setDayEventsDialog(null);
+                    setSelectedEvent(event);
+                  }}
+                >
+                  <div className="text-lg">
+                    {event.resource.type === 'vacation' && '🏖️'}
+                    {event.resource.type === 'sick' && '🏥'}
+                    {event.resource.type === 'personal' && '👤'}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">{event.resource.userName}</h4>
+                    <p className="text-xs text-gray-600">
+                      {t(`holidays.request.types.${event.resource.type}`)}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <StatusBadge status={event.resource.status} />
+                  </div>
+                </div>
+              ))}
+              
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" onClick={() => setDayEventsDialog(null)}>
+                  Chiudi
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* FullCalendar Custom CSS */}
       <style jsx global>{`
         .fullcalendar-container .fc {
@@ -638,34 +771,99 @@ export function IntegratedCalendar({
         }
         
         .fullcalendar-container .fc-event {
-          border-radius: 4px;
+          border-radius: 3px;
           border: none;
-          font-size: 11px;
+          font-size: 10px;
           font-weight: 600;
-          padding: 1px 4px;
+          padding: 1px 3px;
+          margin: 1px 0;
+          min-height: 16px;
+          line-height: 1.2;
+          cursor: pointer;
         }
         
         .fullcalendar-container .fc-event-title {
           font-weight: 600;
           color: white;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         
         .fullcalendar-container .fc-daygrid-event {
           margin: 1px 0;
+          min-height: 16px;
+        }
+        
+        .fullcalendar-container .fc-daygrid-day-events {
+          margin: 1px;
         }
         
         .fullcalendar-container .fc-day-today {
           background-color: #f0f9ff !important;
         }
         
+        .fullcalendar-container .fc-more-link {
+          font-size: 10px;
+          color: #374151;
+          font-weight: 500;
+          padding: 1px 4px;
+          border-radius: 2px;
+          background: #f3f4f6;
+          border: 1px solid #e5e7eb;
+          margin: 1px 0;
+        }
+        
+        .fullcalendar-container .fc-more-link:hover {
+          background: #e5e7eb;
+          text-decoration: none;
+        }
+        
+        /* Hide all FullCalendar popovers - we use custom dialogs */
+        .fullcalendar-container .fc-popover {
+          display: none !important;
+        }
+        
+        .fullcalendar-container .fc-popover-header {
+          display: none !important;
+        }
+        
+        .fullcalendar-container .fc-popover-body {
+          display: none !important;
+        }
+        
         .holiday-event {
           text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         
+        /* Improve day cell spacing */
+        .fullcalendar-container .fc-daygrid-day-frame {
+          min-height: 80px;
+        }
+        
+        .fullcalendar-container .fc-daygrid-day-top {
+          padding: 4px;
+        }
+        
+        .fullcalendar-container .fc-daygrid-day-number {
+          padding: 2px 4px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+        
         @media (max-width: 640px) {
           .fullcalendar-container .fc-event {
-            font-size: 10px;
+            font-size: 9px;
             padding: 1px 2px;
+            min-height: 14px;
+          }
+          
+          .fullcalendar-container .fc-daygrid-day-frame {
+            min-height: 70px;
+          }
+          
+          .fullcalendar-container .fc-more-link {
+            font-size: 9px;
           }
         }
       `}</style>

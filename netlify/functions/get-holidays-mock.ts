@@ -165,6 +165,92 @@ const mockHolidays = [
     status: 'approved',
     notes: 'Giorni personali',
     createdAt: '2025-07-05T16:00:00.000Z'
+  },
+
+  // TEST: 6 OVERLAPPING HOLIDAYS - Same days (August 15-17) to test event limit
+  {
+    id: 'h12',
+    employeeId: 'e11',
+    employeeName: 'Francesco Grigio',
+    employeeEmail: 'francesco.grigio@ominiaservice.net',
+    department: 'IT Support',
+    startDate: '2025-08-15',
+    endDate: '2025-08-17',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Test sovrapposto 1',
+    createdAt: '2025-08-01T09:00:00.000Z'
+  },
+  {
+    id: 'h13',
+    employeeId: 'e12',
+    employeeName: 'Valentina Oro',
+    employeeEmail: 'valentina.oro@ominiaservice.net',
+    department: 'Accounting',
+    startDate: '2025-08-15',
+    endDate: '2025-08-17',
+    workingDays: 3,
+    type: 'personal',
+    status: 'approved',
+    notes: 'Test sovrapposto 2',
+    createdAt: '2025-08-01T10:00:00.000Z'
+  },
+  {
+    id: 'h14',
+    employeeId: 'e13',
+    employeeName: 'Roberto Argento',
+    employeeEmail: 'roberto.argento@ominiaservice.net',
+    department: 'Security',
+    startDate: '2025-08-16',
+    endDate: '2025-08-17',
+    workingDays: 2,
+    type: 'sick',
+    status: 'pending',
+    notes: 'Test sovrapposto 3',
+    createdAt: '2025-08-01T11:00:00.000Z'
+  },
+  {
+    id: 'h15',
+    employeeId: 'e14',
+    employeeName: 'Silvia Bronzo',
+    employeeEmail: 'silvia.bronzo@ominiaservice.net',
+    department: 'Logistics',
+    startDate: '2025-08-16',
+    endDate: '2025-08-17',
+    workingDays: 2,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Test sovrapposto 4',
+    createdAt: '2025-08-01T12:00:00.000Z'
+  },
+  {
+    id: 'h16',
+    employeeId: 'e15',
+    employeeName: 'Davide Platino',
+    employeeEmail: 'davide.platino@ominiaservice.net',
+    department: 'Quality Control',
+    startDate: '2025-08-17',
+    endDate: '2025-08-17',
+    workingDays: 1,
+    type: 'personal',
+    status: 'approved',
+    notes: 'Test sovrapposto 5',
+    createdAt: '2025-08-01T13:00:00.000Z'
+  },
+  {
+    id: 'h17',
+    employeeId: 'e16',
+    employeeName: 'Federica Rame',
+    employeeEmail: 'federica.rame@ominiaservice.net',
+    department: 'Training',
+    startDate: '2025-08-17',
+    endDate: '2025-08-17',
+    workingDays: 1,
+    type: 'vacation',
+    status: 'pending',
+    notes: 'Test sovrapposto 6',
+    createdAt: '2025-08-01T14:00:00.000Z'
   }
 ];
 
