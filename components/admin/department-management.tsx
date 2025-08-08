@@ -78,11 +78,12 @@ export function DepartmentManagement({
         ? 'http://localhost:8888'
         : window.location.origin;
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/departments/create-department`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/create-department`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify({
           name: newDepartment.name,

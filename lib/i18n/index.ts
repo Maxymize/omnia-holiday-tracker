@@ -68,7 +68,8 @@ export const translations = {
         teamHolidays: 'Ferie del team',
         allHolidays: 'Tutti',
         newRequest: 'Nuova richiesta',
-        legend: {
+        legend: 'Legenda',
+        legendDetails: {
           approved: 'Approvata',
           pending: 'In attesa',
           rejected: 'Rifiutata',
@@ -273,7 +274,8 @@ export const translations = {
         teamHolidays: 'Team holidays',
         allHolidays: 'All',
         newRequest: 'New request',
-        legend: {
+        legend: 'Legend',
+        legendDetails: {
           approved: 'Approved',
           pending: 'Pending',
           rejected: 'Rejected',
@@ -439,7 +441,8 @@ export const translations = {
         teamHolidays: 'Vacaciones del equipo',
         allHolidays: 'Todas',
         newRequest: 'Nueva solicitud',
-        legend: {
+        legend: 'Leyenda',
+        legendDetails: {
           approved: 'Aprobada',
           pending: 'Pendiente',
           rejected: 'Rechazada',

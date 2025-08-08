@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, 
@@ -25,7 +25,8 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  UserPlus
+  UserPlus,
+  RefreshCw
 } from 'lucide-react';
 import { Employee } from '@/lib/hooks/useAdminData';
 
@@ -47,10 +48,15 @@ export function EmployeeManagement({
   onRefresh 
 }: EmployeeManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'approved' | 'pending' | 'rejected' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'employee'>('all');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    employee: Employee | null;
+    action: 'approve' | 'reject';
+  }>({ isOpen: false, employee: null, action: 'approve' });
 
   // Filter and search employees
   const filteredEmployees = useMemo(() => {
@@ -68,6 +74,17 @@ export function EmployeeManagement({
   }, [employees, searchTerm, statusFilter, roleFilter]);
 
   const handleApprove = async (employee: Employee) => {
+    // Se il dipendente non è pending, mostra dialog di conferma
+    if (employee.status !== 'pending') {
+      setConfirmDialog({
+        isOpen: true,
+        employee,
+        action: 'approve'
+      });
+      return;
+    }
+
+    // Procedi direttamente per dipendenti pending
     setActionLoading(employee.id);
     try {
       const success = await onApproveEmployee(employee.id);
@@ -80,9 +97,40 @@ export function EmployeeManagement({
   };
 
   const handleReject = async (employee: Employee) => {
+    // Se il dipendente non è pending, mostra dialog di conferma
+    if (employee.status !== 'pending') {
+      setConfirmDialog({
+        isOpen: true,
+        employee,
+        action: 'reject'
+      });
+      return;
+    }
+
+    // Procedi direttamente per dipendenti pending
     setActionLoading(employee.id);
     try {
       const success = await onRejectEmployee(employee.id);
+      if (success) {
+        // Success feedback will be handled by the parent component
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmDialog.employee) return;
+
+    const { employee, action } = confirmDialog;
+    setActionLoading(employee.id);
+    setConfirmDialog({ isOpen: false, employee: null, action: 'approve' });
+
+    try {
+      const success = action === 'approve' 
+        ? await onApproveEmployee(employee.id)
+        : await onRejectEmployee(employee.id);
+
       if (success) {
         // Success feedback will be handled by the parent component
       }
@@ -95,8 +143,12 @@ export function EmployeeManagement({
     switch (status) {
       case 'active':
         return <Badge className="bg-green-100 text-green-800">Attivo</Badge>;
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800">Approvato</Badge>;
       case 'pending':
         return <Badge className="bg-amber-100 text-amber-800">In attesa</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800">Rifiutato</Badge>;
       case 'inactive':
         return <Badge className="bg-gray-100 text-gray-800">Inattivo</Badge>;
       default:
@@ -123,7 +175,7 @@ export function EmployeeManagement({
   };
 
   const pendingEmployees = employees.filter(emp => emp.status === 'pending');
-  const activeEmployees = employees.filter(emp => emp.status === 'active');
+  const activeEmployees = employees.filter(emp => emp.status === 'active' || emp.status === 'approved');
   const totalHolidaysUsed = employees.reduce((sum, emp) => sum + emp.holidaysUsed, 0);
 
   if (loading && employees.length === 0) {
@@ -155,7 +207,7 @@ export function EmployeeManagement({
           </p>
         </div>
         <Button onClick={onRefresh} disabled={loading}>
-          <UserPlus className="h-4 w-4 mr-2" />
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Aggiorna
         </Button>
       </div>
@@ -250,7 +302,9 @@ export function EmployeeManagement({
                 <SelectContent>
                   <SelectItem value="all">Tutti gli stati</SelectItem>
                   <SelectItem value="active">Attivi</SelectItem>
+                  <SelectItem value="approved">Approvati</SelectItem>
                   <SelectItem value="pending">In attesa</SelectItem>
+                  <SelectItem value="rejected">Rifiutati</SelectItem>
                   <SelectItem value="inactive">Inattivi</SelectItem>
                 </SelectContent>
               </Select>
@@ -334,6 +388,7 @@ export function EmployeeManagement({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-1">
+                          {/* Mostra pulsanti basati sullo stato attuale */}
                           {employee.status === 'pending' && (
                             <>
                               <Button
@@ -342,6 +397,7 @@ export function EmployeeManagement({
                                 onClick={() => handleApprove(employee)}
                                 disabled={actionLoading === employee.id}
                                 className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                title="Approva dipendente"
                               >
                                 <UserCheck className="h-4 w-4" />
                               </Button>
@@ -351,10 +407,39 @@ export function EmployeeManagement({
                                 onClick={() => handleReject(employee)}
                                 disabled={actionLoading === employee.id}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Rifiuta dipendente"
                               >
                                 <UserX className="h-4 w-4" />
                               </Button>
                             </>
+                          )}
+                          
+                          {/* Per dipendenti attivi/approvati: consenti di rifiutare */}
+                          {(employee.status === 'active' || employee.status === 'approved') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleReject(employee)}
+                              disabled={actionLoading === employee.id}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title={`Cambia stato da ${employee.status === 'active' ? 'attivo' : 'approvato'} a rifiutato`}
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          {/* Per dipendenti rifiutati: consenti di approvare */}
+                          {employee.status === 'rejected' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApprove(employee)}
+                              disabled={actionLoading === employee.id}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Cambia stato da rifiutato ad approvato"
+                            >
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
                           )}
                           <Dialog>
                             <DialogTrigger asChild>
@@ -435,6 +520,81 @@ export function EmployeeManagement({
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog di Conferma Cambio Stato */}
+      <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => 
+        setConfirmDialog({ isOpen: open, employee: null, action: 'approve' })
+      }>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Conferma Cambio Stato
+            </DialogTitle>
+          </DialogHeader>
+          {confirmDialog.employee && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div>
+                  <h4 className="font-medium text-amber-900">Attenzione: Cambio di Stato</h4>
+                  <p className="text-sm text-amber-700">
+                    Stai per modificare lo stato di un dipendente già processato.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="font-medium text-gray-700">Dipendente:</label>
+                  <p className="text-gray-900">{confirmDialog.employee.name}</p>
+                  <p className="text-sm text-gray-600">{confirmDialog.employee.email}</p>
+                </div>
+                
+                <div>
+                  <label className="font-medium text-gray-700">Stato attuale:</label>
+                  <div className="mt-1">{getStatusBadge(confirmDialog.employee.status)}</div>
+                </div>
+                
+                <div>
+                  <label className="font-medium text-gray-700">Nuovo stato:</label>
+                  <div className="mt-1">
+                    {confirmDialog.action === 'approve' ? (
+                      <Badge className="bg-green-100 text-green-800">Approvato</Badge>
+                    ) : (
+                      <Badge className="bg-red-100 text-red-800">Rifiutato</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <strong>Nota:</strong> Questa azione cambierà lo stato del dipendente. 
+                {confirmDialog.action === 'approve' 
+                  ? ' Il dipendente potrà accedere al sistema e richiedere ferie.' 
+                  : ' Il dipendente non potrà più accedere al sistema.'
+                }
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setConfirmDialog({ isOpen: false, employee: null, action: 'approve' })}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleConfirmAction}
+              className={confirmDialog.action === 'approve' 
+                ? 'bg-green-600 hover:bg-green-700' 
+                : 'bg-red-600 hover:bg-red-700'
+              }
+            >
+              {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

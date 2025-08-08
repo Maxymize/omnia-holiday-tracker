@@ -7,14 +7,14 @@
 Claude Code MUST read these files in order at session start:
 
 1. **CLAUDE.md** (this file) - Core rules and project overview
-2. **PLANNING.md** - Complete architecture and technology stack
-3. **TASK.md** - Current task status and AI agent protocols
-4. **CLAUDE-CODE-INSTRUCTIONS.md** - Detailed agent usage and handoff protocols
-5. **AGENT-WORK-LOG.md** - Previous agent work history
-6. **STATUS-HANDOFF.md** - Current project state and next steps
-7. **DOMAIN-CONFIG.md** - OmniaGroup domain configuration
-8. **README.md** - Setup instructions and project overview
-9. **.env.example** - Environment configuration
+2. **TASK.md** - ACTIVE TASKS ONLY (optimized for context preservation)
+3. **STATUS-HANDOFF.md** - Current project state and next steps
+4. **AGENT-WORK-LOG.md** - Recent agent work history
+5. **PLANNING.md** - Complete architecture and technology stack (when needed)
+6. **CLAUDE-CODE-INSTRUCTIONS.md** - Detailed agent usage (reference only)
+7. **TASK-COMPLETED.md** - Completed work archive (reference only)
+
+**CONTEXT OPTIMIZATION**: Files are now structured to minimize context usage while maintaining full project visibility.
 
 ### **🚨 CRITICAL SUCCESS FACTORS**
 - **USE AI AGENTS PROACTIVELY** - Never wait for explicit requests
@@ -31,17 +31,19 @@ Claude Code MUST read these files in order at session start:
 **DOMAINS**: omniaservices.net, omniaelectronics.com + additional configurable domains
 
 ### **📋 CURRENT PROJECT STATUS**
-- **Phase**: Foundation Setup (Phase 1 of 6)
-- **Critical Tasks**: Database setup, GitHub/Netlify integration
+- **Phase**: Integration & Production Readiness (Phase 4 of 6) 
+- **Progress**: ~75% complete (Phases 1-3 completed)
+- **Critical Tasks**: Holiday workflow completion, admin panel integration
+- **Context Optimized**: Task files restructured for better context preservation
 - **Stack**: Next.js 15, TypeScript, NEON DB, Netlify Functions
 - **Languages**: Italian (primary), English, Spanish
 
 ### **🎯 SESSION PRIORITIES**
-1. **Read all documentation files** listed above immediately
-2. **Check AGENT-WORK-LOG.md** for previous agent work
-3. **Review STATUS-HANDOFF.md** for current project state
+1. **Read optimized documentation files** in the sequence above
+2. **Focus on active tasks only** (Phase 4 integration)
+3. **Check STATUS-HANDOFF.md** for current project state  
 4. **Use AI agents proactively** with proper handoff documentation
-5. **Complete Phase 1 foundation setup** following TASK.md
+5. **Complete Phase 4 integration** following streamlined TASK.md
 
 - **Always read `PLANNING.md`** at the start to understand architecture, goals, and constraints
 - **Check `TASK.md`** before starting - includes mandatory AI agent protocols

@@ -79,7 +79,7 @@ export function useAdminData() {
   // State for different data types
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<PendingHolidayRequest[]>([]);
+  const [allRequests, setAllRequests] = useState<PendingHolidayRequest[]>([]);
   const [systemSettings, setSystemSettings] = useState<Partial<SystemSettings>>({});
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
 
@@ -161,8 +161,8 @@ export function useAdminData() {
     }
   }, [isAdmin]);
 
-  // Fetch pending holiday requests
-  const fetchPendingRequests = useCallback(async () => {
+  // Fetch all holiday requests
+  const fetchAllRequests = useCallback(async () => {
     if (!isAdmin) return;
     
     setLoading(true);
@@ -174,7 +174,7 @@ export function useAdminData() {
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?status=pending&viewMode=all`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=all`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -186,15 +186,15 @@ export function useAdminData() {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch pending requests');
+        throw new Error(data.error || 'Failed to fetch holiday requests');
       }
 
       if (data.success && data.data) {
-        setPendingRequests(data.data.holidays || data.data || []);
+        setAllRequests(data.data.holidays || data.data || []);
       }
     } catch (err) {
-      console.error('Error fetching pending requests:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch pending requests');
+      console.error('Error fetching holiday requests:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch holiday requests');
     } finally {
       setLoading(false);
     }
@@ -246,18 +246,19 @@ export function useAdminData() {
     const activeEmployees = employees.filter(emp => emp.status === 'active').length;
     const pendingEmployees = employees.filter(emp => emp.status === 'pending').length;
     const totalHolidaysUsed = employees.reduce((sum, emp) => sum + emp.holidaysUsed, 0);
+    const pendingHolidayRequests = allRequests.filter(req => req.status === 'pending').length;
 
     setAdminStats({
       totalEmployees: employees.length,
       activeEmployees,
       pendingEmployees,
-      pendingHolidayRequests: pendingRequests.length,
-      totalHolidayRequests: totalHolidaysUsed, // This would need more detailed calculation
+      pendingHolidayRequests: pendingHolidayRequests,
+      totalHolidayRequests: allRequests.length, // Total of all requests
       holidaysThisMonth: totalHolidaysUsed, // Placeholder - would need date filtering
       employeesOnHolidayToday: 0, // Placeholder - would need real-time data
       departmentCount: departments.length,
     });
-  }, [employees, pendingRequests, departments]);
+  }, [employees, allRequests, departments]);
 
   // Action functions
   const approveEmployee = useCallback(async (employeeId: string) => {
@@ -269,7 +270,7 @@ export function useAdminData() {
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -277,7 +278,7 @@ export function useAdminData() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: employeeId,
+          employeeId: employeeId,
           action: 'approve'
         }),
       });
@@ -307,7 +308,7 @@ export function useAdminData() {
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -315,7 +316,7 @@ export function useAdminData() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          userId: employeeId,
+          employeeId: employeeId,
           action: 'reject'
         }),
       });
@@ -345,7 +346,8 @@ export function useAdminData() {
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject`, {
+      // Use mock endpoint for now (switch to real endpoint when database is ready)
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -364,15 +366,15 @@ export function useAdminData() {
         throw new Error(data.error || 'Failed to approve holiday request');
       }
 
-      // Refresh pending requests
-      await fetchPendingRequests();
+      // Refresh all requests
+      await fetchAllRequests();
       return true;
     } catch (err) {
       console.error('Error approving holiday request:', err);
       setError(err instanceof Error ? err.message : 'Failed to approve holiday request');
       return false;
     }
-  }, [isAdmin, fetchPendingRequests]);
+  }, [isAdmin, fetchAllRequests]);
 
   const rejectHolidayRequest = useCallback(async (requestId: string, reason?: string) => {
     if (!isAdmin) return false;
@@ -383,7 +385,8 @@ export function useAdminData() {
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject`, {
+      // Use mock endpoint for now (switch to real endpoint when database is ready)
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -403,15 +406,15 @@ export function useAdminData() {
         throw new Error(data.error || 'Failed to reject holiday request');
       }
 
-      // Refresh pending requests
-      await fetchPendingRequests();
+      // Refresh all requests
+      await fetchAllRequests();
       return true;
     } catch (err) {
       console.error('Error rejecting holiday request:', err);
       setError(err instanceof Error ? err.message : 'Failed to reject holiday request');
       return false;
     }
-  }, [isAdmin, fetchPendingRequests]);
+  }, [isAdmin, fetchAllRequests]);
 
   const updateSystemSetting = useCallback(async (key: keyof SystemSettings, value: any) => {
     if (!isAdmin) return false;
@@ -463,10 +466,10 @@ export function useAdminData() {
     await Promise.all([
       fetchEmployees(),
       fetchDepartments(),
-      fetchPendingRequests(),
+      fetchAllRequests(),
       fetchSystemSettings()
     ]);
-  }, [isAdmin, fetchEmployees, fetchDepartments, fetchPendingRequests, fetchSystemSettings]);
+  }, [isAdmin, fetchEmployees, fetchDepartments, fetchAllRequests, fetchSystemSettings]);
 
   // Calculate stats when data changes
   useEffect(() => {
@@ -484,7 +487,7 @@ export function useAdminData() {
     // Data
     employees,
     departments,
-    pendingRequests,
+    pendingRequests: allRequests, // Export allRequests as pendingRequests for compatibility
     systemSettings,
     adminStats,
     
@@ -496,7 +499,7 @@ export function useAdminData() {
     fetchAllAdminData,
     fetchEmployees,
     fetchDepartments,
-    fetchPendingRequests,
+    fetchPendingRequests: fetchAllRequests, // Export fetchAllRequests as fetchPendingRequests for compatibility
     fetchSystemSettings,
     approveEmployee,
     rejectEmployee,

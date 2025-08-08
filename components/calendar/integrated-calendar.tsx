@@ -34,6 +34,7 @@ import { useTranslation } from "@/lib/i18n/provider"
 import { MultiStepHolidayRequest } from "@/components/forms/multi-step-holiday-request"
 import { TimelineView } from "./timeline-view"
 import { cn } from "@/lib/utils"
+import { toast } from "@/lib/utils/toast"
 
 interface HolidayEvent {
   id: string
@@ -78,7 +79,7 @@ export function IntegratedCalendar({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [view, setView] = useState<string>('dayGridMonth')
+  const [view, setView] = useState<string>('timeline')
   const [viewMode, setViewMode] = useState<'own' | 'team' | 'all'>('all')
   
   // Dialog states
@@ -486,6 +487,63 @@ export function IntegratedCalendar({
     }
   }
 
+  // Handle approve/reject actions
+  const handleApproveReject = async (eventId: string, action: 'approve' | 'reject') => {
+    try {
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        toast.error('Sessione scaduta. Effettua nuovamente il login.')
+        return
+      }
+
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:8888' 
+        : window.location.origin
+
+      // Use mock endpoint for now (switch to real endpoint when database is ready)
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          holidayId: eventId,
+          action: action
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || `Errore durante ${action === 'approve' ? 'l\'approvazione' : 'il rifiuto'}`)
+      }
+
+      if (data.success) {
+        // Show success toast
+        toast.success(
+          action === 'approve' 
+            ? '✅ Richiesta ferie approvata con successo'
+            : '❌ Richiesta ferie rifiutata',
+          {
+            description: `La richiesta è stata ${action === 'approve' ? 'approvata' : 'rifiutata'} correttamente.`
+          }
+        )
+
+        // Refresh holidays to show updated status
+        await fetchHolidays()
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing holiday:`, error)
+      toast.error(
+        `Errore durante ${action === 'approve' ? 'l\'approvazione' : 'il rifiuto'}`,
+        {
+          description: error instanceof Error ? error.message : 'Si è verificato un errore. Riprova.'
+        }
+      )
+    }
+  }
+
   // Get calendar messages for localization
   const getCalendarMessages = () => {
     return {
@@ -536,7 +594,10 @@ export function IntegratedCalendar({
     <>
       <Card className={cn(className, "w-full max-w-full overflow-hidden")}>
         <CardContent className="p-0 w-full max-w-full box-border">
-          <div className="h-[580px] sm:h-[680px] relative w-full max-w-full overflow-hidden box-border">
+          <div className={cn(
+            "relative w-full max-w-full box-border",
+            view === 'timeline' ? "min-h-[580px] overflow-hidden" : "h-[580px] sm:h-[680px] overflow-hidden"
+          )}>
             {/* Always render CustomToolbar for all views */}
             <CustomToolbar 
               label={format(currentDate, "MMMM yyyy", { locale: getDateFnsLocale() })}
@@ -547,16 +608,16 @@ export function IntegratedCalendar({
             />
             
             {view === 'timeline' ? (
-              <div className="w-full max-w-full overflow-hidden box-border" style={{ height: 'calc(100% - 180px)' }}>
+              <div className="w-full h-full overflow-hidden">
                 <TimelineView 
                   events={filteredEvents}
                   currentDate={currentDate}
                   onEventClick={handleEventClick}
                   onApproveEvent={async (eventId) => {
-                    console.log('Approve event:', eventId)
+                    await handleApproveReject(eventId, 'approve')
                   }}
                   onRejectEvent={async (eventId) => {
-                    console.log('Reject event:', eventId)
+                    await handleApproveReject(eventId, 'reject')
                   }}
                 />
               </div>
@@ -877,42 +938,46 @@ export function CalendarLegend() {
   
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">
           {t('dashboard.calendar.legend')}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-emerald-500"></div>
-          <span className="text-xs">{t('dashboard.calendar.legend.approved')}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-amber-500"></div>
-          <span className="text-xs">{t('dashboard.calendar.legend.pending')}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-red-500"></div>
-          <span className="text-xs">{t('dashboard.calendar.legend.rejected')}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 rounded bg-gray-500"></div>
-          <span className="text-xs">Cancelled</span>
+      <CardContent className="py-2">
+        {/* Status Colors in one row */}
+        <div className="flex items-center space-x-4 mb-2">
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 rounded bg-emerald-500"></div>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.approved')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 rounded bg-amber-500"></div>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.pending')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 rounded bg-red-500"></div>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.rejected')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 rounded bg-gray-500"></div>
+            <span className="text-xs">Cancelled</span>
+          </div>
         </div>
         
-        <hr className="my-3" />
-        
-        <div className="flex items-center space-x-2">
-          <span className="text-sm">🏖️</span>
-          <span className="text-xs">{t('dashboard.calendar.legend.vacation')}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm">🏥</span>
-          <span className="text-xs">{t('dashboard.calendar.legend.sick')}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm">👤</span>
-          <span className="text-xs">{t('dashboard.calendar.legend.personal')}</span>
+        {/* Holiday Types in one row */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            <span className="text-sm">🏖️</span>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.vacation')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-sm">🏥</span>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.sick')}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <span className="text-sm">👤</span>
+            <span className="text-xs">{t('dashboard.calendar.legendDetails.personal')}</span>
+          </div>
         </div>
       </CardContent>
     </Card>

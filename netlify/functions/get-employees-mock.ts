@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { getEmployeeStatus } from '../../lib/mock-storage';
 
 // Mock employee data for development
 const mockEmployees = [
@@ -86,17 +87,33 @@ export const handler: Handler = async (event, context) => {
 
     console.log('Mock employees accessed by admin:', userToken.email);
 
-    // Return mock employee data
+    // Apply status updates from shared mock storage
+    const employeesWithUpdatedStatus = mockEmployees.map(employee => {
+      const updatedStatus = getEmployeeStatus(employee.id);
+      const finalEmployee = {
+        ...employee,
+        status: updatedStatus || employee.status
+      };
+      
+      if (updatedStatus) {
+        console.log(`Applied status update for employee ${employee.id}: ${employee.status} -> ${updatedStatus}`);
+      }
+      
+      return finalEmployee;
+    });
+
+    // Return mock employee data with updated statuses
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         data: {
-          employees: mockEmployees,
-          total: mockEmployees.length,
-          active: mockEmployees.filter(e => e.status === 'active').length,
-          pending: mockEmployees.filter(e => e.status === 'pending').length
+          employees: employeesWithUpdatedStatus,
+          total: employeesWithUpdatedStatus.length,
+          active: employeesWithUpdatedStatus.filter(e => e.status === 'active' || e.status === 'approved').length,
+          pending: employeesWithUpdatedStatus.filter(e => e.status === 'pending').length,
+          rejected: employeesWithUpdatedStatus.filter(e => e.status === 'rejected').length
         }
       })
     };

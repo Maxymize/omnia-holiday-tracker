@@ -57,7 +57,7 @@ export function MobileCalendar({
   showAddButton = true,  
   showTeamHolidays = true,
   onHolidayCreated,
-  defaultView = 'monthly'
+  defaultView = 'timeline'
 }: MobileCalendarProps) {
   const { user, isAuthenticated, isAdmin } = useAuth()
   const { t, locale } = useI18n()
@@ -148,6 +148,47 @@ export function MobileCalendar({
       setLoading(false)
     }
   }, [isAuthenticated, user, currentDate, viewMode, t])
+
+  // Get unique employees from events for timeline
+  const getUniqueEmployees = useCallback(() => {
+    const employeesMap = new Map()
+    events.forEach(event => {
+      if (!employeesMap.has(event.resource.userId)) {
+        employeesMap.set(event.resource.userId, {
+          id: event.resource.userId,
+          name: event.resource.userName,
+          initials: event.resource.userName.split(' ').map(n => n[0]).join('').substring(0, 2),
+          events: []
+        })
+      }
+    })
+    
+    // Add events to each employee
+    events.forEach(event => {
+      const employee = employeesMap.get(event.resource.userId)
+      if (employee) {
+        employee.events.push(event)
+      }
+    })
+    
+    return Array.from(employeesMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [events])
+
+  // Get events for specific employee and date
+  const getEmployeeEventsForDate = useCallback((employeeId: string, date: Date) => {
+    return events.filter(event => {
+      if (event.resource.userId !== employeeId) return false
+      
+      const eventStart = event.start
+      const eventEnd = new Date(event.end.getTime() - 24 * 60 * 60 * 1000) // Subtract 1 day for all-day events
+      
+      const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      const eventStartOnly = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate())
+      const eventEndOnly = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate())
+      
+      return dateOnly >= eventStartOnly && dateOnly <= eventEndOnly
+    })
+  }, [events])
 
   // Effect to fetch holidays when dependencies change
   useEffect(() => {
@@ -258,66 +299,117 @@ export function MobileCalendar({
 
   const calendarDays = getCalendarDays()
 
-  // Mobile Timeline View Component
-  const MobileTimelineView = () => (
-    <div className="w-full">
-      <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-        {eachDayOfInterval({ 
-          start: startOfMonth(currentDate), 
-          end: endOfMonth(currentDate) 
-        }).map((date, index) => {
-          const dayEvents = getEventsForDate(date)
-          const isToday = new Date().toDateString() === date.toDateString()
-          
-          return (
-            <div key={date.toISOString()} className="flex-shrink-0 w-20 snap-center">
-              <div className={cn(
-                "p-2 border-r text-center",
-                isToday && "bg-blue-50 border-blue-200"
-              )}>
-                <div className="text-xs font-medium text-gray-600">
-                  {format(date, 'EEE', { locale: getDateFnsLocale() })}
+  // Mobile Timeline View Component - Now with employee rows like desktop
+  const MobileTimelineView = () => {
+    const monthDays = eachDayOfInterval({ 
+      start: startOfMonth(currentDate), 
+      end: endOfMonth(currentDate) 
+    })
+    const uniqueEmployees = getUniqueEmployees()
+    
+    return (
+      <div className="w-full overflow-x-auto">
+        <div className="min-w-full relative" style={{ width: `${160 + monthDays.length * 50}px` }}>
+          {/* Header row with days */}
+          <div className="flex sticky top-0 bg-white border-b-2 border-gray-300 z-20">
+            {/* Employee names column header - STICKY */}
+            <div className="sticky left-0 z-30 flex-shrink-0 w-40 p-2 bg-gray-50 border-r-2 border-gray-300 shadow-sm">
+              <div className="text-xs font-semibold text-gray-700">Team Members</div>
+              <div className="text-xs text-gray-500">{uniqueEmployees.length} dipendenti</div>
+            </div>
+            
+            {/* Day headers */}
+            {monthDays.map((date) => {
+              const isToday = new Date().toDateString() === date.toDateString()
+              return (
+                <div key={date.toISOString()} className="flex-shrink-0 w-12 p-1 text-center border-r border-gray-300">
+                  <div className="text-xs font-medium text-gray-600">
+                    {format(date, 'EEE', { locale: getDateFnsLocale() })}
+                  </div>
+                  <div className={cn(
+                    "text-sm font-semibold",
+                    isToday && "text-blue-600"
+                  )}>
+                    {format(date, 'd')}
+                  </div>
                 </div>
-                <div className={cn(
-                  "text-lg font-semibold mb-2",
-                  isToday && "text-blue-600"
-                )}>
-                  {format(date, 'd')}
+              )
+            })}
+          </div>
+          
+          {/* Employee rows */}
+          <div className="divide-y divide-gray-200">
+            {uniqueEmployees.map((employee) => (
+              <div key={employee.id} className="flex hover:bg-gray-50">
+                {/* Employee name cell - STICKY */}
+                <div className="sticky left-0 z-10 flex-shrink-0 w-40 p-3 bg-gray-50 border-r-2 border-gray-300 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-medium text-blue-700">
+                        {employee.initials}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {employee.name}
+                      </div>
+                      <div className="text-xs text-gray-500">Department</div>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="space-y-1 min-h-[60px]">
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <div
-                      key={event.id}
-                      className={cn(
-                        "text-xs p-1 rounded text-center truncate cursor-pointer",
-                        event.resource.status === 'approved' && "bg-green-200 text-green-800",
-                        event.resource.status === 'pending' && "bg-orange-200 text-orange-800",
-                        event.resource.status === 'rejected' && "bg-red-200 text-red-800"
-                      )}
+                {/* Day cells for this employee */}
+                {monthDays.map((date) => {
+                  const employeeEvents = getEmployeeEventsForDate(employee.id, date)
+                  const hasEvents = employeeEvents.length > 0
+                  const primaryEvent = employeeEvents[0]
+                  
+                  return (
+                    <div 
+                      key={date.toISOString()} 
+                      className="flex-shrink-0 w-12 min-h-[60px] border-r border-gray-300 flex items-center justify-center cursor-pointer hover:bg-blue-50 relative"
                       onClick={() => {
-                        setSelectedDate(date)
-                        setShowDayEventsDialog(true)
+                        if (hasEvents) {
+                          setSelectedDate(date)
+                          setShowDayEventsDialog(true)
+                        }
                       }}
                     >
-                      {event.resource.type === 'vacation' && '🏖️'}
-                      {event.resource.type === 'sick' && '🏥'}
-                      {event.resource.type === 'personal' && '👤'}
+                      {hasEvents && primaryEvent && (
+                        <div className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium",
+                          primaryEvent.resource.status === 'approved' && "bg-green-200 text-green-800",
+                          primaryEvent.resource.status === 'pending' && "bg-orange-200 text-orange-800",
+                          primaryEvent.resource.status === 'rejected' && "bg-red-200 text-red-800",
+                          primaryEvent.resource.status === 'cancelled' && "bg-gray-200 text-gray-600"
+                        )}>
+                          {primaryEvent.resource.type === 'vacation' && '🏖️'}
+                          {primaryEvent.resource.type === 'sick' && '🏥'}
+                          {primaryEvent.resource.type === 'personal' && '👤'}
+                        </div>
+                      )}
+                      {employeeEvents.length > 1 && (
+                        <div className="absolute -top-1 -right-1 bg-gray-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                          {employeeEvents.length}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {dayEvents.length > 3 && (
-                    <div className="text-xs text-center text-gray-600 bg-gray-100 rounded py-1">
-                      +{dayEvents.length - 3}
-                    </div>
-                  )}
-                </div>
+                  )
+                })}
               </div>
+            ))}
+          </div>
+          
+          {/* Empty state */}
+          {uniqueEmployees.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Nessun dipendente trovato
             </div>
-          )
-        })}
+          )}
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // Mobile Weekly View Component
   const MobileWeeklyView = () => {
@@ -422,24 +514,26 @@ export function MobileCalendar({
 
   // Mobile View Switcher Component
   const MobileViewSwitcher = () => (
-    <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-3">
-      {[
-        { key: 'monthly' as const, label: 'Mese', icon: CalendarIcon },
-        { key: 'timeline' as const, label: 'Timeline', icon: CalendarIcon },
-        { key: 'weekly' as const, label: 'Settimana', icon: CalendarIcon },
-        { key: 'list' as const, label: 'Lista', icon: CalendarIcon }
-      ].map(({ key, label, icon: Icon }) => (
-        <Button
-          key={key}
-          variant={mobileView === key ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setMobileView(key)}
-          className="flex-1 h-8 text-xs"
-        >
-          <Icon className="h-3 w-3 mr-1" />
-          {label}
-        </Button>
-      ))}
+    <div className="w-full overflow-hidden mb-3">
+      <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-lg">
+        {[
+          { key: 'timeline' as const, label: 'Timeline', icon: CalendarIcon },
+          { key: 'monthly' as const, label: 'Mese', icon: CalendarIcon },
+          { key: 'weekly' as const, label: 'Sett.', icon: CalendarIcon },
+          { key: 'list' as const, label: 'Lista', icon: CalendarIcon }
+        ].map(({ key, label, icon: Icon }) => (
+          <Button
+            key={key}
+            variant={mobileView === key ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setMobileView(key)}
+            className="h-8 text-xs px-1 min-w-0 truncate flex-shrink-0"
+          >
+            <Icon className="h-3 w-3 mr-0.5 flex-shrink-0" />
+            <span className="truncate">{label}</span>
+          </Button>
+        ))}
+      </div>
     </div>
   )
 
@@ -455,7 +549,7 @@ export function MobileCalendar({
       case 'monthly':
       default:
         return (
-          <div className="grid grid-cols-7">
+          <div className="grid grid-cols-7 gap-0 w-full">
             {calendarDays.map((date, index) => {
               const dayEvents = getEventsForDate(date)
               const isCurrentMonth = isSameMonth(date, currentDate)
@@ -466,7 +560,7 @@ export function MobileCalendar({
                 <motion.div
                   key={date.toISOString()}
                   className={cn(
-                    "relative min-h-[60px] p-1 border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors",
+                    "relative min-h-[70px] p-1 border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors",
                     !isCurrentMonth && "bg-gray-50 text-gray-400",
                     isTodayDate && "bg-blue-50 ring-1 ring-blue-200",
                     isSelectedDay && "bg-blue-100 ring-2 ring-blue-400",
@@ -477,7 +571,7 @@ export function MobileCalendar({
                   whileTap={{ scale: 0.95 }}
                 >
                   <div className={cn(
-                    "text-sm font-medium mb-1",
+                    "text-xs sm:text-sm font-medium mb-1",
                     isTodayDate && "text-blue-600 font-bold",
                     !isCurrentMonth && "text-gray-400"
                   )}>
@@ -485,31 +579,42 @@ export function MobileCalendar({
                   </div>
 
                   {dayEvents.length > 0 && (
-                    <div className="space-y-1">
-                      {dayEvents.slice(0, 2).map((event, eventIndex) => (
+                    <div className="space-y-0.5">
+                      {dayEvents.slice(0, 3).map((event, eventIndex) => (
                         <div
                           key={event.id}
                           className={cn(
-                            "text-xs p-1 rounded text-center truncate",
+                            "text-xs p-0.5 rounded text-center truncate leading-tight",
                             event.resource.status === 'approved' && "bg-green-200 text-green-800",
                             event.resource.status === 'pending' && "bg-orange-200 text-orange-800",
                             event.resource.status === 'rejected' && "bg-red-200 text-red-800",
                             event.resource.status === 'cancelled' && "bg-gray-200 text-gray-600"
                           )}
                         >
-                          {event.resource.type === 'vacation' && '🏖️'}
-                          {event.resource.type === 'sick' && '🏥'}
-                          {event.resource.type === 'personal' && '👤'}
-                          {viewMode !== 'own' && (
-                            <span className="ml-1">
-                              {event.resource.userName.split(' ')[0]}
+                          <div className="flex items-center justify-center gap-1">
+                            <span className="text-xs">
+                              {event.resource.type === 'vacation' && '🏖️'}
+                              {event.resource.type === 'sick' && '🏥'}
+                              {event.resource.type === 'personal' && '👤'}
                             </span>
-                          )}
+                            {viewMode !== 'own' && (
+                              <span className="text-xs truncate">
+                                {event.resource.userName.split(' ')[0]}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       ))}
-                      {dayEvents.length > 2 && (
-                        <div className="text-xs text-center text-gray-600 bg-gray-100 rounded py-1">
-                          +{dayEvents.length - 2}
+                      {dayEvents.length > 3 && (
+                        <div 
+                          className="text-xs text-center text-gray-600 bg-gray-100 rounded py-0.5 cursor-pointer hover:bg-gray-200"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedDate(date)
+                            setShowDayEventsDialog(true)
+                          }}
+                        >
+                          +{dayEvents.length - 3}
                         </div>
                       )}
                     </div>
@@ -525,27 +630,29 @@ export function MobileCalendar({
   return (
     <>
       <Card className={className}>
-        <CardHeader className="pb-2">
-          {/* Header with navigation */}
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-2 px-3">
+          {/* Header with navigation - Fixed mobile layout */}
+          <div className="flex items-center justify-between mb-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigateMonth('prev')}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 flex-shrink-0"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             
-            <h2 className="text-lg font-semibold">
-              {format(currentDate, 'MMMM yyyy', { locale: getDateFnsLocale() })}
+            <h2 className="text-sm sm:text-base font-semibold text-center flex-1 px-2 min-w-0">
+              <span className="block truncate">
+                {format(currentDate, 'MMMM yyyy', { locale: getDateFnsLocale() })}
+              </span>
             </h2>
             
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigateMonth('next')}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 flex-shrink-0"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -554,58 +661,62 @@ export function MobileCalendar({
           {/* Mobile View Switcher */}
           <MobileViewSwitcher />
 
-          {/* View mode selector */}
+          {/* Filter selector - Fixed mobile layout */}
           {(isAdmin || showTeamHolidays) && (
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-              <Button
-                variant={viewMode === 'own' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('own')}
-                className="flex-1 h-7 text-xs"
-              >
-                <User className="h-3 w-3 mr-1" />
-                Mie
-              </Button>
-              {showTeamHolidays && (
+            <div className="w-full overflow-hidden">
+              <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-lg">
                 <Button
-                  variant={viewMode === 'team' ? 'default' : 'ghost'}
+                  variant={viewMode === 'own' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setViewMode('team')}
-                  className="flex-1 h-7 text-xs"
+                  onClick={() => setViewMode('own')}
+                  className="h-7 text-xs px-1 min-w-0 truncate flex-shrink-0"
                 >
-                  <Users className="h-3 w-3 mr-1" />
-                  Team
+                  <User className="h-3 w-3 mr-0.5 flex-shrink-0" />
+                  <span className="truncate">Mie</span>
                 </Button>
-              )}
-              {isAdmin && (
-                <Button
-                  variant={viewMode === 'all' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('all')}
-                  className="flex-1 h-7 text-xs"
-                >
-                  <Eye className="h-3 w-3 mr-1" />
-                  Tutte
-                </Button>
-              )}
+                {showTeamHolidays && (
+                  <Button
+                    variant={viewMode === 'team' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('team')}
+                    className="h-7 text-xs px-1 min-w-0 truncate flex-shrink-0"
+                  >
+                    <Users className="h-3 w-3 mr-0.5 flex-shrink-0" />
+                    <span className="truncate">Team</span>
+                  </Button>
+                )}
+                {isAdmin && (
+                  <Button
+                    variant={viewMode === 'all' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('all')}
+                    className="h-7 text-xs px-1 min-w-0 truncate flex-shrink-0"
+                  >
+                    <Eye className="h-3 w-3 mr-0.5 flex-shrink-0" />
+                    <span className="truncate">Tutte</span>
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </CardHeader>
         
-        <CardContent className="p-2">
+        <CardContent className="p-3">
           {/* Weekday headers - only for monthly view */}
           {mobileView === 'monthly' && (
             <div className="grid grid-cols-7 border-b mb-2">
               {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((day) => (
-                <div key={day} className="p-2 text-center text-xs font-medium text-gray-600 border-r last:border-r-0">
+                <div key={day} className="p-1.5 text-center text-xs font-medium text-gray-600 border-r last:border-r-0">
                   {day}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Render current mobile view */}
-          {renderMobileView()}
+          {/* Mobile view container with proper overflow handling */}
+          <div className="w-full overflow-hidden">
+            {renderMobileView()}
+          </div>
         </CardContent>
 
         {/* Add button */}

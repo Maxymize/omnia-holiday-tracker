@@ -45,13 +45,18 @@ export function HolidayRequestsManagement({
   onRefresh 
 }: HolidayRequestsManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'vacation' | 'sick' | 'personal'>('all');
   const [selectedRequest, setSelectedRequest] = useState<PendingHolidayRequest | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [requestToReject, setRequestToReject] = useState<PendingHolidayRequest | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    request: PendingHolidayRequest | null;
+    action: 'approve' | 'reject';
+  }>({ isOpen: false, request: null, action: 'approve' });
 
   // Filter and search requests
   const filteredRequests = useMemo(() => {
@@ -69,11 +74,23 @@ export function HolidayRequestsManagement({
   }, [requests, searchTerm, statusFilter, typeFilter]);
 
   const handleApprove = async (request: PendingHolidayRequest) => {
+    // Se la richiesta non è pending, mostra dialog di conferma
+    if (request.status !== 'pending') {
+      setConfirmDialog({
+        isOpen: true,
+        request,
+        action: 'approve'
+      });
+      return;
+    }
+
+    // Procedi direttamente per richieste pending
     setActionLoading(request.id);
     try {
       const success = await onApproveRequest(request.id);
       if (success) {
-        // Success feedback will be handled by the parent component
+        // Refresh data to show updated status
+        onRefresh();
       }
     } finally {
       setActionLoading(null);
@@ -81,6 +98,17 @@ export function HolidayRequestsManagement({
   };
 
   const handleRejectClick = (request: PendingHolidayRequest) => {
+    // Se la richiesta non è pending, mostra dialog di conferma
+    if (request.status !== 'pending') {
+      setConfirmDialog({
+        isOpen: true,
+        request,
+        action: 'reject'
+      });
+      return;
+    }
+
+    // Per richieste pending, usa il dialog di rifiuto esistente con motivo
     setRequestToReject(request);
     setRejectionReason('');
     setShowRejectDialog(true);
@@ -96,6 +124,28 @@ export function HolidayRequestsManagement({
         setShowRejectDialog(false);
         setRequestToReject(null);
         setRejectionReason('');
+        // Refresh data to show updated status
+        onRefresh();
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmDialog.request) return;
+
+    const { request, action } = confirmDialog;
+    setActionLoading(request.id);
+    setConfirmDialog({ isOpen: false, request: null, action: 'approve' });
+
+    try {
+      const success = action === 'approve' 
+        ? await onApproveRequest(request.id)
+        : await onRejectRequest(request.id, 'Stato cambiato dall\'amministratore');
+
+      if (success) {
+        onRefresh();
       }
     } finally {
       setActionLoading(null);
@@ -372,6 +422,7 @@ export function HolidayRequestsManagement({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-1">
+                          {/* Pulsanti per richieste pending */}
                           {request.status === 'pending' && (
                             <>
                               <Button
@@ -380,6 +431,7 @@ export function HolidayRequestsManagement({
                                 onClick={() => handleApprove(request)}
                                 disabled={actionLoading === request.id}
                                 className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                title="Approva richiesta"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </Button>
@@ -389,10 +441,39 @@ export function HolidayRequestsManagement({
                                 onClick={() => handleRejectClick(request)}
                                 disabled={actionLoading === request.id}
                                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Rifiuta richiesta"
                               >
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </>
+                          )}
+                          
+                          {/* Per richieste approvate: consenti di rifiutare */}
+                          {request.status === 'approved' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRejectClick(request)}
+                              disabled={actionLoading === request.id}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Cambia stato ad rifiutata"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          
+                          {/* Per richieste rifiutate: consenti di approvare */}
+                          {request.status === 'rejected' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApprove(request)}
+                              disabled={actionLoading === request.id}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Cambia stato ad approvata"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
                           )}
                           <Dialog>
                             <DialogTrigger asChild>
@@ -514,6 +595,91 @@ export function HolidayRequestsManagement({
               disabled={actionLoading === requestToReject?.id}
             >
               {actionLoading === requestToReject?.id ? 'Rifiutando...' : 'Rifiuta Richiesta'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog di Conferma Cambio Stato */}
+      <Dialog open={confirmDialog.isOpen} onOpenChange={(open) => 
+        setConfirmDialog({ isOpen: open, request: null, action: 'approve' })
+      }>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Conferma Cambio Stato Richiesta
+            </DialogTitle>
+          </DialogHeader>
+          {confirmDialog.request && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div>
+                  <h4 className="font-medium text-amber-900">Attenzione: Cambio di Stato</h4>
+                  <p className="text-sm text-amber-700">
+                    Stai per modificare lo stato di una richiesta già processata.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="font-medium text-gray-700">Dipendente:</label>
+                  <p className="text-gray-900">{confirmDialog.request.employeeName}</p>
+                  <p className="text-sm text-gray-600">{confirmDialog.request.employeeEmail}</p>
+                </div>
+                
+                <div>
+                  <label className="font-medium text-gray-700">Periodo richiesto:</label>
+                  <p className="text-gray-900">
+                    {formatDate(confirmDialog.request.startDate)} - {formatDate(confirmDialog.request.endDate)}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {confirmDialog.request.workingDays} giorni lavorativi • {confirmDialog.request.type === 'vacation' ? '🏖️ Ferie' : confirmDialog.request.type === 'sick' ? '🏥 Malattia' : '📅 Permesso'}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="font-medium text-gray-700">Stato attuale:</label>
+                  <div className="mt-1">{getStatusBadge(confirmDialog.request.status)}</div>
+                </div>
+                
+                <div>
+                  <label className="font-medium text-gray-700">Nuovo stato:</label>
+                  <div className="mt-1">
+                    {confirmDialog.action === 'approve' ? (
+                      <Badge className="bg-green-100 text-green-800">Approvata</Badge>
+                    ) : (
+                      <Badge className="bg-red-100 text-red-800">Rifiutata</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                <strong>Nota:</strong> Questa azione cambierà lo stato della richiesta di ferie. 
+                {confirmDialog.action === 'approve' 
+                  ? ' I giorni di ferie verranno nuovamente allocati al dipendente.' 
+                  : ' I giorni di ferie verranno restituiti al dipendente se precedentemente approvati.'
+                }
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setConfirmDialog({ isOpen: false, request: null, action: 'approve' })}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleConfirmAction}
+              className={confirmDialog.action === 'approve' 
+                ? 'bg-green-600 hover:bg-green-700' 
+                : 'bg-red-600 hover:bg-red-700'
+              }
+            >
+              {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
             </Button>
           </DialogFooter>
         </DialogContent>

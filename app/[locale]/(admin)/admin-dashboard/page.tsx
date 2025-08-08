@@ -239,45 +239,45 @@ export default function AdminDashboard() {
 
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Admin Calendar - Show all holidays */}
-                <div className="flex-1">
-                  <ResponsiveCalendar
-                    showAddButton={false}
-                    showTeamHolidays={true}
-                    onHolidayCreated={handleHolidayCreated}
-                    showLegend={false}
-                  />
-                </div>
-
-                {/* Legend and Calendar Stats */}
-                <div className="hidden lg:block lg:w-80 space-y-4">
-                  <CalendarLegend />
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm">Statistiche Calendario</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between text-sm">
+              {/* Legend and Statistics - Now horizontal at the top */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <CalendarLegend />
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Statistiche Calendario</CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-2">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      <div className="flex justify-between text-xs">
                         <span>Dipendenti totali</span>
                         <span className="font-medium">{adminStats?.totalEmployees || 0}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs">
                         <span>Richieste pendenti</span>
                         <span className="font-medium">{adminStats?.pendingHolidayRequests || 0}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs">
                         <span>In ferie oggi</span>
                         <span className="font-medium">{adminStats?.employeesOnHolidayToday || 0}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-xs">
                         <span>Dipartimenti</span>
                         <span className="font-medium">{adminStats?.departmentCount || 0}</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Admin Calendar - Now full width */}
+              <div className="w-full">
+                <ResponsiveCalendar
+                  showAddButton={false}
+                  showTeamHolidays={true}
+                  onHolidayCreated={handleHolidayCreated}
+                  showLegend={false}
+                />
               </div>
             </div>
           )}

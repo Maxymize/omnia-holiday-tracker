@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { getHolidayStatus } from '../../lib/mock-storage';
 
 // Mock holiday data for development - Updated with overlapping holidays
 const mockHolidays = [
@@ -251,6 +252,288 @@ const mockHolidays = [
     status: 'pending',
     notes: 'Test sovrapposto 6',
     createdAt: '2025-08-01T14:00:00.000Z'
+  },
+
+  // ADDITIONAL 20 EMPLOYEES FOR STICKY TESTING
+  {
+    id: 'h18',
+    employeeId: 'e17',
+    employeeName: 'Matteo Scarlatto',
+    employeeEmail: 'matteo.scarlatto@ominiaservice.net',
+    department: 'Web Development',
+    startDate: '2025-08-12',
+    endDate: '2025-08-14',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Metà agosto',
+    createdAt: '2025-08-01T15:00:00.000Z'
+  },
+  {
+    id: 'h19',
+    employeeId: 'e18',
+    employeeName: 'Alessandra Blu',
+    employeeEmail: 'alessandra.blu@ominiaservice.net',
+    department: 'Social Media',
+    startDate: '2025-08-20',
+    endDate: '2025-08-21',
+    workingDays: 2,
+    type: 'personal',
+    status: 'pending',
+    notes: 'Giorni personali',
+    createdAt: '2025-08-02T09:00:00.000Z'
+  },
+  {
+    id: 'h20',
+    employeeId: 'e19',
+    employeeName: 'Simone Verde',
+    employeeEmail: 'simone.verde@ominiaservice.net',
+    department: 'Data Analysis',
+    startDate: '2025-08-05',
+    endDate: '2025-08-07',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Inizio agosto',
+    createdAt: '2025-08-01T16:00:00.000Z'
+  },
+  {
+    id: 'h21',
+    employeeId: 'e20',
+    employeeName: 'Francesca Gialla',
+    employeeEmail: 'francesca.gialla@ominiaservice.net',
+    department: 'Content Creation',
+    startDate: '2025-08-28',
+    endDate: '2025-08-30',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Fine agosto',
+    createdAt: '2025-08-03T10:00:00.000Z'
+  },
+  {
+    id: 'h22',
+    employeeId: 'e21',
+    employeeName: 'Lorenzo Rosso',
+    employeeEmail: 'lorenzo.rosso@ominiaservice.net',
+    department: 'DevOps',
+    startDate: '2025-08-13',
+    endDate: '2025-08-13',
+    workingDays: 1,
+    type: 'sick',
+    status: 'approved',
+    notes: 'Malattia',
+    createdAt: '2025-08-13T08:30:00.000Z'
+  },
+  {
+    id: 'h23',
+    employeeId: 'e22',
+    employeeName: 'Beatrice Bianca',
+    employeeEmail: 'beatrice.bianca@ominiaservice.net',
+    department: 'UX Design',
+    startDate: '2025-08-19',
+    endDate: '2025-08-23',
+    workingDays: 5,
+    type: 'vacation',
+    status: 'pending',
+    notes: 'Vacanze estive',
+    createdAt: '2025-08-04T11:00:00.000Z'
+  },
+  {
+    id: 'h24',
+    employeeId: 'e23',
+    employeeName: 'Gabriele Nero',
+    employeeEmail: 'gabriele.nero@ominiaservice.net',
+    department: 'System Admin',
+    startDate: '2025-08-09',
+    endDate: '2025-08-11',
+    workingDays: 3,
+    type: 'personal',
+    status: 'approved',
+    notes: 'Weekend lungo',
+    createdAt: '2025-08-05T12:00:00.000Z'
+  },
+  {
+    id: 'h25',
+    employeeId: 'e24',
+    employeeName: 'Martina Rosa',
+    employeeEmail: 'martina.rosa@ominiaservice.net',
+    department: 'Project Management',
+    startDate: '2025-08-26',
+    endDate: '2025-08-29',
+    workingDays: 4,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Ultima settimana agosto',
+    createdAt: '2025-08-06T13:00:00.000Z'
+  },
+  {
+    id: 'h26',
+    employeeId: 'e25',
+    employeeName: 'Alessandro Azzurro',
+    employeeEmail: 'alessandro.azzurro@ominiaservice.net',
+    department: 'Mobile Development',
+    startDate: '2025-08-06',
+    endDate: '2025-08-08',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Ponte inizio agosto',
+    createdAt: '2025-08-07T14:00:00.000Z'
+  },
+  {
+    id: 'h27',
+    employeeId: 'e26',
+    employeeName: 'Cristina Viola',
+    employeeEmail: 'cristina.viola@ominiaservice.net',
+    department: 'Business Intelligence',
+    startDate: '2025-08-14',
+    endDate: '2025-08-16',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'pending',
+    notes: 'Ferragosto',
+    createdAt: '2025-08-08T15:00:00.000Z'
+  },
+  {
+    id: 'h28',
+    employeeId: 'e27',
+    employeeName: 'Daniele Grigio',
+    employeeEmail: 'daniele.grigio@ominiaservice.net',
+    department: 'Cloud Infrastructure',
+    startDate: '2025-08-21',
+    endDate: '2025-08-22',
+    workingDays: 2,
+    type: 'personal',
+    status: 'approved',
+    notes: 'Giorni personali',
+    createdAt: '2025-08-09T16:00:00.000Z'
+  },
+  {
+    id: 'h29',
+    employeeId: 'e28',
+    employeeName: 'Eleonora Oro',
+    employeeEmail: 'eleonora.oro@ominiaservice.net',
+    department: 'Digital Marketing',
+    startDate: '2025-08-27',
+    endDate: '2025-08-28',
+    workingDays: 2,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Fine agosto',
+    createdAt: '2025-08-10T17:00:00.000Z'
+  },
+  {
+    id: 'h30',
+    employeeId: 'e29',
+    employeeName: 'Fabio Argento',
+    employeeEmail: 'fabio.argento@ominiaservice.net',
+    department: 'Backend Development',
+    startDate: '2025-08-04',
+    endDate: '2025-08-06',
+    workingDays: 3,
+    type: 'sick',
+    status: 'approved',
+    notes: 'Malattia',
+    createdAt: '2025-08-04T08:00:00.000Z'
+  },
+  {
+    id: 'h31',
+    employeeId: 'e30',
+    employeeName: 'Giorgia Bronzo',
+    employeeEmail: 'giorgia.bronzo@ominiaservice.net',
+    department: 'Product Management',
+    startDate: '2025-08-18',
+    endDate: '2025-08-20',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'pending',
+    notes: 'Metà agosto',
+    createdAt: '2025-08-11T09:00:00.000Z'
+  },
+  {
+    id: 'h32',
+    employeeId: 'e31',
+    employeeName: 'Hugo Platino',
+    employeeEmail: 'hugo.platino@ominiaservice.net',
+    department: 'API Development',
+    startDate: '2025-08-25',
+    endDate: '2025-08-27',
+    workingDays: 3,
+    type: 'personal',
+    status: 'approved',
+    notes: 'Giorni personali',
+    createdAt: '2025-08-12T10:00:00.000Z'
+  },
+  {
+    id: 'h33',
+    employeeId: 'e32',
+    employeeName: 'Ilaria Rame',
+    employeeEmail: 'ilaria.rame@ominiaservice.net',
+    department: 'Frontend Development',
+    startDate: '2025-08-10',
+    endDate: '2025-08-12',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Weekend lungo',
+    createdAt: '2025-08-13T11:00:00.000Z'
+  },
+  {
+    id: 'h34',
+    employeeId: 'e33',
+    employeeName: 'Jacopo Scuro',
+    employeeEmail: 'jacopo.scuro@ominiaservice.net',
+    department: 'Database Management',
+    startDate: '2025-08-29',
+    endDate: '2025-08-30',
+    workingDays: 2,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Fine agosto',
+    createdAt: '2025-08-14T12:00:00.000Z'
+  },
+  {
+    id: 'h35',
+    employeeId: 'e34',
+    employeeName: 'Katia Chiaro',
+    employeeEmail: 'katia.chiaro@ominiaservice.net',
+    department: 'Testing & QA',
+    startDate: '2025-08-15',
+    endDate: '2025-08-16',
+    workingDays: 2,
+    type: 'personal',
+    status: 'pending',
+    notes: 'Ferragosto',
+    createdAt: '2025-08-15T13:00:00.000Z'
+  },
+  {
+    id: 'h36',
+    employeeId: 'e35',
+    employeeName: 'Luca Brillante',
+    employeeEmail: 'luca.brillante@ominiaservice.net',
+    department: 'Tech Support',
+    startDate: '2025-08-23',
+    endDate: '2025-08-25',
+    workingDays: 3,
+    type: 'vacation',
+    status: 'approved',
+    notes: 'Fine agosto',
+    createdAt: '2025-08-16T14:00:00.000Z'
+  },
+  {
+    id: 'h37',
+    employeeId: 'e36',
+    employeeName: 'Monica Splendente',
+    employeeEmail: 'monica.splendente@ominiaservice.net',
+    department: 'Graphic Design',
+    startDate: '2025-08-07',
+    endDate: '2025-08-09',
+    workingDays: 3,
+    type: 'sick',
+    status: 'approved',
+    notes: 'Malattia',
+    createdAt: '2025-08-07T07:00:00.000Z'
   }
 ];
 
@@ -321,18 +604,28 @@ export const handler: Handler = async (event, context) => {
 
     console.log('Mock holidays accessed by:', userToken.email, 'filters:', { status, viewMode });
 
-    // Return mock holiday data
+    // Apply status updates from shared mock storage
+    const holidaysWithUpdatedStatus = filteredHolidays.map(holiday => {
+      const updatedStatus = getHolidayStatus(holiday.id);
+      console.log(`Holiday ${holiday.id} (${holiday.employeeName}): original=${holiday.status}, updated=${updatedStatus || 'none'}`);
+      return {
+        ...holiday,
+        status: updatedStatus || holiday.status
+      };
+    });
+
+    // Return mock holiday data with updated statuses
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         data: {
-          holidays: filteredHolidays,
-          total: filteredHolidays.length,
-          pending: mockHolidays.filter(h => h.status === 'pending').length,
-          approved: mockHolidays.filter(h => h.status === 'approved').length,
-          rejected: mockHolidays.filter(h => h.status === 'rejected').length
+          holidays: holidaysWithUpdatedStatus,
+          total: holidaysWithUpdatedStatus.length,
+          pending: holidaysWithUpdatedStatus.filter(h => h.status === 'pending').length,
+          approved: holidaysWithUpdatedStatus.filter(h => h.status === 'approved').length,
+          rejected: holidaysWithUpdatedStatus.filter(h => h.status === 'rejected').length
         }
       })
     };

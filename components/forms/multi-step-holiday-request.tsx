@@ -277,14 +277,57 @@ export function MultiStepHolidayRequest({
     }
 
     try {
-      await onSubmit({
-        ...data,
-        workingDays,
+      // Get auth token
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        toast.error("Sessione scaduta. Effettua nuovamente il login.")
+        return
+      }
+
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:8888' 
+        : window.location.origin
+
+      // Format dates to YYYY-MM-DD
+      const formattedData = {
+        startDate: format(data.startDate, 'yyyy-MM-dd'),
+        endDate: format(data.endDate, 'yyyy-MM-dd'),
+        type: data.type,
+        notes: data.notes || ''
+      }
+
+      // Make API call to create holiday request
+      const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formattedData)
       })
-      toast.success("Richiesta inviata con successo!")
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Errore durante la creazione della richiesta')
+      }
+
+      if (result.success) {
+        toast.success("✅ Richiesta ferie inviata con successo!", {
+          description: `La tua richiesta dal ${format(data.startDate, 'dd/MM/yyyy')} al ${format(data.endDate, 'dd/MM/yyyy')} è stata inviata per approvazione.`
+        })
+        
+        // Call the onSubmit callback to refresh the calendar
+        await onSubmit({
+          ...data,
+          workingDays,
+        })
+      }
     } catch (error) {
       console.error('Error submitting request:', error)
-      toast.error("Errore durante l'invio della richiesta")
+      toast.error("Errore durante l'invio della richiesta", {
+        description: error instanceof Error ? error.message : "Si è verificato un errore. Riprova."
+      })
     }
   }
 
