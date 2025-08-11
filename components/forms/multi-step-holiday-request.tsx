@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { format, differenceInDays, isWeekend, addDays } from "date-fns"
-import { CalendarIcon, AlertTriangle, CheckCircle, ArrowLeft, ArrowRight, Clock, FileText, Loader2 } from "lucide-react"
+import { CalendarIcon, AlertTriangle, CheckCircle, ArrowLeft, ArrowRight, Clock, FileText, Loader2, Upload, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DateRangePicker } from "@/components/ui/date-picker"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/hooks/useAuth"
@@ -33,6 +33,8 @@ const holidayRequestSchema = z.object({
     message: "Seleziona il tipo di permesso",
   }),
   notes: z.string().max(500, "Le note non possono superare i 500 caratteri").optional(),
+  medicalCertificate: z.any().optional(), // File upload for medical certificate
+  medicalCertificateOption: z.string().optional(), // Option for medical certificate
 }).refine((data) => {
   if (data.startDate && data.endDate) {
     return data.endDate >= data.startDate
@@ -60,6 +62,17 @@ const holidayRequestSchema = z.object({
 }, {
   message: "Non puoi richiedere permessi oltre un anno in anticipo",
   path: ["startDate"],
+}).refine((data) => {
+  if (data.type === "sick") {
+    // Must either upload a file or commit to send later
+    const hasFile = data.medicalCertificate !== null && data.medicalCertificate !== undefined
+    const willSendLater = data.medicalCertificateOption === "send_later"
+    return hasFile || willSendLater
+  }
+  return true
+}, {
+  message: "Il certificato medico è necessario per i congedi per malattia",
+  path: ["medicalCertificateOption"],
 })
 
 type HolidayRequestFormData = z.infer<typeof holidayRequestSchema>
@@ -105,6 +118,9 @@ export function MultiStepHolidayRequest({
   const [usedDays] = React.useState(5) // This would be calculated from existing holidays
   const [isCheckingConflicts, setIsCheckingConflicts] = React.useState(false)
   const [conflictWarning, setConflictWarning] = React.useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
+  const [medicalCertOption, setMedicalCertOption] = React.useState<"upload" | "send_later" | null>(null)
+  const [dragActive, setDragActive] = React.useState(false)
   
   const { user } = useAuth()
   const { t } = useTranslation()
@@ -154,8 +170,11 @@ export function MultiStepHolidayRequest({
     setConflictWarning(null)
 
     try {
+      // Ensure existingHolidays is an array
+      const holidaysArray = Array.isArray(existingHolidays) ? existingHolidays : []
+      
       // Check against existing holidays prop first
-      const hasLocalConflict = existingHolidays.some(holiday => {
+      const hasLocalConflict = holidaysArray.some(holiday => {
         const holidayStart = new Date(holiday.startDate)
         const holidayEnd = new Date(holiday.endDate)
         
@@ -187,7 +206,7 @@ export function MultiStepHolidayRequest({
 
         if (response.ok) {
           const data = await response.json()
-          const holidays = data.data || []
+          const holidays = Array.isArray(data.data) ? data.data : (data.data ? [] : [])
           
           const hasConflict = holidays.some((holiday: Holiday) => {
             const holidayStart = new Date(holiday.startDate)
@@ -209,12 +228,16 @@ export function MultiStepHolidayRequest({
     }
   }, [existingHolidays, user?.id])
 
-  // Separate useEffect for conflict checking
+  // Debounced conflict checking to prevent infinite loops
   React.useEffect(() => {
     if (startDate && endDate) {
-      checkForConflicts(startDate, endDate)
+      const timeoutId = setTimeout(() => {
+        checkForConflicts(startDate, endDate)
+      }, 300) // 300ms debounce
+      
+      return () => clearTimeout(timeoutId)
     }
-  }, [startDate, endDate, checkForConflicts])
+  }, [startDate, endDate]) // Only depend on dates, not on checkForConflicts
 
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {
@@ -264,7 +287,7 @@ export function MultiStepHolidayRequest({
       case 2:
         return ["type"]
       case 3:
-        return ["notes"]
+        return ["notes", "medicalCertificate", "medicalCertificateOption"]
       default:
         return []
     }
@@ -342,31 +365,59 @@ export function MultiStepHolidayRequest({
             </div>
             
             <div className="space-y-4">
-              <div>
-                <Label>Periodo di Assenza</Label>
-                <DateRangePicker
-                  from={startDate}
-                  to={endDate}
-                  onDateRangeChange={(from, to) => {
-                    if (from) form.setValue("startDate", from)
-                    if (to) form.setValue("endDate", to)
-                  }}
-                  placeholder="Seleziona il periodo..."
-                  minDate={new Date()}
-                  maxDate={addDays(new Date(), 365)}
-                  locale="it"
-                  className="w-full"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Start Date */}
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Inizio</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          date={field.value}
+                          onDateChange={(date) => {
+                            field.onChange(date)
+                            // If end date is before start date, clear it
+                            if (endDate && date && endDate < date) {
+                              form.setValue("endDate", null as any)
+                            }
+                          }}
+                          placeholder="Seleziona data inizio..."
+                          minDate={new Date()}
+                          maxDate={addDays(new Date(), 365)}
+                          locale="it"
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {form.formState.errors.startDate && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.startDate.message}
-                  </p>
-                )}
-                {form.formState.errors.endDate && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.endDate.message}
-                  </p>
-                )}
+
+                {/* End Date */}
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Fine</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          date={field.value}
+                          onDateChange={field.onChange}
+                          placeholder="Seleziona data fine..."
+                          minDate={startDate || new Date()}
+                          maxDate={addDays(new Date(), 365)}
+                          locale="it"
+                          className="w-full"
+                          disabled={!startDate}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               {/* Conflict Warning */}
@@ -423,8 +474,12 @@ export function MultiStepHolidayRequest({
                   <FormLabel>Tipo di Assenza</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Seleziona il tipo di permesso" />
+                      <SelectTrigger className="h-12 w-full">
+                        <SelectValue placeholder="Seleziona il tipo di permesso">
+                          {field.value && (
+                            <span className="font-medium">{getHolidayTypeLabel(field.value)}</span>
+                          )}
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -449,7 +504,7 @@ export function MultiStepHolidayRequest({
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    {getHolidayTypeDescription(field.value)}
+                    {field.value ? getHolidayTypeDescription(field.value) : ''}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -526,6 +581,218 @@ export function MultiStepHolidayRequest({
                 </FormItem>
               )}
             />
+
+            {/* Medical Certificate Upload for Sick Leave */}
+            {holidayType === "sick" && (
+              <div className="space-y-4">
+                <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-yellow-600" />
+                    <h4 className="font-medium text-yellow-800">Certificato Medico Necessario</h4>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Per i congedi per malattia è necessario il certificato medico. Puoi caricarlo ora o impegnarti a inviarlo successivamente.
+                  </p>
+                </div>
+
+                {/* Medical Certificate Options */}
+                <FormField
+                  control={form.control}
+                  name="medicalCertificateOption"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Opzioni Certificato Medico</FormLabel>
+                      <FormControl>
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="radio"
+                              id="upload-now"
+                              value="upload"
+                              checked={medicalCertOption === "upload"}
+                              onChange={(e) => {
+                                setMedicalCertOption("upload")
+                                field.onChange("upload")
+                                form.setValue("medicalCertificateOption", "upload")
+                              }}
+                              className="h-4 w-4 text-blue-600"
+                            />
+                            <label htmlFor="upload-now" className="text-sm font-medium">
+                              Carica il documento ora
+                            </label>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="radio"
+                              id="send-later"
+                              value="send_later"
+                              checked={medicalCertOption === "send_later"}
+                              onChange={(e) => {
+                                setMedicalCertOption("send_later")
+                                field.onChange("send_later")
+                                form.setValue("medicalCertificateOption", "send_later")
+                                // Clear any selected file
+                                setSelectedFile(null)
+                                form.setValue("medicalCertificate", null)
+                              }}
+                              className="h-4 w-4 text-blue-600"
+                            />
+                            <label htmlFor="send-later" className="text-sm font-medium">
+                              Mi impegno a inviarlo successivamente via email alla direzione aziendale
+                            </label>
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* File Upload Area - Only show if upload option is selected */}
+                {medicalCertOption === "upload" && (
+                  <FormField
+                    control={form.control}
+                    name="medicalCertificate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Carica Certificato Medico</FormLabel>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <div
+                              className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                                dragActive 
+                                  ? 'border-blue-500 bg-blue-50' 
+                                  : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                              }`}
+                              onDragOver={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setDragActive(true)
+                              }}
+                              onDragEnter={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setDragActive(true)
+                              }}
+                              onDragLeave={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setDragActive(false)
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setDragActive(false)
+                                
+                                const files = Array.from(e.dataTransfer.files)
+                                const file = files[0]
+                                
+                                if (file) {
+                                  // Check file type
+                                  const allowedTypes = ['application/pdf', 'application/msword', 
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                    'image/jpeg', 'image/jpg', 'image/png']
+                                  
+                                  if (!allowedTypes.includes(file.type)) {
+                                    toast.error("Formato file non supportato. Usa PDF, DOC, DOCX, JPG o PNG.")
+                                    return
+                                  }
+                                  
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast.error("File troppo grande. Massimo 5MB consentiti.")
+                                    return
+                                  }
+                                  
+                                  setSelectedFile(file)
+                                  field.onChange(file)
+                                }
+                              }}
+                              onClick={() => {
+                                document.getElementById('medical-certificate')?.click()
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                <Upload className={`w-8 h-8 mb-2 ${dragActive ? 'text-blue-500' : 'text-gray-500'}`} />
+                                <p className={`mb-2 text-sm ${dragActive ? 'text-blue-600' : 'text-gray-500'}`}>
+                                  <span className="font-semibold">
+                                    {dragActive ? 'Rilascia qui il file' : 'Clicca per caricare'}
+                                  </span> 
+                                  {!dragActive && ' o trascina il file'}
+                                </p>
+                                <p className={`text-xs ${dragActive ? 'text-blue-500' : 'text-gray-500'}`}>
+                                  PDF, DOC, DOCX, JPG, PNG (MAX 5MB)
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <input
+                              id="medical-certificate"
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast.error("File troppo grande. Massimo 5MB consentiti.")
+                                    return
+                                  }
+                                  setSelectedFile(file)
+                                  field.onChange(file)
+                                }
+                              }}
+                            />
+
+                            {selectedFile && (
+                              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-green-600" />
+                                  <div>
+                                    <p className="text-sm font-medium text-green-800">{selectedFile.name}</p>
+                                    <p className="text-xs text-green-600">
+                                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedFile(null)
+                                    field.onChange(null)
+                                  }}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Carica il certificato medico in formato PDF, DOC, o immagine (JPG/PNG)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Commitment Message for Send Later Option */}
+                {medicalCertOption === "send_later" && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="h-4 w-4 text-blue-600" />
+                      <h4 className="font-medium text-blue-800">Impegno Registrato</h4>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Ti impegni a inviare il certificato medico via email alla direzione aziendale entro 3 giorni lavorativi dalla presentazione di questa richiesta.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )
 
@@ -580,6 +847,30 @@ export function MultiStepHolidayRequest({
                     <p className="font-medium bg-muted/50 p-2 rounded text-sm">{notes}</p>
                   </div>
                 )}
+
+                {holidayType === "sick" && (
+                  <div>
+                    <Label className="text-muted-foreground">Certificato Medico</Label>
+                    {selectedFile ? (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded">
+                        <FileText className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-800">{selectedFile.name}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </Badge>
+                      </div>
+                    ) : medicalCertOption === "send_later" ? (
+                      <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                        <CheckCircle className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium text-blue-800">
+                          Impegno a inviare via email entro 3 giorni lavorativi
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Non specificato</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Final Warnings */}
@@ -614,7 +905,11 @@ export function MultiStepHolidayRequest({
       case 2:
         return holidayType && (holidayType !== "vacation" || remainingDays - workingDays >= 0)
       case 3:
-        return true // Notes are optional
+        // For sick leave, must either have a file uploaded or selected "send later" option
+        if (holidayType === "sick") {
+          return (medicalCertOption === "upload" && selectedFile) || medicalCertOption === "send_later"
+        }
+        return true // Notes are optional for other types
       case 4:
         return !conflictWarning && !isLoading
       default:

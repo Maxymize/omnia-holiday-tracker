@@ -45,7 +45,7 @@ This project leverages specialized AI agents and MCP research tools for optimal 
 **Frontend**: Next.js 15 + TypeScript + Tailwind CSS + shadcn/ui  
 **Backend**: Netlify Functions (serverless)  
 **Database**: Neon PostgreSQL + Drizzle ORM  
-**Authentication**: Custom JWT with domain validation  
+**Authentication**: Custom JWT with HTTP-only cookies (production) + domain validation  
 **Deployment**: Netlify with automatic deployments  
 **Calendar**: React Big Calendar with custom optimizations  
 
@@ -220,6 +220,24 @@ RESEND_API_KEY=your_resend_key_for_emails
 3. Set build command: `npm run build`
 4. Set publish directory: `.next`
 5. Deploy automatically on main branch pushes
+
+### 🍪 **CRITICAL: Cookie Authentication Production Switch**
+**⚠️ MANDATORY step before production deployment:**
+
+Before deploying to production, **remove the development bypass** in `middleware.ts`:
+
+```typescript
+// REMOVE these lines for production (lines 110-113):
+if (process.env.NODE_ENV === 'development' || process.env.NETLIFY_DEV) {
+  console.log('🚧 Development mode: skipping auth middleware (cookies work in production)');
+  return NextResponse.next();
+}
+```
+
+**Why this is needed:**
+- Development uses localStorage for authentication (Netlify dev cookie issues)
+- Production uses secure HTTP-only cookies for authentication
+- The bypass ensures development functionality while maintaining production security
 
 ### Database Setup
 1. Create Neon PostgreSQL database

@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { getEmployeeStatus } from '../../lib/mock-storage';
+import { getEmployeeStatus, loadFromMockStorage } from '../../lib/mock-storage';
 
 // Mock employee data for development
 const mockEmployees = [
@@ -87,8 +87,30 @@ export const handler: Handler = async (event, context) => {
 
     console.log('Mock employees accessed by admin:', userToken.email);
 
+    // Load new registrations from mock storage
+    const registrations = loadFromMockStorage('registrations') || [];
+    
+    // Convert registrations to employee format
+    const registrationEmployees = registrations.map((reg: any) => ({
+      id: reg.id,
+      name: reg.name,
+      email: reg.email,
+      role: reg.role,
+      status: reg.status,
+      department: reg.departmentId,
+      departmentName: reg.departmentId ? 'Assegnato' : 'Non assegnato',
+      holidayAllowance: reg.holidayAllowance,
+      holidaysUsed: 0,
+      holidaysRemaining: reg.holidayAllowance,
+      createdAt: reg.createdAt,
+      lastLogin: null
+    }));
+
+    // Combine existing employees with new registrations
+    const allEmployees = [...mockEmployees, ...registrationEmployees];
+
     // Apply status updates from shared mock storage
-    const employeesWithUpdatedStatus = mockEmployees.map(employee => {
+    const employeesWithUpdatedStatus = allEmployees.map(employee => {
       const updatedStatus = getEmployeeStatus(employee.id);
       const finalEmployee = {
         ...employee,

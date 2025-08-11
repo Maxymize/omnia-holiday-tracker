@@ -1,18 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, loading, error, clearError } = useAuth();
+  const { login, loading, error, clearError, user, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     email: 'max.giurastante@ominiaservices.net', // Pre-filled for testing
     password: 'admin123' // Pre-filled for testing
   });
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirectUrl = searchParams.get('redirect');
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else {
+        // Redirect based on user role
+        const dashboardUrl = user.role === 'admin' ? '/it/admin-dashboard' : '/it/employee-dashboard';
+        console.log('🔄 Redirecting to:', dashboardUrl);
+        router.push(dashboardUrl);
+      }
+    }
+  }, [isAuthenticated, user, router, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,8 +53,10 @@ export default function LoginPage() {
     const success = await login(formData.email, formData.password);
     
     if (success) {
-      // Redirect to appropriate dashboard
-      router.push('/it/admin-dashboard'); // Correct path for admin dashboard
+      // Force page reload to let middleware read cookie auth
+      const redirectUrl = searchParams.get('redirect') || '/it/admin-dashboard';
+      console.log('🔄 Redirecting to:', redirectUrl);
+      window.location.href = redirectUrl;
     }
   };
 

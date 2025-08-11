@@ -67,6 +67,7 @@ export function useAuth() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies in request
         body: JSON.stringify({ email, password }),
       });
 
@@ -108,15 +109,35 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     console.log('🚪 Logging out user');
+    
+    try {
+      // Call logout endpoint to clear cookies
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:8888' 
+        : window.location.origin;
+        
+      await fetch(`${baseUrl}/.netlify/functions/logout`, {
+        method: 'POST',
+        credentials: 'include' // Include cookies
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+    
+    // Clear local storage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userData');
+    
+    // Update auth state
     setAuthState({
       user: null,
       loading: false,
       error: null
     });
+    
+    // Redirect to login
     router.push('/it/login');
   };
 

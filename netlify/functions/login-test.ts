@@ -1,6 +1,7 @@
 import { Handler } from '@netlify/functions';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { loadFromMockStorage, getEmployeeStatus } from '../../lib/mock-storage';
 
 // Simulazione connessione database per test rapido
 const testUsers = [
@@ -47,15 +48,48 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Trova utente
-    const user = testUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    // Load registered users from mock storage
+    const registrations = loadFromMockStorage('registrations') || [];
+    
+    // Convert registrations to user format and combine with test users
+    const registeredUsers = registrations.map((reg: any) => ({
+      id: reg.id,
+      email: reg.email,
+      name: reg.name,
+      passwordHash: reg.passwordHash,
+      role: reg.role,
+      status: reg.status
+    }));
+    
+    // Combine hardcoded test users with registered users
+    const allUsers = [...testUsers, ...registeredUsers];
+    
+    // Trova utente tra tutti gli utenti disponibili
+    const user = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (!user) {
+      console.log(`Login attempt for unknown user: ${email}`);
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({ error: 'Credenziali non valide' })
       };
     }
+    
+    // Check for status updates from admin panel
+    const updatedStatus = getEmployeeStatus(user.id);
+    const finalStatus = updatedStatus || user.status;
+    
+    // Check if user is approved (active or approved status)
+    if (finalStatus !== 'active' && finalStatus !== 'approved') {
+      console.log(`Login attempt for unapproved user: ${email} (original status: ${user.status}, updated: ${updatedStatus || 'none'})`);
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Account in attesa di approvazione' })
+      };
+    }
+    
+    console.log(`Successful login for user: ${email} (status: ${finalStatus})`)
 
     // Verifica password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
@@ -77,9 +111,16 @@ export const handler: Handler = async (event, context) => {
 
     const accessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: '1h' });
 
+    // Create secure cookies
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Strict; Path=/`;
+    
     return {
       statusCode: 200,
-      headers,
+      headers: {
+        ...headers,
+        'Set-Cookie': `auth-token=${accessToken}; Max-Age=3600; ${cookieOptions}`
+      },
       body: JSON.stringify({
         success: true,
         data: {

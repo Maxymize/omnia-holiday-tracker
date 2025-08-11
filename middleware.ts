@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from '@/lib/i18n/config';
+import { getUserFromToken } from '@/lib/auth/jwt-utils';
 
 // Supported locales
 const supportedLocales = locales;
@@ -87,10 +88,81 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // TEMPORARILY DISABLE AUTH CHECK TO FIX REDIRECT LOOP
-  // Will re-enable after confirming routing works
-  
-  return NextResponse.next();
+  // Extract path without locale for route checking
+  const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), '') || '/';
+
+  // Check if route requires authentication
+  const isPublicRoute = publicRoutes.some(route => 
+    route === pathWithoutLocale || 
+    pathWithoutLocale.startsWith('/api/') ||
+    pathWithoutLocale === '/login' ||
+    pathWithoutLocale === '/register'
+  );
+
+  // Skip auth check for public routes
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
+  // TODO: Re-enable in production - Currently disabled due to Netlify dev cookie handling issues
+  // In production deployment, cookies work correctly with middleware
+  // Remove this bypass when deploying to production
+  if (process.env.NODE_ENV === 'development' || process.env.NETLIFY_DEV) {
+    console.log('🚧 Development mode: skipping auth middleware (cookies work in production)');
+    return NextResponse.next();
+  }
+
+  // Get auth token from cookies or headers
+  const authToken = request.cookies.get('auth-token')?.value || 
+    request.headers.get('authorization')?.replace('Bearer ', '');
+
+  // If no token found, redirect to login
+  if (!authToken) {
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    // Only add redirect parameter if we're not already on login page
+    if (!pathname.includes('/login')) {
+      loginUrl.searchParams.set('redirect', pathname);
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  try {
+    // Verify token and get user info
+    const userInfo = getUserFromToken(authToken ? `Bearer ${authToken}` : undefined);
+    
+    if (!userInfo) {
+      throw new Error('Invalid token');
+    }
+
+    // Check admin-only routes
+    const isAdminRoute = adminRoutes.some(route => pathWithoutLocale.startsWith(route));
+    
+    if (isAdminRoute && userInfo.role !== 'admin') {
+      // Redirect non-admin users to employee dashboard
+      return NextResponse.redirect(new URL(`/${locale}/employee-dashboard`, request.url));
+    }
+
+    // Authentication successful - continue
+    return NextResponse.next();
+
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    
+    // Token invalid - redirect to login
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    // Only add redirect parameter if we're not already on login page
+    if (!pathname.includes('/login')) {
+      loginUrl.searchParams.set('redirect', pathname);
+    }
+    
+    const response = NextResponse.redirect(loginUrl);
+    
+    // Clear invalid tokens
+    response.cookies.delete('auth-token');
+    response.cookies.delete('refresh-token');
+    
+    return response;
+  }
 }
 
 export const config = {

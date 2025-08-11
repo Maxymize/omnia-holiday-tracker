@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // NO output: 'export' - use regular Next.js deployment for SaaS with server features
-  trailingSlash: true,
+  trailingSlash: false, // Disabled to avoid redirect loops with middleware
   images: { 
     unoptimized: false, // Enable Next.js image optimization
     domains: ['localhost'], // Add any external image domains here

@@ -158,7 +158,12 @@ export function DateRangePicker({
           selected={{ from, to }}
           onSelect={(range) => {
             onDateRangeChange?.(range?.from, range?.to)
-            if (range?.from && range?.to) {
+            // Only close if we have both dates and they are different (not a single day selection)
+            if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
+              setOpen(false)
+            }
+            // Also close if user clicks the same date twice (single day holiday)
+            else if (range?.from && range?.to && range.from.getTime() === range.to.getTime()) {
               setOpen(false)
             }
           }}

@@ -111,6 +111,32 @@ export function updateEmployeeStatus(employeeId: string, status: string, approve
 // Store new holiday requests created during session
 export const newHolidayRequests: any[] = [];
 
+// Generic save/load functions for any mock data type
+export function saveToMockStorage(key: string, data: any) {
+  try {
+    const filePath = path.join(TEMP_DIR, `${key}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    console.log(`Saved mock data for key: ${key}`);
+  } catch (error) {
+    console.warn(`Failed to save mock data for key ${key}:`, error);
+  }
+}
+
+export function loadFromMockStorage(key: string): any | null {
+  try {
+    const filePath = path.join(TEMP_DIR, `${key}.json`);
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      const parsed = JSON.parse(data);
+      console.log(`Loaded mock data for key: ${key} (${Array.isArray(parsed) ? parsed.length : 'single'} items)`);
+      return parsed;
+    }
+  } catch (error) {
+    console.warn(`Failed to load mock data for key ${key}:`, error);
+  }
+  return null;
+}
+
 // Clear all mock data (useful for testing)
 export function clearMockData() {
   try {
@@ -123,6 +149,13 @@ export function clearMockData() {
     if (fs.existsSync(NEW_REQUESTS_FILE)) {
       fs.unlinkSync(NEW_REQUESTS_FILE);
     }
+    // Clear other dynamic files
+    const files = fs.readdirSync(TEMP_DIR);
+    files.forEach(file => {
+      if (file.endsWith('.json')) {
+        fs.unlinkSync(path.join(TEMP_DIR, file));
+      }
+    });
   } catch (error) {
     console.warn('Failed to clear mock data:', error);
   }

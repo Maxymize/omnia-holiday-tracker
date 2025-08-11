@@ -43,20 +43,30 @@ export default function RegisterPage() {
     }
 
     try {
-      // TODO: Replace with actual API call when frontend integration is ready
-      console.log('Registration data:', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+      // Call the registration API
+      const response = await fetch('/.netlify/functions/register-mock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
       });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Errore durante la registrazione');
+      }
+
+      // Registration successful
       setSuccess(true);
       setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    } catch (err) {
-      setError('Errore durante la registrazione. Riprova.');
+    } catch (err: any) {
+      setError(err.message || 'Errore durante la registrazione. Riprova.');
     } finally {
       setIsLoading(false);
     }
