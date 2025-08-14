@@ -1,6 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { getEmployeeStatus, loadFromMockStorage } from '../../lib/mock-storage';
+import { db, users, departments, holidays } from '../../lib/db/index';
+import { eq, sql, desc, and } from 'drizzle-orm';
 
 // Mock employee data for development
 const mockEmployees = [
@@ -85,68 +86,88 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    console.log('Mock employees accessed by admin:', userToken.email);
+    console.log('Employees accessed by admin:', userToken.email);
 
-    // Load new registrations from mock storage
-    const registrations = loadFromMockStorage('registrations') || [];
-    
-    // Load departments to get department names
-    const departments = loadFromMockStorage('departments') || [];
-    
-    // Convert registrations to employee format
-    const registrationEmployees = registrations.map((reg: any) => {
-      let departmentName = 'Non assegnato';
-      if (reg.departmentId) {
-        const department = departments.find((dept: any) => dept.id === reg.departmentId);
-        departmentName = department ? department.name : 'Sconosciuto';
-      }
-      
-      return {
-        id: reg.id,
-        name: reg.name,
-        email: reg.email,
-        role: reg.role,
-        status: reg.status,
-        department: reg.departmentId,
-        departmentName,
-        holidayAllowance: reg.holidayAllowance,
-        holidaysUsed: 0,
-        holidaysRemaining: reg.holidayAllowance,
-        createdAt: reg.createdAt,
-        lastLogin: null
-      };
-    });
+    // Get all employees from database with their holiday usage
+    const employeesData = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        departmentId: users.departmentId,
+        departmentName: departments.name,
+        departmentLocation: departments.location,
+        holidayAllowance: users.holidayAllowance,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt
+      })
+      .from(users)
+      .leftJoin(departments, eq(users.departmentId, departments.id))
+      .orderBy(desc(users.createdAt));
 
-    // Combine existing employees with new registrations
-    const allEmployees = [...mockEmployees, ...registrationEmployees];
+    // Calculate holidays used for each employee
+    const employeesWithHolidayStats = await Promise.all(
+      employeesData.map(async (employee) => {
+        // Get approved holidays for this employee in current year
+        const currentYear = new Date().getFullYear();
+        const yearStart = `${currentYear}-01-01`;
+        const yearEnd = `${currentYear}-12-31`;
 
-    // Apply status updates from shared mock storage
-    const employeesWithUpdatedStatus = allEmployees.map(employee => {
-      const updatedStatus = getEmployeeStatus(employee.id);
-      const finalEmployee = {
-        ...employee,
-        status: updatedStatus || employee.status
-      };
-      
-      if (updatedStatus) {
-        console.log(`Applied status update for employee ${employee.id}: ${employee.status} -> ${updatedStatus}`);
-      }
-      
-      return finalEmployee;
-    });
+        const holidayStats = await db
+          .select({
+            totalUsed: sql<number>`COALESCE(SUM(${holidays.workingDays}), 0)`,
+            totalPending: sql<number>`COALESCE(SUM(CASE WHEN ${holidays.status} = 'pending' THEN ${holidays.workingDays} ELSE 0 END), 0)`
+          })
+          .from(holidays)
+          .where(
+            and(
+              eq(holidays.userId, employee.id),
+              // Only count holidays in current year
+              sql`${holidays.startDate} >= ${yearStart} AND ${holidays.startDate} <= ${yearEnd}`,
+              // Only count approved or pending holidays
+              sql`${holidays.status} IN ('approved', 'pending')`
+            )
+          );
 
-    // Return mock employee data with updated statuses
+        const stats = holidayStats[0];
+        const holidaysUsed = Number(stats?.totalUsed) || 0;
+        const holidaysPending = Number(stats?.totalPending) || 0;
+        const holidaysRemaining = Math.max(0, employee.holidayAllowance - holidaysUsed - holidaysPending);
+
+        return {
+          id: employee.id,
+          name: employee.name,
+          email: employee.email,
+          role: employee.role,
+          status: employee.status,
+          department: employee.departmentId,
+          departmentName: employee.departmentName || 'Non assegnato',
+          departmentLocation: employee.departmentLocation,
+          holidayAllowance: employee.holidayAllowance,
+          holidaysUsed,
+          holidaysPending,
+          holidaysRemaining,
+          createdAt: employee.createdAt.toISOString(),
+          updatedAt: employee.updatedAt?.toISOString(),
+          lastLogin: null // TODO: Implement last login tracking
+        };
+      })
+    );
+
+    // Return employee data from database
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
         data: {
-          employees: employeesWithUpdatedStatus,
-          total: employeesWithUpdatedStatus.length,
-          active: employeesWithUpdatedStatus.filter(e => e.status === 'active' || e.status === 'approved').length,
-          pending: employeesWithUpdatedStatus.filter(e => e.status === 'pending').length,
-          rejected: employeesWithUpdatedStatus.filter(e => e.status === 'rejected').length
+          employees: employeesWithHolidayStats,
+          total: employeesWithHolidayStats.length,
+          active: employeesWithHolidayStats.filter(e => e.status === 'active').length,
+          pending: employeesWithHolidayStats.filter(e => e.status === 'pending').length,
+          inactive: employeesWithHolidayStats.filter(e => e.status === 'inactive').length
         }
       })
     };

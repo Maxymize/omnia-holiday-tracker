@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { saveToMockStorage } from '../../lib/mock-storage';
+import { upsertSetting, getUserByEmail, createAuditLog } from '../../lib/db/operations';
 import { z } from 'zod';
 
 // Valid setting keys and their types
@@ -70,16 +70,19 @@ export const handler: Handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const validatedData = systemSettingSchema.parse(body);
 
-    // For now, simulate settings update
-    // In a real implementation, this would:
-    // 1. Update settings in database
-    // 2. Validate setting values based on type
-    // 3. Apply immediate effects (like visibility changes)
-    // 4. Log setting changes for audit trail
+    // Get admin user details
+    const adminUser = await getUserByEmail(userToken.email);
+    if (!adminUser) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Amministratore non trovato nel database' })
+      };
+    }
 
     const { settings } = validatedData;
     
-    console.log('System settings update (mock):', {
+    console.log('System settings update:', {
       settings,
       updatedBy: userToken.email,
       timestamp: new Date().toISOString()
@@ -130,18 +133,41 @@ export const handler: Handler = async (event, context) => {
       }
     }
 
-    // Save updated settings to mock storage
+    // Save updated settings to database
+    const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+    const userAgent = event.headers['user-agent'] || 'unknown';
+    
+    // Update each setting in the database
+    const savedSettings: string[] = [];
+    for (const [key, value] of Object.entries(validatedSettings)) {
+      await upsertSetting(key, JSON.stringify(value), `System setting for ${key}`, adminUser.id);
+      savedSettings.push(key);
+      
+      // Create audit log for each setting change
+      await createAuditLog(
+        'setting_updated',
+        adminUser.id,
+        {
+          settingKey: key,
+          newValue: value,
+          timestamp: new Date().toISOString()
+        },
+        undefined,
+        undefined,
+        'setting',
+        ipAddress,
+        userAgent
+      );
+    }
+    
     const updateResult = {
       settings: validatedSettings,
       updatedBy: userToken.email,
       updatedAt: new Date().toISOString(),
-      affectedKeys: Object.keys(validatedSettings)
+      affectedKeys: savedSettings
     };
     
-    // Save to storage using the same key as get-holidays-mock.ts expects
-    saveToMockStorage('system-settings', updateResult);
-    
-    console.log('Settings saved to storage:', updateResult);
+    console.log('Settings saved to database:', updateResult);
 
     return {
       statusCode: 200,

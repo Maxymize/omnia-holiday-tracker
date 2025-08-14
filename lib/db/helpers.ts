@@ -1,7 +1,7 @@
 import { db } from './index';
-import { users, departments, holidays, settings } from './schema';
-import { eq, and, inArray, ilike, or } from 'drizzle-orm';
-import type { NewUser, NewDepartment, NewHoliday, NewSetting } from './schema';
+import { users, departments, holidays, settings, auditLogs } from './schema';
+import { eq, and, inArray, ilike, or, desc } from 'drizzle-orm';
+import type { NewUser, NewDepartment, NewHoliday, NewSetting, NewAuditLog, AuditLog, AuditLogAction } from './schema';
 
 // User helpers
 export async function createUser(userData: NewUser) {
@@ -179,6 +179,52 @@ export async function searchUsersByNameOrEmail(searchTerm: string) {
       ilike(users.email, term)
     )
   );
+}
+
+// Audit log helpers
+export async function createAuditLog(
+  action: AuditLogAction,
+  userId: string | null,
+  details: any = {},
+  targetUserId?: string,
+  targetResourceId?: string,
+  resourceType?: string,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<AuditLog> {
+  const auditData: NewAuditLog = {
+    action,
+    userId,
+    targetUserId,
+    targetResourceId,
+    resourceType,
+    details: JSON.stringify(details),
+    ipAddress,
+    userAgent
+  };
+
+  const result = await db.insert(auditLogs).values(auditData).returning();
+  return result[0];
+}
+
+export async function getRecentAuditLogs(limit: number = 50): Promise<AuditLog[]> {
+  return await db.select().from(auditLogs)
+    .orderBy(desc(auditLogs.timestamp))
+    .limit(limit);
+}
+
+export async function getAuditLogsByUser(userId: string, limit: number = 50): Promise<AuditLog[]> {
+  return await db.select().from(auditLogs)
+    .where(or(eq(auditLogs.userId, userId), eq(auditLogs.targetUserId, userId)))
+    .orderBy(desc(auditLogs.timestamp))
+    .limit(limit);
+}
+
+export async function getAuditLogsByAction(action: AuditLogAction, limit: number = 100): Promise<AuditLog[]> {
+  return await db.select().from(auditLogs)
+    .where(eq(auditLogs.action, action))
+    .orderBy(desc(auditLogs.timestamp))
+    .limit(limit);
 }
 
 // Test database connection

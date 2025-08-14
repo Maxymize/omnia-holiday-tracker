@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { saveToMockStorage, loadFromMockStorage } from '../../lib/mock-storage';
+import { createHolidayWithAudit, getUserByEmail } from '../../lib/db/operations';
 import { z } from 'zod';
 import { format, parseISO, differenceInBusinessDays } from 'date-fns';
 
@@ -105,43 +105,34 @@ export const handler: Handler = async (event, context) => {
     // Calculate working days
     const workingDays = calculateWorkingDays(startDate, endDate);
 
-    // For mock implementation, generate a new holiday request
-    const newHoliday = {
-      id: `h${Date.now()}`,
-      employeeId: userToken.userId,
-      employeeName: userToken.email.split('@')[0],
-      employeeEmail: userToken.email,
-      department: 'Department', // Would come from user profile in production
+    // Get user details from database
+    const user = await getUserByEmail(userToken.email);
+    if (!user) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Utente non trovato nel database' })
+      };
+    }
+
+    // Create holiday request in database
+    const holidayData = {
+      userId: user.id,
       startDate: validatedData.startDate,
       endDate: validatedData.endDate,
-      workingDays: workingDays,
-      type: validatedData.type,
-      status: 'pending',
+      type: validatedData.type as 'vacation' | 'sick' | 'personal',
+      status: 'pending' as const,
       notes: validatedData.notes || '',
-      createdAt: new Date().toISOString(),
-      createdBy: userToken.email,
-      // Medical certificate info for sick leave
-      ...(validatedData.type === 'sick' && {
-        medicalCertificateOption: validatedData.medicalCertificateOption || 'upload',
-        medicalCertificateFileName: validatedData.medicalCertificateFileName,
-        medicalCertificateFileId: validatedData.medicalCertificateFileId,
-        medicalCertificateStatus: validatedData.medicalCertificateOption === 'send_later' 
-          ? 'commitment_pending' 
-          : validatedData.medicalCertificateFileId ? 'uploaded' : 'pending'
-      })
+      workingDays: workingDays
     };
 
-    console.log('New holiday request created:', newHoliday);
+    // Get client IP and user agent for audit logging
+    const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+    const userAgent = event.headers['user-agent'] || 'unknown';
 
-    // Save to mock storage for persistence
-    try {
-      const existingRequests = loadFromMockStorage('new-holiday-requests') || [];
-      const updatedRequests = [...existingRequests, newHoliday];
-      saveToMockStorage('new-holiday-requests', updatedRequests);
-      console.log('Holiday request saved to mock storage');
-    } catch (error) {
-      console.error('Failed to save holiday request to mock storage:', error);
-    }
+    const newHoliday = await createHolidayWithAudit(holidayData, ipAddress, userAgent);
+
+    console.log('New holiday request created in database:', newHoliday.id);
 
     return {
       statusCode: 201,
@@ -149,7 +140,28 @@ export const handler: Handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         message: 'Richiesta ferie creata con successo',
-        data: newHoliday
+        data: {
+          id: newHoliday.id,
+          employeeId: newHoliday.userId,
+          employeeName: user.name,
+          employeeEmail: user.email,
+          startDate: newHoliday.startDate,
+          endDate: newHoliday.endDate,
+          workingDays: newHoliday.workingDays,
+          type: newHoliday.type,
+          status: newHoliday.status,
+          notes: newHoliday.notes,
+          createdAt: newHoliday.createdAt?.toISOString() || new Date().toISOString(),
+          // Medical certificate info for sick leave compatibility
+          ...(validatedData.type === 'sick' && {
+            medicalCertificateOption: validatedData.medicalCertificateOption || 'upload',
+            medicalCertificateFileName: validatedData.medicalCertificateFileName,
+            medicalCertificateFileId: validatedData.medicalCertificateFileId,
+            medicalCertificateStatus: validatedData.medicalCertificateOption === 'send_later' 
+              ? 'commitment_pending' 
+              : validatedData.medicalCertificateFileId ? 'uploaded' : 'pending'
+          })
+        }
       })
     };
 

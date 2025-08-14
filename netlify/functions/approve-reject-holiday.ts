@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { updateHolidayStatusWithAudit, getUserByEmail } from '../../lib/db/operations';
 import { z } from 'zod';
 
 // Input validation schema
@@ -50,19 +51,41 @@ export const handler: Handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const validatedData = approveRejectSchema.parse(body);
 
-    // For mock implementation, we'll simulate the update
-    // In production, this would update the database
-    console.log('Holiday approval/rejection:', {
+    // Get admin user details
+    const adminUser = await getUserByEmail(userToken.email);
+    if (!adminUser) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Amministratore non trovato nel database' })
+      };
+    }
+
+    // Update holiday status in database with audit logging
+    const status = validatedData.action === 'approve' ? 'approved' : 'rejected';
+    const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+    const userAgent = event.headers['user-agent'] || 'unknown';
+
+    await updateHolidayStatusWithAudit(
+      validatedData.holidayId,
+      status,
+      adminUser.id,
+      validatedData.notes,
+      ipAddress,
+      userAgent
+    );
+
+    console.log('Holiday approval/rejection completed:', {
       holidayId: validatedData.holidayId,
       action: validatedData.action,
       approvedBy: userToken.email,
       timestamp: new Date().toISOString()
     });
 
-    // Mock response - in production this would return the updated holiday record
-    const mockUpdatedHoliday = {
+    // Response with updated holiday status
+    const updatedHoliday = {
       id: validatedData.holidayId,
-      status: validatedData.action === 'approve' ? 'approved' : 'rejected',
+      status: status,
       approvedBy: userToken.email,
       approvedAt: new Date().toISOString(),
       notes: validatedData.notes
@@ -74,7 +97,7 @@ export const handler: Handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         message: `Richiesta ferie ${validatedData.action === 'approve' ? 'approvata' : 'rifiutata'} con successo`,
-        data: mockUpdatedHoliday
+        data: updatedHoliday
       })
     };
 

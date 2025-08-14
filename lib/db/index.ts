@@ -14,3 +14,6 @@ export const db = drizzle(sql, { schema });
 
 // Export schema for use in other files
 export * from './schema';
+
+// Re-export operations for easy access
+export * from './operations';

@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { getAllSettings } from '../../lib/db/operations';
 
 // Mock system settings for development
 const mockSettings = {
@@ -60,17 +61,36 @@ export const handler: Handler = async (event, context) => {
     const userToken = verifyAuthHeader(event.headers.authorization);
     requireAccessToken(userToken);
 
-    console.log('Mock settings accessed by:', userToken.email);
+    console.log('Settings accessed by:', userToken.email);
 
-    // Return mock settings data
+    // Get settings from database
+    const dbSettings = await getAllSettings();
+    
+    // Convert database settings to key-value format
+    const settingsMap: any = {};
+    dbSettings.forEach(setting => {
+      try {
+        // Try to parse JSON values
+        settingsMap[setting.key] = JSON.parse(setting.value);
+      } catch {
+        // Use string value if not JSON
+        settingsMap[setting.key] = setting.value;
+      }
+    });
+    
+    // Merge with default settings (database takes priority)
+    const finalSettings = { ...mockSettings, ...settingsMap };
+
+    // Return settings data
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        settings: mockSettings,
+        settings: finalSettings,
         meta: {
-          totalSettings: Object.keys(mockSettings).length,
+          totalSettings: Object.keys(finalSettings).length,
+          dbSettings: dbSettings.length,
           userRole: userToken.role,
           canModify: userToken.role === 'admin',
           lastAccessed: new Date().toISOString()

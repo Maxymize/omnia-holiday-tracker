@@ -10,7 +10,13 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:init": "ts-node lib/db/init-db.ts",
+    "db:migrate:up": "ts-node lib/db/migrate.ts up",
+    "db:migrate:down": "ts-node lib/db/migrate.ts down",
+    "db:migrate:status": "ts-node lib/db/migrate.ts status",
+    "db:reset": "npm run db:migrate:down && npm run db:migrate:up",
+    "db:test": "ts-node lib/db/test-db.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.18",
@@ -84,6 +90,7 @@
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }
 }

@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { updateEmployeeStatus } from '../../lib/mock-storage';
+import { updateEmployeeStatusWithAudit, getUserByEmail } from '../../lib/db/operations';
 import { z } from 'zod';
 
 // Input validation schema
@@ -53,11 +53,31 @@ export const handler: Handler = async (event, context) => {
 
     const { employeeId, action, reason } = validatedData;
     
-    // Update employee status using shared mock storage
-    const newStatus = action === 'approve' ? 'approved' : 'rejected';
-    updateEmployeeStatus(employeeId, newStatus, userToken.email, reason);
+    // Get admin user details
+    const adminUser = await getUserByEmail(userToken.email);
+    if (!adminUser) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Amministratore non trovato nel database' })
+      };
+    }
     
-    console.log('Employee approval action (mock):', {
+    // Update employee status in database with audit logging
+    const newStatus = action === 'approve' ? 'active' : 'inactive';
+    const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+    const userAgent = event.headers['user-agent'] || 'unknown';
+    
+    await updateEmployeeStatusWithAudit(
+      employeeId,
+      newStatus,
+      adminUser.id,
+      reason,
+      ipAddress,
+      userAgent
+    );
+    
+    console.log('Employee approval action completed:', {
       employeeId,
       action,
       newStatus,
@@ -66,11 +86,11 @@ export const handler: Handler = async (event, context) => {
       timestamp: new Date().toISOString()
     });
 
-    // Mock response with action result
+    // Response with action result
     const actionResult = {
       employeeId,
       action,
-      status: action === 'approve' ? 'approved' : 'rejected',
+      status: newStatus,
       processedBy: userToken.email,
       processedAt: new Date().toISOString(),
       reason
