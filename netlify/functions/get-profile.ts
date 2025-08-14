@@ -30,11 +30,12 @@ export const handler: Handler = async (event, context) => {
     const userToken = verifyAuthHeader(event.headers.authorization);
     requireAccessToken(userToken);
 
-    // Get user department information
+    // Get user information (name, department, etc.)
     let department = null;
     let departmentName = null;
+    let userName = userToken.email.split('@')[0]; // Default fallback
     
-    // Load employees to get department information
+    // Load employees to get user information including name and department
     const mockEmployees = [
       {
         id: 'e1',
@@ -62,6 +63,7 @@ export const handler: Handler = async (event, context) => {
     // Check if this is a hardcoded employee
     const mockEmployee = mockEmployees.find(emp => emp.email.toLowerCase() === userToken.email.toLowerCase());
     if (mockEmployee) {
+      userName = mockEmployee.name;
       department = mockEmployee.department;
       departmentName = mockEmployee.departmentName;
     } else {
@@ -69,13 +71,17 @@ export const handler: Handler = async (event, context) => {
       const registrations = loadFromMockStorage('registrations') || [];
       const userRegistration = registrations.find((reg: any) => reg.id === userToken.userId);
       
-      if (userRegistration && userRegistration.departmentId) {
-        department = userRegistration.departmentId;
+      if (userRegistration) {
+        userName = userRegistration.name || userName; // Use registered name if available
         
-        // Get department name
-        const departments = loadFromMockStorage('departments') || [];
-        const departmentInfo = departments.find((dept: any) => dept.id === userRegistration.departmentId);
-        departmentName = departmentInfo ? departmentInfo.name : 'Sconosciuto';
+        if (userRegistration.departmentId) {
+          department = userRegistration.departmentId;
+          
+          // Get department name
+          const departments = loadFromMockStorage('departments') || [];
+          const departmentInfo = departments.find((dept: any) => dept.id === userRegistration.departmentId);
+          departmentName = departmentInfo ? departmentInfo.name : 'Sconosciuto';
+        }
       }
     }
 
@@ -89,7 +95,7 @@ export const handler: Handler = async (event, context) => {
           user: {
             id: userToken.userId,
             email: userToken.email,
-            name: userToken.name || userToken.email.split('@')[0], // Fallback to email prefix
+            name: userName,
             role: userToken.role,
             status: 'active', // Since they're authenticated, they're active
             department,
