@@ -83,113 +83,55 @@ export function HolidayBalance({ stats, loading = false, className }: HolidayBal
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        {/* Main Balance Display */}
-        <div className="text-center space-y-2">
-          <div className="text-3xl font-bold text-gray-900">
-            {stats.remainingDays}
-          </div>
-          <div className="text-sm text-gray-600">
-            giorni disponibili su {stats.totalAllowance}
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Utilizzo ferie</span>
-            <span className="font-medium">{usagePercentage.toFixed(0)}%</span>
-          </div>
-          <Progress value={usagePercentage} className="h-2" />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>{stats.usedDays} utilizzati</span>
-            <span>{stats.remainingDays} rimanenti</span>
-          </div>
-        </div>
-
-        {/* Pending Days Alert */}
-        {stats.pendingDays > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-amber-600" />
-              <span className="text-sm font-medium text-amber-800">
-                {stats.pendingDays} giorni in attesa di approvazione
-              </span>
-            </div>
-            <div className="text-xs text-amber-700 mt-1">
-              Se approvati, rimarrebbero {stats.remainingDays - stats.pendingDays} giorni
-            </div>
-          </div>
-        )}
-
-        {/* Warning for low balance */}
-        {stats.remainingDays <= 5 && stats.remainingDays > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <span className="text-sm font-medium text-red-800">
-                Pochi giorni rimanenti
-              </span>
-            </div>
-            <div className="text-xs text-red-700 mt-1">
-              Pianifica le tue ferie con attenzione
-            </div>
-          </div>
-        )}
-
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">Approvate</span>
-            </div>
-            <div className="text-lg font-bold text-green-600">
-              {stats.approvedRequests}
-            </div>
+      <CardContent className="py-2">
+        {/* Compact Balance Display */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-gray-900">{stats.remainingDays}</div>
+            <div className="text-xs text-gray-600">giorni disponibili su {stats.totalAllowance}</div>
           </div>
           
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <Clock className="h-4 w-4 text-amber-600" />
-              <span className="text-sm font-medium text-gray-700">In attesa</span>
+          {/* Usage Progress - Compact */}
+          <div className="flex-1 mx-4">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-gray-600">Utilizzo {usagePercentage.toFixed(0)}%</span>
+              {stats.pendingDays > 0 && (
+                <span className="text-amber-600">{stats.pendingDays} in attesa</span>
+              )}
             </div>
-            <div className="text-lg font-bold text-amber-600">
-              {stats.pendingRequests}
-            </div>
+            <Progress value={usagePercentage} className="h-1" />
           </div>
-          
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">Prossime</span>
-            </div>
-            <div className="text-lg font-bold text-blue-600">
-              {stats.upcomingHolidays}
-            </div>
-          </div>
-          
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-center space-x-1 mb-1">
-              <Calendar className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Totali</span>
-            </div>
-            <div className="text-lg font-bold text-gray-600">
-              {stats.totalRequests}
-            </div>
-          </div>
+
+          {/* Status Badge */}
+          <Badge 
+            variant={stats.remainingDays > 10 ? "default" : stats.remainingDays > 5 ? "secondary" : "destructive"}
+            className="text-xs"
+          >
+            {stats.remainingDays > 10 ? 'Ottimo' : stats.remainingDays > 5 ? 'Buono' : 'Attenzione'}
+          </Badge>
         </div>
 
-        {/* Balance Status */}
-        <div className="pt-2 border-t">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Stato saldo:</span>
-            <Badge 
-              variant={stats.remainingDays > 10 ? "default" : stats.remainingDays > 5 ? "secondary" : "destructive"}
-              className="text-xs"
-            >
-              {stats.remainingDays > 10 ? 'Ottimo' : stats.remainingDays > 5 ? 'Buono' : 'Attenzione'}
-            </Badge>
+        {/* Compact Stats Row with Labels */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+          <div className="flex items-center space-x-1">
+            <CheckCircle className="h-3 w-3 text-green-600" />
+            <span className="font-medium">{stats.approvedRequests}</span>
+            <span className="text-gray-600">Approvate</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Clock className="h-3 w-3 text-amber-600" />
+            <span className="font-medium">{stats.pendingRequests}</span>
+            <span className="text-gray-600">In attesa</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <TrendingUp className="h-3 w-3 text-blue-600" />
+            <span className="font-medium">{stats.upcomingHolidays}</span>
+            <span className="text-gray-600">Prossime</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Calendar className="h-3 w-3 text-gray-600" />
+            <span className="font-medium">{stats.totalRequests}</span>
+            <span className="text-gray-600">Totali</span>
           </div>
         </div>
       </CardContent>

@@ -43,11 +43,20 @@ export function DepartmentManagement({
 }: DepartmentManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
   
   // Form states
   const [newDepartment, setNewDepartment] = useState({
+    name: '',
+    location: '',
+    managerId: ''
+  });
+
+  const [editDepartment, setEditDepartment] = useState({
     name: '',
     location: '',
     managerId: ''
@@ -75,7 +84,7 @@ export function DepartmentManagement({
     try {
       // TODO: Call API to create department
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
+        ? 'http://localhost:3000'
         : window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/create-department`, {
@@ -88,7 +97,7 @@ export function DepartmentManagement({
         body: JSON.stringify({
           name: newDepartment.name,
           location: newDepartment.location || undefined,
-          managerId: newDepartment.managerId || undefined
+          managerId: (newDepartment.managerId && newDepartment.managerId !== 'none') ? newDepartment.managerId : undefined
         }),
       });
 
@@ -110,6 +119,61 @@ export function DepartmentManagement({
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const handleEditDepartment = async () => {
+    if (!editingDepartment || !editDepartment.name.trim()) return;
+
+    setEditLoading(true);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-department`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          departmentId: editingDepartment.id,
+          name: editDepartment.name,
+          location: editDepartment.location || undefined,
+          managerId: (editDepartment.managerId && editDepartment.managerId !== 'none') ? editDepartment.managerId : undefined
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update department');
+      }
+
+      // Reset form and close dialog
+      setEditDepartment({ name: '', location: '', managerId: '' });
+      setEditingDepartment(null);
+      setShowEditDialog(false);
+      
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error updating department:', err);
+      // TODO: Show error toast
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const openEditDialog = (department: Department) => {
+    setEditingDepartment(department);
+    setEditDepartment({
+      name: department.name,
+      location: department.location || '',
+      managerId: department.managerId || ''
+    });
+    setShowEditDialog(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -197,7 +261,7 @@ export function DepartmentManagement({
                       <SelectValue placeholder="Seleziona un manager (opzionale)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nessun manager</SelectItem>
+                      <SelectItem value="none">Nessun manager</SelectItem>
                       {availableManagers.map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
                           {manager.name} ({manager.email})
@@ -220,6 +284,73 @@ export function DepartmentManagement({
                   disabled={createLoading || !newDepartment.name.trim()}
                 >
                   {createLoading ? 'Creando...' : 'Crea Dipartimento'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Department Dialog */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Modifica Dipartimento</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-dept-name">Nome Dipartimento *</Label>
+                  <Input
+                    id="edit-dept-name"
+                    value={editDepartment.name}
+                    onChange={(e) => setEditDepartment(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="es. Risorse Umane"
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-dept-location">Ubicazione</Label>
+                  <Input
+                    id="edit-dept-location"
+                    value={editDepartment.location}
+                    onChange={(e) => setEditDepartment(prev => ({ ...prev, location: e.target.value }))}
+                    placeholder="es. Milano, Roma"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-dept-manager">Manager</Label>
+                  <Select 
+                    value={editDepartment.managerId} 
+                    onValueChange={(value) => setEditDepartment(prev => ({ ...prev, managerId: value }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Seleziona un manager (opzionale)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nessun manager</SelectItem>
+                      {availableManagers.map((manager) => (
+                        <SelectItem key={manager.id} value={manager.id}>
+                          {manager.name} ({manager.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditDialog(false)}
+                  disabled={editLoading}
+                >
+                  Annulla
+                </Button>
+                <Button 
+                  onClick={handleEditDepartment}
+                  disabled={editLoading || !editDepartment.name.trim()}
+                >
+                  {editLoading ? 'Salvando...' : 'Salva Modifiche'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -391,7 +522,7 @@ export function DepartmentManagement({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {/* TODO: Edit department */}}
+                            onClick={() => openEditDialog(department)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>

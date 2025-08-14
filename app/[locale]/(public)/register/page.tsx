@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n/provider';
+import { LanguageSelector } from '@/components/layout/language-selector';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -74,7 +75,12 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+        {/* Language Selector in top-right corner */}
+        <div className="absolute top-4 right-4">
+          <LanguageSelector />
+        </div>
+        
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -103,7 +109,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Language Selector in top-right corner */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
+      
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-auto flex justify-center">

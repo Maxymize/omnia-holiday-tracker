@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { LanguageSelector } from '@/components/layout/language-selector';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const { t } = useTranslation();
   const { login, loading, error, clearError, user, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    email: 'max.giurastante@ominiaservices.net', // Pre-filled for testing
+    email: 'max.giurastante@omniaservices.net', // Pre-filled for testing
     password: 'admin123' // Pre-filled for testing
   });
 
@@ -61,7 +62,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Language Selector in top-right corner */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
+      
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -150,5 +156,21 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

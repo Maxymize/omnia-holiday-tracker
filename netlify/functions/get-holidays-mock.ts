@@ -1,6 +1,56 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { getHolidayStatus } from '../../lib/mock-storage';
+import { getHolidayStatus, loadFromMockStorage } from '../../lib/mock-storage';
+
+// Default mock system settings - will be overridden by stored settings
+const defaultMockSettings = {
+  'holidays.visibility_mode': 'all_see_all', // 'all_see_all' allows employees to see all holidays when viewMode=all
+  'holidays.show_names': 'true',
+  'holidays.show_details': 'false'
+};
+
+// Function to load current system settings from storage
+function getCurrentSettings() {
+  const storedSettings = loadFromMockStorage('system-settings');
+  if (storedSettings && storedSettings.settings) {
+    // Merge stored settings with defaults
+    return {
+      ...defaultMockSettings,
+      ...storedSettings.settings
+    };
+  }
+  return defaultMockSettings;
+}
+
+// Mock employees data to get department information
+const mockEmployees = [
+  { id: 'e1', name: 'Mario Rossi', email: 'mario.rossi@ominiaservice.net', department: 'IT Development' },
+  { id: 'e2', name: 'Giulia Bianchi', email: 'giulia.bianchi@ominiaservice.net', department: 'Marketing' },
+  { id: 'e3', name: 'Luca Verdi', email: 'luca.verdi@ominiaservice.net', department: 'Sales' },
+  { id: 'e4', name: 'Anna Neri', email: 'anna.neri@ominiaservice.net', department: 'HR' },
+  { id: 'e5', name: 'Paolo Blu', email: 'paolo.blu@ominiaservice.net', department: 'Operations' },
+  { id: 'e6', name: 'Sofia Rosa', email: 'sofia.rosa@ominiaservice.net', department: 'Design' },
+  { id: 'e7', name: 'Marco Giallo', email: 'marco.giallo@ominiaservice.net', department: 'Finance' },
+  { id: 'e8', name: 'Elena Viola', email: 'elena.viola@ominiaservice.net', department: 'Customer Service' },
+  { id: 'e9', name: 'Andrea Verde', email: 'andrea.verde@ominiaservice.net', department: 'Legal' },
+  { id: 'e10', name: 'Chiara Arancio', email: 'chiara.arancio@ominiaservice.net', department: 'R&D' },
+  { id: 'e11', name: 'Francesco Grigio', email: 'francesco.grigio@ominiaservice.net', department: 'IT Support' },
+  { id: 'e12', name: 'Valentina Oro', email: 'valentina.oro@ominiaservice.net', department: 'Accounting' },
+  { id: 'e13', name: 'Roberto Argento', email: 'roberto.argento@ominiaservice.net', department: 'Security' },
+  { id: 'e14', name: 'Silvia Bronzo', email: 'silvia.bronzo@ominiaservice.net', department: 'Logistics' },
+  { id: 'e15', name: 'Davide Platino', email: 'davide.platino@ominiaservice.net', department: 'Quality Control' },
+  { id: 'e16', name: 'Federica Rame', email: 'federica.rame@ominiaservice.net', department: 'Training' },
+  { id: 'e17', name: 'Matteo Scarlatto', email: 'matteo.scarlatto@ominiaservice.net', department: 'Web Development' },
+  { id: 'e18', name: 'Alessandra Blu', email: 'alessandra.blu@ominiaservice.net', department: 'Social Media' },
+  { id: 'e19', name: 'Simone Verde', email: 'simone.verde@ominiaservice.net', department: 'Data Analysis' },
+  { id: 'e20', name: 'Francesca Gialla', email: 'francesca.gialla@ominiaservice.net', department: 'Content Creation' }
+];
+
+// Function to get user's department by email
+function getUserDepartment(email: string): string | null {
+  const employee = mockEmployees.find(emp => emp.email === email);
+  return employee ? employee.department : null;
+}
 
 // Mock holiday data for development - Updated with overlapping holidays
 const mockHolidays = [
@@ -572,7 +622,10 @@ export const handler: Handler = async (event, context) => {
     const startDate = queryParams.startDate;
     const endDate = queryParams.endDate;
 
-    let filteredHolidays = mockHolidays;
+    // Load new holiday requests from mock storage and merge with mock data
+    const newHolidayRequests = loadFromMockStorage('new-holiday-requests') || [];
+    let allHolidays = [...mockHolidays, ...newHolidayRequests];
+    let filteredHolidays = allHolidays;
 
     // Filter by date range if provided
     if (startDate && endDate) {
@@ -597,12 +650,70 @@ export const handler: Handler = async (event, context) => {
       filteredHolidays = filteredHolidays.filter(h => h.status === status);
     }
 
-    // Apply view mode filtering for non-admin users
-    if (userToken.role !== 'admin' && viewMode !== 'all') {
-      filteredHolidays = filteredHolidays.filter(h => h.employeeId === userToken.userId);
+    // Get current system settings from storage
+    const currentSettings = getCurrentSettings();
+    const visibilityMode = currentSettings['holidays.visibility_mode'];
+    
+    // Apply view mode filtering based on role and system settings
+    if (userToken.role !== 'admin') {
+      // Get user's department for department-based filtering
+      const userDepartment = getUserDepartment(userToken.email);
+      
+      console.log(`User ${userToken.email} (${userToken.role}) - Department: ${userDepartment}, ViewMode: ${viewMode}, VisibilityMode: ${visibilityMode}`);
+
+      if (viewMode === 'all') {
+        // User requested to see all holidays - check system permissions
+        if (visibilityMode === 'all_see_all') {
+          // System allows all employees to see everyone's holidays
+          console.log(`✅ User ${userToken.email} can see ALL holidays (system allows all_see_all)`);
+          // Keep all holidays
+        } else if (visibilityMode === 'department_only' && userDepartment) {
+          // System allows department-level visibility only
+          filteredHolidays = filteredHolidays.filter(h => 
+            h.employeeId === userToken.userId || h.department === userDepartment
+          );
+          console.log(`✅ User ${userToken.email} can see department holidays only (${userDepartment})`);
+        } else {
+          // System restricts to admin_only - show only own holidays
+          filteredHolidays = filteredHolidays.filter(h => h.employeeId === userToken.userId);
+          console.log(`❌ User ${userToken.email} restricted to own holidays only (admin_only mode)`);
+        }
+      } else if (viewMode === 'team') {
+        // User requested to see team/department holidays
+        if (visibilityMode === 'all_see_all' || visibilityMode === 'department_only') {
+          if (userDepartment) {
+            // Show department holidays including own
+            filteredHolidays = filteredHolidays.filter(h => h.department === userDepartment);
+            console.log(`✅ User ${userToken.email} can see team holidays for department: ${userDepartment}`);
+          } else {
+            // User has no department - show only own holidays
+            filteredHolidays = filteredHolidays.filter(h => h.employeeId === userToken.userId);
+            console.log(`⚠️ User ${userToken.email} has no department - showing own holidays only`);
+          }
+        } else {
+          // admin_only mode - restrict to own holidays
+          filteredHolidays = filteredHolidays.filter(h => h.employeeId === userToken.userId);
+          console.log(`❌ User ${userToken.email} restricted to own holidays (admin_only mode prevents team view)`);
+        }
+      } else if (viewMode === 'own' || !viewMode) {
+        // Default: show only own holidays
+        filteredHolidays = filteredHolidays.filter(h => h.employeeId === userToken.userId);
+        console.log(`✅ User ${userToken.email} viewing own holidays only`);
+      }
+    } else {
+      // Admin users can see everything regardless of system settings
+      console.log(`✅ Admin user ${userToken.email} can see all holidays in ${viewMode} mode`);
     }
 
-    console.log('Mock holidays accessed by:', userToken.email, 'filters:', { status, viewMode });
+    console.log('Mock holidays final result:', {
+      user: userToken.email,
+      role: userToken.role,
+      department: getUserDepartment(userToken.email),
+      requestedViewMode: viewMode,
+      systemVisibilityMode: visibilityMode,
+      statusFilter: status,
+      finalHolidayCount: filteredHolidays.length
+    });
 
     // Apply status updates from shared mock storage
     const holidaysWithUpdatedStatus = filteredHolidays.map(holiday => {
@@ -612,6 +723,13 @@ export const handler: Handler = async (event, context) => {
         ...holiday,
         status: updatedStatus || holiday.status
       };
+    });
+
+    // Sort by creation date (newest first) to show recent requests at the top
+    holidaysWithUpdatedStatus.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
     });
 
     // Return mock holiday data with updated statuses

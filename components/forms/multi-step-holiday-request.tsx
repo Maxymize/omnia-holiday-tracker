@@ -35,6 +35,10 @@ const holidayRequestSchema = z.object({
   notes: z.string().max(500, "Le note non possono superare i 500 caratteri").optional(),
   medicalCertificate: z.any().optional(), // File upload for medical certificate
   medicalCertificateOption: z.string().optional(), // Option for medical certificate
+  medicalCertificateFileName: z.string().optional(), // File name for medical certificate
+  medicalCertificateFileType: z.string().optional(), // MIME type of the file
+  medicalCertificateFileContent: z.string().optional(), // Base64 encoded file content
+  medicalCertificateFileId: z.string().optional(), // ID returned from upload API
 }).refine((data) => {
   if (data.startDate && data.endDate) {
     return data.endDate >= data.startDate
@@ -72,7 +76,7 @@ const holidayRequestSchema = z.object({
   return true
 }, {
   message: "Il certificato medico è necessario per i congedi per malattia",
-  path: ["medicalCertificateOption"],
+  path: ["medicalCertificate"],
 })
 
 type HolidayRequestFormData = z.infer<typeof holidayRequestSchema>
@@ -121,6 +125,7 @@ export function MultiStepHolidayRequest({
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
   const [medicalCertOption, setMedicalCertOption] = React.useState<"upload" | "send_later" | null>(null)
   const [dragActive, setDragActive] = React.useState(false)
+  const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
   
   const { user } = useAuth()
   const { t } = useTranslation()
@@ -139,6 +144,7 @@ export function MultiStepHolidayRequest({
   const endDate = form.watch("endDate")
   const holidayType = form.watch("type")
   const notes = form.watch("notes")
+  const medicalCertificateOptionValue = form.watch("medicalCertificateOption")
 
   // Calculate working days when dates change
   React.useEffect(() => {
@@ -150,6 +156,14 @@ export function MultiStepHolidayRequest({
       setConflictWarning(null)
     }
   }, [startDate, endDate])
+
+  // Set default medical certificate option for sick leave
+  React.useEffect(() => {
+    if (holidayType === 'sick' && !medicalCertificateOptionValue) {
+      form.setValue('medicalCertificateOption', 'upload')
+      setMedicalCertOption('upload')
+    }
+  }, [holidayType, medicalCertificateOptionValue, form])
 
   const calculateWorkingDays = (start: Date, end: Date): number => {
     let count = 0
@@ -191,7 +205,7 @@ export function MultiStepHolidayRequest({
       // Check with backend API
       if (user?.id) {
         const baseUrl = process.env.NODE_ENV === 'development' 
-          ? 'http://localhost:8888' 
+          ? 'http://localhost:3000' 
           : window.location.origin
 
         const token = localStorage.getItem('accessToken')
@@ -294,10 +308,19 @@ export function MultiStepHolidayRequest({
   }
 
   const handleSubmit = async (data: HolidayRequestFormData) => {
+    // FIXED: Prevent duplicate submissions with submission lock
+    if (isLoading || isSubmittingRequest) {
+      console.log('Submission already in progress, preventing duplicate');
+      return;
+    }
+
     if (conflictWarning) {
       toast.error("Risolvi i conflitti prima di inviare la richiesta")
       return
     }
+
+    // Lock submission to prevent duplicates
+    setIsSubmittingRequest(true);
 
     try {
       // Get auth token
@@ -308,7 +331,7 @@ export function MultiStepHolidayRequest({
       }
 
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin
 
       // Format dates to YYYY-MM-DD
@@ -316,8 +339,31 @@ export function MultiStepHolidayRequest({
         startDate: format(data.startDate, 'yyyy-MM-dd'),
         endDate: format(data.endDate, 'yyyy-MM-dd'),
         type: data.type,
-        notes: data.notes || ''
+        notes: data.notes || '',
+        // Include medical certificate info for sick leave
+        ...(data.type === 'sick' && {
+          medicalCertificateOption: data.medicalCertificateOption,
+          medicalCertificateFileName: selectedFile?.name || null
+        })
       }
+
+      // Debug logging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Frontend sending data:', JSON.stringify(formattedData, null, 2));
+        console.log('Form data before formatting:', {
+          type: data.type,
+          medicalCertificateOption: data.medicalCertificateOption,
+          selectedFileState: !!selectedFile,
+          selectedFileName: selectedFile?.name,
+          medicalCertState: medicalCertOption
+        });
+      }
+
+      // Helper function for consistent fetch configuration
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.port === '3001';
 
       // Make API call to create holiday request
       const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
@@ -326,6 +372,8 @@ export function MultiStepHolidayRequest({
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
+        // Include credentials only in production where cookies work properly
+        ...(isDevelopment ? {} : { credentials: 'include' }),
         body: JSON.stringify(formattedData)
       })
 
@@ -336,11 +384,76 @@ export function MultiStepHolidayRequest({
       }
 
       if (result.success) {
-        toast.success("✅ Richiesta ferie inviata con successo!", {
-          description: `La tua richiesta dal ${format(data.startDate, 'dd/MM/yyyy')} al ${format(data.endDate, 'dd/MM/yyyy')} è stata inviata per approvazione.`
-        })
+        let uploadError = null;
         
-        // Call the onSubmit callback to refresh the calendar
+        // Upload medical certificate if provided
+        if (data.type === 'sick' && selectedFile && data.medicalCertificateOption === 'upload') {
+          try {
+            console.log('Uploading medical certificate:', selectedFile.name);
+            
+            // Convert file to base64
+            const fileContent = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const base64 = reader.result?.toString().split(',')[1] || '';
+                resolve(base64);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(selectedFile);
+            });
+
+            const uploadData = {
+              fileName: selectedFile.name,
+              fileType: selectedFile.type,
+              fileContent: fileContent,
+              holidayRequestId: result.data.id
+            };
+
+            console.log('Sending upload data:', { 
+              fileName: uploadData.fileName, 
+              fileType: uploadData.fileType,
+              holidayRequestId: uploadData.holidayRequestId,
+              contentLength: uploadData.fileContent.length 
+            });
+
+            const uploadResponse = await fetch(`${baseUrl}/.netlify/functions/upload-medical-certificate`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              ...(isDevelopment ? {} : { credentials: 'include' }),
+              body: JSON.stringify(uploadData)
+            });
+
+            const uploadResult = await uploadResponse.json();
+
+            // FIXED: Check response status properly to avoid false error messages
+            if (uploadResponse.ok && uploadResponse.status === 200) {
+              console.log('Upload successful:', uploadResult);
+              // Upload succeeded - no error
+            } else {
+              console.error('Upload failed with status:', uploadResponse.status, uploadResult);
+              throw new Error(uploadResult.error || 'Errore durante l\'upload del certificato');
+            }
+            
+          } catch (uploadErr) {
+            console.error('Upload error:', uploadErr);
+            uploadError = uploadErr instanceof Error ? uploadErr.message : 'Errore durante l\'upload del certificato';
+          }
+        }
+
+        if (uploadError) {
+          toast.success("✅ Richiesta ferie inviata!", 
+            `La tua richiesta dal ${format(data.startDate, 'dd/MM/yyyy')} al ${format(data.endDate, 'dd/MM/yyyy')} è stata inviata, ma c'è stato un problema con l'upload del certificato: ${uploadError}`
+          );
+        } else {
+          // Don't show success message here - let parent handle it
+          console.log('Holiday request and upload completed successfully');
+        }
+        
+        // FIXED: Call the onSubmit callback only after successful API operations
+        // This prevents duplicate submissions
         await onSubmit({
           ...data,
           workingDays,
@@ -348,9 +461,11 @@ export function MultiStepHolidayRequest({
       }
     } catch (error) {
       console.error('Error submitting request:', error)
-      toast.error("Errore durante l'invio della richiesta", {
-        description: error instanceof Error ? error.message : "Si è verificato un errore. Riprova."
-      })
+      const errorMessage = error instanceof Error ? error.message : "Si è verificato un errore. Riprova."
+      toast.error("Errore durante l'invio della richiesta", errorMessage)
+    } finally {
+      // Always unlock submission
+      setIsSubmittingRequest(false);
     }
   }
 
@@ -391,6 +506,9 @@ export function MultiStepHolidayRequest({
                         />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Primo giorno di ferie (non si lavora)
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -415,6 +533,9 @@ export function MultiStepHolidayRequest({
                         />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ultimo giorno di ferie (si torna al lavoro il giorno dopo)
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -705,6 +826,16 @@ export function MultiStepHolidayRequest({
                                   
                                   setSelectedFile(file)
                                   field.onChange(file)
+                                  
+                                  // Convert file to base64 for upload
+                                  const reader = new FileReader()
+                                  reader.onload = () => {
+                                    const base64Content = reader.result?.toString().split(',')[1] || ''
+                                    form.setValue('medicalCertificateFileType', file.type)
+                                    form.setValue('medicalCertificateFileContent', base64Content)
+                                    form.setValue('medicalCertificateFileName', file.name)
+                                  }
+                                  reader.readAsDataURL(file)
                                 }
                               }}
                               onClick={() => {
@@ -739,6 +870,16 @@ export function MultiStepHolidayRequest({
                                   }
                                   setSelectedFile(file)
                                   field.onChange(file)
+                                  
+                                  // Convert file to base64 for upload
+                                  const reader = new FileReader()
+                                  reader.onload = () => {
+                                    const base64Content = reader.result?.toString().split(',')[1] || ''
+                                    form.setValue('medicalCertificateFileType', file.type)
+                                    form.setValue('medicalCertificateFileContent', base64Content)
+                                    form.setValue('medicalCertificateFileName', file.name)
+                                  }
+                                  reader.readAsDataURL(file)
                                 }
                               }}
                             />
@@ -809,11 +950,11 @@ export function MultiStepHolidayRequest({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Dipendente</Label>
-                    <p className="font-medium">{user?.name}</p>
+                    <p className="font-medium">{user?.name || 'Non disponibile'}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Email</Label>
-                    <p className="font-medium">{user?.email}</p>
+                    <p className="font-medium">{user?.email || 'Non disponibile'}</p>
                   </div>
                 </div>
                 
@@ -844,7 +985,9 @@ export function MultiStepHolidayRequest({
                 {notes && (
                   <div>
                     <Label className="text-muted-foreground">Note</Label>
-                    <p className="font-medium bg-muted/50 p-2 rounded text-sm">{notes}</p>
+                    <p className="font-medium bg-muted/50 p-2 rounded text-sm">
+                      {typeof notes === 'string' ? notes : 'Note non disponibili'}
+                    </p>
                   </div>
                 )}
 
@@ -854,9 +997,17 @@ export function MultiStepHolidayRequest({
                     {selectedFile ? (
                       <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded">
                         <FileText className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-green-800">{selectedFile.name}</span>
+                        <span className="font-medium text-green-800">
+                          {typeof selectedFile === 'object' && selectedFile?.name 
+                            ? String(selectedFile.name) 
+                            : 'File caricato'
+                          }
+                        </span>
                         <Badge variant="secondary" className="text-xs">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          {typeof selectedFile === 'object' && selectedFile?.size 
+                            ? (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB' 
+                            : ''
+                          }
                         </Badge>
                       </div>
                     ) : medicalCertOption === "send_later" ? (
@@ -886,7 +1037,9 @@ export function MultiStepHolidayRequest({
               {conflictWarning && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{conflictWarning}</AlertDescription>
+                  <AlertDescription>
+                    {typeof conflictWarning === 'string' ? conflictWarning : 'Conflitto rilevato nelle date selezionate'}
+                  </AlertDescription>
                 </Alert>
               )}
             </div>
@@ -911,7 +1064,7 @@ export function MultiStepHolidayRequest({
         }
         return true // Notes are optional for other types
       case 4:
-        return !conflictWarning && !isLoading
+        return !conflictWarning && !isLoading && !isSubmittingRequest
       default:
         return false
     }
@@ -984,9 +1137,10 @@ export function MultiStepHolidayRequest({
               ) : (
                 <Button 
                   type="submit" 
-                  disabled={!canProceed() || isLoading}
+                  disabled={!canProceed() || isLoading || isSubmittingRequest}
+                  className="relative"
                 >
-                  {isLoading ? (
+                  {(isLoading || isSubmittingRequest) ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Invio in corso...

@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Holiday } from '@/lib/hooks/useHolidays';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { Calendar, Filter, RefreshCw } from 'lucide-react';
+import { Calendar, Filter, RefreshCw, Download, Edit, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { it, enUS, es } from 'date-fns/locale';
+import { toast } from '@/lib/utils/toast';
 
 interface HolidayHistoryTableProps {
   holidays: Holiday[];
@@ -29,8 +32,14 @@ export function HolidayHistoryTable({
   compact = false 
 }: HolidayHistoryTableProps) {
   const { t, locale } = useTranslation();
+  const { user } = useAuth();
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [downloadingFiles, setDownloadingFiles] = useState<Set<string>>(new Set());
+
+  // Helper to get token from localStorage
+  const getToken = () => localStorage.getItem('accessToken');
 
   // Get date-fns locale
   const getDateLocale = () => {
@@ -84,6 +93,133 @@ export function HolidayHistoryTable({
     }
     const dayLabel = locale === 'it' ? 'giorni' : locale === 'es' ? 'días' : 'days';
     return `${days} ${dayLabel}`;
+  };
+
+  // Handle edit request - redirect to holiday request page with pre-filled data
+  const handleEditRequest = (holiday: Holiday) => {
+    router.push(`/${locale}/holiday-request?edit=${holiday.id}`);
+  };
+
+  // Handle cancel request
+  const handleCancelRequest = async (holiday: Holiday) => {
+    if (!getToken()) {
+      toast.error(locale === 'it' ? 'Non autorizzato' : locale === 'es' ? 'No autorizado' : 'Not authorized');
+      return;
+    }
+
+    try {
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? `http://localhost:${window.location.port}`
+        : '';
+
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.port === '3001';
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`,
+        },
+        ...(isDevelopment ? {} : { credentials: 'include' }),
+        body: JSON.stringify({
+          holidayId: holiday.id,
+          status: 'cancelled',
+          notes: 'Annullata dal dipendente'
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(locale === 'it' ? 'Richiesta annullata con successo' : 
+                     locale === 'es' ? 'Solicitud cancelada con éxito' : 
+                     'Request cancelled successfully');
+        onRefresh?.();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to cancel request');
+      }
+    } catch (error) {
+      console.error('Cancel request error:', error);
+      toast.error(locale === 'it' ? 'Errore nell\'annullamento della richiesta' : 
+                 locale === 'es' ? 'Error al cancelar la solicitud' : 
+                 'Failed to cancel request');
+    }
+  };
+
+  // Handle download medical certificate
+  const handleDownloadCertificate = async (holiday: Holiday) => {
+    if (!getToken() || !holiday.medicalCertificateFileId) {
+      toast.error(locale === 'it' ? 'Certificato non disponibile' : 
+                 locale === 'es' ? 'Certificado no disponible' : 
+                 'Certificate not available');
+      return;
+    }
+
+    const fileId = holiday.medicalCertificateFileId;
+    setDownloadingFiles(prev => new Set(prev).add(fileId));
+
+    try {
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? `http://localhost:${window.location.port}`
+        : '';
+
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.port === '3001';
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${fileId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+        },
+        ...(isDevelopment ? {} : { credentials: 'include' }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get('content-disposition');
+        let fileName = 'medical-certificate.pdf';
+        
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (fileNameMatch) {
+            fileName = fileNameMatch[1];
+          }
+        }
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast.success(locale === 'it' ? 'Certificato scaricato con successo' : 
+                     locale === 'es' ? 'Certificado descargado con éxito' : 
+                     'Certificate downloaded successfully');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to download certificate');
+      }
+    } catch (error) {
+      console.error('Download certificate error:', error);
+      toast.error(locale === 'it' ? 'Errore nel download del certificato' : 
+                 locale === 'es' ? 'Error al descargar el certificado' : 
+                 'Failed to download certificate');
+    } finally {
+      setDownloadingFiles(prev => {
+        const next = new Set(prev);
+        next.delete(fileId);
+        return next;
+      });
+    }
   };
 
   if (loading) {
@@ -227,14 +363,42 @@ export function HolidayHistoryTable({
                     </div>
                   </div>
 
-                  {showActions && holiday.status === 'pending' && (
+                  {showActions && (
                     <div className="flex space-x-2 pt-2 border-t">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        {t('dashboard.holidays.editRequest')}
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:text-red-700">
-                        {t('dashboard.holidays.cancelRequest')}
-                      </Button>
+                      {holiday.status === 'pending' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1"
+                            onClick={() => handleEditRequest(holiday)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            {t('dashboard.holidays.editRequest')}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1 text-red-600 hover:text-red-700"
+                            onClick={() => handleCancelRequest(holiday)}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            {t('dashboard.holidays.cancelRequest')}
+                          </Button>
+                        </>
+                      )}
+                      {holiday.type === 'sick' && holiday.medicalCertificateFileId && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleDownloadCertificate(holiday)}
+                          disabled={downloadingFiles.has(holiday.medicalCertificateFileId!)}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          {downloadingFiles.has(holiday.medicalCertificateFileId!) ? 'Scaricando...' : 'Scarica Certificato'}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -293,16 +457,42 @@ export function HolidayHistoryTable({
                       </TableCell>
                       {showActions && (
                         <TableCell>
-                          {holiday.status === 'pending' && (
-                            <div className="flex space-x-1">
-                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
-                                {t('dashboard.holidays.editRequest')}
+                          <div className="flex space-x-1">
+                            {holiday.status === 'pending' && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => handleEditRequest(holiday)}
+                                >
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  {t('dashboard.holidays.editRequest')}
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 px-2 text-xs text-red-600"
+                                  onClick={() => handleCancelRequest(holiday)}
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  {t('dashboard.holidays.cancelRequest')}
+                                </Button>
+                              </>
+                            )}
+                            {holiday.type === 'sick' && holiday.medicalCertificateFileId && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs"
+                                onClick={() => handleDownloadCertificate(holiday)}
+                                disabled={downloadingFiles.has(holiday.medicalCertificateFileId!)}
+                              >
+                                <Download className="h-3 w-3 mr-1" />
+                                {downloadingFiles.has(holiday.medicalCertificateFileId!) ? 'Scaricando...' : 'Scarica'}
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-red-600">
-                                {t('dashboard.holidays.cancelRequest')}
-                              </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>

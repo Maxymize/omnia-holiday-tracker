@@ -3,6 +3,74 @@
 ## 📚 Context Optimization
 **This file contains all COMPLETED tasks to keep TASK.md lightweight and preserve Claude Code context.**
 
+## 🆕 Latest Completed Tasks - August 12, 2025
+
+### Department Management System Implementation ✅
+**Completed**: 2025-08-12 | **Session**: Claude Code Direct
+**Priority**: High | **Context**: Fixed Select.Item error and implemented complete department operations
+
+#### Tasks Completed:
+- ✅ **Fix Select.Item empty value error**: Changed `value=""` to `value="none"` in department manager selection
+- ✅ **Department Creation Dialog**: Complete form with name, location, and manager selection
+- ✅ **Department Editing Dialog**: Update existing departments with validation
+- ✅ **Employee Department Assignment**: Assign/change employee departments with confirmation
+- ✅ **Backend Functions Created**:
+  - `create-department.ts` - Create new departments with validation
+  - `update-department.ts` - Update existing department information  
+  - `assign-employee-department.ts` - Assign employees to departments
+- ✅ **TypeScript Build Fixes**: Resolved all compilation errors and Zod validation issues
+- ✅ **Admin Dashboard Integration**: Passed departments prop to EmployeeManagement component
+
+**Technical Details**:
+- Fixed Radix UI Select.Item requirement for non-empty value props
+- Implemented Zod schemas for all department operations
+- Added proper error handling and user feedback
+- Created comprehensive department management UI with dialogs
+
+### Employee Profile Enhancement ✅
+**Completed**: 2025-08-12 | **Session**: Claude Code Direct  
+**Priority**: High | **Context**: Enhanced employee profile with status and department display
+
+#### Tasks Completed:
+- ✅ **Account Status Display**: Added visual status indicators with icons
+  - Active: Green CheckCircle with "Attivo" 
+  - Pending: Amber Clock with "In attesa di approvazione"
+  - Inactive: Red AlertTriangle with "Inattivo"
+- ✅ **Department Information**: Display assigned department with Building2 icon
+- ✅ **User Interface Updates**: Updated User interface to include department fields
+- ✅ **Authentication Enhancement**: Enhanced login system to include department data
+
+**Technical Details**:
+- Updated `useAuth.ts` User interface with `department` and `departmentName` fields
+- Enhanced `login-test.ts` to include department information in response
+- Created `get-profile.ts` function for refreshing user data
+- Added `refreshUserData` method to useAuth hook
+
+### Data Consistency Fix ✅
+**Completed**: 2025-08-12 | **Session**: Claude Code Direct
+**Priority**: Critical | **Context**: Resolved admin-employee view data inconsistencies
+
+#### Problem Identified:
+- Admin dashboard showed "Sconosciuto" status and "Assegnato" department
+- Employee profile showed "In attesa di approvazione" and "Non assegnato"
+- Inconsistent data sources between admin and employee views
+
+#### Tasks Completed:
+- ✅ **Fixed Department Name Resolution**: Updated all backend functions to properly fetch department names from storage instead of showing generic "Assegnato"
+- ✅ **Updated Functions**:
+  - `assign-employee-department.ts` - Fixed department name lookup logic
+  - `get-employees-mock.ts` - Synchronized department name resolution
+  - `get-profile.ts` - Enhanced department information handling
+  - `login-test.ts` - Improved login response with correct department data
+- ✅ **Consistent Data Logic**: All functions now use same department lookup pattern
+- ✅ **Error Handling**: Added "Sconosciuto" fallback for missing departments
+
+**Technical Details**:
+- Replaced hardcoded "Assegnato" text with actual department names from storage
+- Added department loading and lookup in all relevant functions
+- Ensured consistent data structure across admin and employee interfaces
+- Fixed data synchronization between different storage mechanisms
+
 ---
 
 ## ✅ PHASE 1: Foundation Setup (COMPLETED)

@@ -39,9 +39,16 @@ export interface PendingHolidayRequest {
   endDate: string;
   workingDays: number;
   type: 'vacation' | 'sick' | 'personal';
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  // Medical certificate fields for sick leave
+  medicalCertificateOption?: 'upload' | 'send_later';
+  medicalCertificateFileName?: string;
+  medicalCertificateFileId?: string;
+  medicalCertificateStatus?: 'pending' | 'uploaded' | 'commitment_pending';
 }
 
 export interface SystemSettings {
@@ -71,6 +78,41 @@ export interface AdminStats {
   departmentCount: number;
 }
 
+// Helper function for consistent fetch configuration
+const createFetchConfig = (method: 'GET' | 'POST' | 'PUT' | 'DELETE', token?: string, body?: any) => {
+  // Multiple checks for development mode
+  const isDevelopment = process.env.NODE_ENV === 'development' || 
+                       window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.port === '3001';
+
+  const config: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    // Include credentials only in production where cookies work properly
+    ...(isDevelopment ? {} : { credentials: 'include' }),
+  };
+
+  if (body) {
+    config.body = JSON.stringify(body);
+  }
+
+  return config;
+};
+
+// Helper function for consistent base URL
+const getBaseUrl = () => {
+  const isDevelopment = process.env.NODE_ENV === 'development' || 
+                       window.location.hostname === 'localhost' ||
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.port === '3001';
+  
+  return isDevelopment ? 'http://localhost:3000' : window.location.origin;
+};
+
 export function useAdminData() {
   const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -91,19 +133,9 @@ export function useAdminData() {
     setError(null);
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-employees-mock`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-employees-mock`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -130,19 +162,9 @@ export function useAdminData() {
     setError(null);
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-departments-mock`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-departments-mock`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -169,19 +191,9 @@ export function useAdminData() {
     setError(null);
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=all`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=all`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -208,19 +220,9 @@ export function useAdminData() {
     setError(null);
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-settings-mock`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-settings-mock`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -265,23 +267,13 @@ export function useAdminData() {
     if (!isAdmin) return false;
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, 
+        createFetchConfig('POST', token || undefined, {
           employeeId: employeeId,
           action: 'approve'
-        }),
-      });
+        }));
 
       const data = await response.json();
       
@@ -303,23 +295,13 @@ export function useAdminData() {
     if (!isAdmin) return false;
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await fetch(`${baseUrl}/.netlify/functions/admin-approve-employee`, 
+        createFetchConfig('POST', token || undefined, {
           employeeId: employeeId,
           action: 'reject'
-        }),
-      });
+        }));
 
       const data = await response.json();
       
@@ -341,24 +323,14 @@ export function useAdminData() {
     if (!isAdmin) return false;
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
       // Use mock endpoint for now (switch to real endpoint when database is ready)
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, 
+        createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'approve'
-        }),
-      });
+        }));
 
       const data = await response.json();
       
@@ -380,25 +352,15 @@ export function useAdminData() {
     if (!isAdmin) return false;
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
       // Use mock endpoint for now (switch to real endpoint when database is ready)
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, 
+        createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'reject',
           notes: reason
-        }),
-      });
+        }));
 
       const data = await response.json();
       
@@ -420,24 +382,14 @@ export function useAdminData() {
     if (!isAdmin) return false;
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888'
-        : window.location.origin;
-
+      const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-settings`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-settings`, 
+        createFetchConfig('POST', token || undefined, {
           settings: {
             [key]: value
           }
-        }),
-      });
+        }));
 
       const data = await response.json();
       

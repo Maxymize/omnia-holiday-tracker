@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { saveToMockStorage } from '../../lib/mock-storage';
 import { z } from 'zod';
 
 // Valid setting keys and their types
@@ -129,13 +130,18 @@ export const handler: Handler = async (event, context) => {
       }
     }
 
-    // Mock response with updated settings
+    // Save updated settings to mock storage
     const updateResult = {
-      updatedSettings: validatedSettings,
+      settings: validatedSettings,
       updatedBy: userToken.email,
       updatedAt: new Date().toISOString(),
       affectedKeys: Object.keys(validatedSettings)
     };
+    
+    // Save to storage using the same key as get-holidays-mock.ts expects
+    saveToMockStorage('system-settings', updateResult);
+    
+    console.log('Settings saved to storage:', updateResult);
 
     return {
       statusCode: 200,
@@ -143,7 +149,12 @@ export const handler: Handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         message: `${Object.keys(validatedSettings).length} impostazioni aggiornate con successo`,
-        data: updateResult
+        data: {
+          updatedSettings: validatedSettings,
+          updatedBy: userToken.email,
+          updatedAt: updateResult.updatedAt,
+          affectedKeys: Object.keys(validatedSettings)
+        }
       })
     };
 
@@ -157,7 +168,7 @@ export const handler: Handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           error: 'Dati non validi', 
-          details: error.errors 
+          details: error.issues 
         })
       };
     }

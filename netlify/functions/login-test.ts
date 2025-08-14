@@ -7,7 +7,7 @@ import { loadFromMockStorage, getEmployeeStatus } from '../../lib/mock-storage';
 const testUsers = [
   {
     id: 'c2c282ce-5723-4049-8428-7a28d4a12b73',
-    email: 'max.giurastante@ominiaservices.net',
+    email: 'max.giurastante@omniaservices.net',
     name: 'Massimiliano Giurastante',
     passwordHash: '$2b$12$qPfeGTGXjHda4ru0hoF.5OWtClfftXPCKDf4Sr7gQej.pN9AyYBpe', // admin123
     role: 'admin',
@@ -101,6 +101,55 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    // Get user department information
+    let department = null;
+    let departmentName = null;
+    
+    // Load employees to get department information
+    const mockEmployees = [
+      {
+        id: 'e1',
+        name: 'Mario Rossi',
+        email: 'mario.rossi@ominiaservice.net',
+        department: 'dept1',
+        departmentName: 'IT Development'
+      },
+      {
+        id: 'e2',
+        name: 'Giulia Bianchi',
+        email: 'giulia.bianchi@ominiaservice.net',
+        department: 'dept2',
+        departmentName: 'Marketing'
+      },
+      {
+        id: 'e3',
+        name: 'Luca Verdi',
+        email: 'luca.verdi@ominiaservice.net',
+        department: 'dept1',
+        departmentName: 'IT Development'
+      }
+    ];
+    
+    // Check if this is a hardcoded employee
+    const mockEmployee = mockEmployees.find(emp => emp.email.toLowerCase() === user.email.toLowerCase());
+    if (mockEmployee) {
+      department = mockEmployee.department;
+      departmentName = mockEmployee.departmentName;
+    } else {
+      // Check if this user has been assigned to a department (for registered users)
+      const registrations = loadFromMockStorage('registrations') || [];
+      const userRegistration = registrations.find((reg: any) => reg.id === user.id);
+      
+      if (userRegistration && userRegistration.departmentId) {
+        department = userRegistration.departmentId;
+        
+        // Get department name
+        const departments = loadFromMockStorage('departments') || [];
+        const departmentInfo = departments.find((dept: any) => dept.id === userRegistration.departmentId);
+        departmentName = departmentInfo ? departmentInfo.name : 'Sconosciuto';
+      }
+    }
+
     // Genera JWT token with proper format for jwt-utils validation
     const tokenPayload = {
       userId: user.id,
@@ -129,7 +178,9 @@ export const handler: Handler = async (event, context) => {
             email: user.email,
             name: user.name,
             role: user.role,
-            status: user.status
+            status: finalStatus,
+            department,
+            departmentName
           },
           accessToken
         }

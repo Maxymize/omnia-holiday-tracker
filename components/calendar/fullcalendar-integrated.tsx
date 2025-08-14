@@ -205,7 +205,7 @@ export function FullCalendarIntegrated({
       })
 
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?${params}`, {
@@ -533,7 +533,7 @@ export function FullCalendarIntegrated({
             onSubmit={async (data) => {
               try {
                 const baseUrl = process.env.NODE_ENV === 'development' 
-                  ? 'http://localhost:8888' 
+                  ? 'http://localhost:3000' 
                   : window.location.origin
 
                 const token = localStorage.getItem('accessToken')

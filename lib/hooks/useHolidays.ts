@@ -16,6 +16,13 @@ export interface Holiday {
   notes?: string;
   workingDays: number;
   createdAt: string;
+  updatedAt?: string;
+  updatedBy?: string;
+  // Medical certificate fields for sick leave
+  medicalCertificateOption?: 'upload' | 'send_later';
+  medicalCertificateFileName?: string;
+  medicalCertificateFileId?: string;
+  medicalCertificateStatus?: 'pending' | 'uploaded' | 'commitment_pending';
   // User info if populated (for backward compatibility)
   user?: {
     id: string;
@@ -53,7 +60,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
 
   const getBaseUrl = () => {
     return process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:8888' 
+      ? 'http://localhost:3000' 
       : window.location.origin;
   };
 

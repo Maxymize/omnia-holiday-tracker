@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthHeader, requireAccessToken, requireAdminAccess } from '../../lib/auth/jwt-utils';
+import { saveToMockStorage, loadFromMockStorage } from '../../lib/mock-storage';
 import { z } from 'zod';
 
 // Input validation schema
@@ -33,63 +34,84 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    // Verify authentication
+    // Verify authentication and admin role
     const userToken = verifyAuthHeader(event.headers.authorization);
-    requireAccessToken(userToken);
-
-    // Check admin permissions
-    if (userToken.role !== 'admin') {
-      return {
-        statusCode: 403,
-        headers,
-        body: JSON.stringify({ error: 'Solo gli amministratori possono creare dipartimenti' })
-      };
-    }
+    requireAdminAccess(userToken);
 
     // Parse and validate request body
     const body = JSON.parse(event.body || '{}');
     const validatedData = createDepartmentSchema.parse(body);
 
-    // For now, simulate department creation
-    // In a real implementation, this would:
-    // 1. Insert new department into database
-    // 2. Set manager if provided
-    // 3. Create department-specific permissions
-    // 4. Send notification to manager
+    // Load existing departments
+    const existingDepartments = loadFromMockStorage('departments') || [];
 
-    const { name, location, managerId } = validatedData;
-    
-    // Generate mock department ID
-    const departmentId = `dept_${Date.now()}`;
-    
-    console.log('Department creation (mock):', {
-      departmentId,
-      name,
-      location: location || 'Non specificata',
-      managerId: managerId || 'Nessun manager assegnato',
-      createdBy: userToken.email,
-      timestamp: new Date().toISOString()
-    });
+    // Check if department name already exists
+    const nameExists = existingDepartments.some((dept: any) => 
+      dept.name.toLowerCase() === validatedData.name.toLowerCase()
+    );
 
-    // Mock created department
-    const createdDepartment = {
-      id: departmentId,
-      name,
-      location: location || null,
-      managerId: managerId || null,
-      managerName: managerId ? 'Manager Name' : null, // In real implementation, lookup manager name
-      employeeCount: 0, // New department starts with 0 employees
+    if (nameExists) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Un dipartimento con questo nome esiste già' 
+        })
+      };
+    }
+
+    // If managerId is provided, verify the manager exists
+    if (validatedData.managerId) {
+      const employees = loadFromMockStorage('employees') || [];
+      const managerExists = employees.some((emp: any) => 
+        emp.id === validatedData.managerId && emp.status === 'active'
+      );
+
+      if (!managerExists) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Manager specificato non trovato o non attivo' 
+          })
+        };
+      }
+    }
+
+    // Create new department
+    const newDepartment = {
+      id: `dept_${Date.now()}`,
+      name: validatedData.name,
+      location: validatedData.location || null,
+      managerId: validatedData.managerId || null,
+      managerName: null, // Will be populated when loading departments with employee data
+      employeeCount: 0,
       createdAt: new Date().toISOString(),
-      createdBy: userToken.email
+      updatedAt: new Date().toISOString()
     };
 
+    // If manager is specified, get manager name
+    if (validatedData.managerId) {
+      const employees = loadFromMockStorage('employees') || [];
+      const manager = employees.find((emp: any) => emp.id === validatedData.managerId);
+      if (manager) {
+        newDepartment.managerName = manager.name;
+      }
+    }
+
+    // Add to departments list
+    const updatedDepartments = [...existingDepartments, newDepartment];
+    saveToMockStorage('departments', updatedDepartments);
+
+    console.log(`Department created: ${newDepartment.name} (ID: ${newDepartment.id}) by admin ${userToken.email}`);
+
     return {
-      statusCode: 201,
+      statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Dipartimento creato con successo',
-        data: createdDepartment
+        data: newDepartment,
+        message: 'Dipartimento creato con successo'
       })
     };
 
@@ -103,13 +125,13 @@ export const handler: Handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           error: 'Dati non validi', 
-          details: error.errors 
+          details: error.issues 
         })
       };
     }
 
     // Handle authentication errors
-    if (error instanceof Error && error.message.includes('Token')) {
+    if (error instanceof Error && (error.message.includes('Token') || error.message.includes('Admin'))) {
       return {
         statusCode: 401,
         headers,

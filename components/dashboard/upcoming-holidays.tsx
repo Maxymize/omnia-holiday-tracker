@@ -17,6 +17,7 @@ interface UpcomingHolidaysProps {
   loading?: boolean;
   showTeam?: boolean;
   onCreateRequest?: () => void;
+  onHolidayClick?: (holiday: Holiday) => void;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ export function UpcomingHolidays({
   loading = false, 
   showTeam = false,
   onCreateRequest,
+  onHolidayClick,
   className 
 }: UpcomingHolidaysProps) {
   const { t, locale } = useTranslation();
@@ -236,8 +238,10 @@ export function UpcomingHolidays({
                     "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
                     dateInfo.urgent 
                       ? "bg-blue-50 border-blue-200" 
-                      : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                      : "bg-gray-50 border-gray-200 hover:bg-gray-100",
+                    onHolidayClick && "cursor-pointer hover:shadow-sm"
                   )}
+                  onClick={() => onHolidayClick?.(holiday)}
                 >
                   {/* User Avatar or Type Icon */}
                   <div className="relative">

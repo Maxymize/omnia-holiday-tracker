@@ -1,8 +1,9 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { loadFromMockStorage, saveToMockStorage } from '../../lib/mock-storage';
 
-// Mock department data for development
-const mockDepartments = [
+// Default mock department data for development - loaded once
+const defaultMockDepartments = [
   {
     id: 'dept1',
     name: 'IT Development',
@@ -31,6 +32,19 @@ const mockDepartments = [
     createdAt: '2024-01-01T00:00:00.000Z'
   }
 ];
+
+// Function to initialize departments if storage is empty
+function getDepartments() {
+  const storedDepartments = loadFromMockStorage('departments');
+  
+  if (!storedDepartments || storedDepartments.length === 0) {
+    // Initialize with default departments
+    saveToMockStorage('departments', defaultMockDepartments);
+    return defaultMockDepartments;
+  }
+  
+  return storedDepartments;
+}
 
 // CORS headers
 const headers = {
@@ -62,13 +76,16 @@ export const handler: Handler = async (event, context) => {
 
     console.log('Mock departments accessed by:', userToken.email);
 
-    // Return mock department data
+    // Get departments from storage (with initialization if empty)
+    const departments = getDepartments();
+
+    // Return department data
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        data: mockDepartments
+        data: departments
       })
     };
 

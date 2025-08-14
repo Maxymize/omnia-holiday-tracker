@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/lib/hooks/useAuth"
 import { useTranslation } from "@/lib/i18n/provider"
+import { useSystemSettings } from "@/lib/hooks/useSystemSettings"
 import { MultiStepHolidayRequest } from "@/components/forms/multi-step-holiday-request"
 import { TimelineView } from "./timeline-view"
 import { cn } from "@/lib/utils"
@@ -73,6 +74,7 @@ export function IntegratedCalendar({
 }: IntegratedCalendarProps) {
   const { user, isAuthenticated, isAdmin } = useAuth()
   const { t, locale } = useTranslation()
+  const { canSeeAllHolidays, canSeeDepartmentHolidays, loading: settingsLoading } = useSystemSettings()
   
   // State management
   const [events, setEvents] = useState<HolidayEvent[]>([])
@@ -114,10 +116,10 @@ export function IntegratedCalendar({
       }
 
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=${viewMode}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -175,36 +177,33 @@ export function IntegratedCalendar({
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, user, viewMode])
 
-  // Filter events based on view mode
-  const filteredEvents = React.useMemo(() => {
-    if (!user) return events
-
-    switch (viewMode) {
-      case 'own':
-        // Show only current user's events (for now, mock by showing events with user's name)
-        return events.filter(event => 
-          event.resource.userName.toLowerCase().includes(user.name?.toLowerCase() || '') ||
-          event.resource.userId === user.id
-        )
-      case 'team':
-        // Show team events (for now, mock by excluding current user)
-        return events.filter(event => 
-          !event.resource.userName.toLowerCase().includes(user.name?.toLowerCase() || '') &&
-          event.resource.userId !== user.id
-        )
-      case 'all':
-      default:
-        // Show all events
-        return events
-    }
-  }, [events, viewMode, user])
+  // Events are already filtered by the backend based on system settings and viewMode
+  // No need for additional client-side filtering - trust the backend logic
+  const filteredEvents = events
 
   // Effect to fetch holidays when dependencies change
   useEffect(() => {
     fetchHolidays()
   }, [fetchHolidays])
+
+  // Effect to auto-correct viewMode when system settings don't allow it
+  useEffect(() => {
+    if (!settingsLoading && !isAdmin) {
+      if (viewMode === 'all' && !canSeeAllHolidays()) {
+        // User is trying to view all but system doesn't allow it
+        if (canSeeDepartmentHolidays()) {
+          setViewMode('team'); // Fall back to team view if allowed
+        } else {
+          setViewMode('own'); // Fall back to own holidays only
+        }
+      } else if (viewMode === 'team' && !canSeeDepartmentHolidays()) {
+        // User is trying to view team but system doesn't allow it
+        setViewMode('own'); // Fall back to own holidays only
+      }
+    }
+  }, [settingsLoading, isAdmin, viewMode, canSeeAllHolidays, canSeeDepartmentHolidays])
 
   // Effect to add click handlers to "more" links after FullCalendar renders
   useEffect(() => {
@@ -351,8 +350,9 @@ export function IntegratedCalendar({
           {/* Right side controls */}
           <div className="flex items-center gap-3">
             {/* Holiday Visibility Toggle */}
-            {showTeamHolidays && (
+            {showTeamHolidays && !settingsLoading && (
               <div className="flex items-center rounded-lg border bg-white/50 p-1">
+                {/* Le mie ferie - sempre visibile */}
                 <Button
                   variant={viewMode === 'own' ? 'default' : 'ghost'}
                   size="sm"
@@ -366,32 +366,40 @@ export function IntegratedCalendar({
                   <User className="h-3 w-3 mr-1" />
                   {t('dashboard.calendar.myHolidays')}
                 </Button>
-                <Button
-                  variant={viewMode === 'team' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('team')}
-                  className={`px-3 h-8 ${
-                    viewMode === 'team' 
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <Users className="h-3 w-3 mr-1" />
-                  {t('dashboard.calendar.teamHolidays')}
-                </Button>
-                <Button
-                  variant={viewMode === 'all' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('all')}
-                  className={`px-3 h-8 ${
-                    viewMode === 'all' 
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <Globe className="h-3 w-3 mr-1" />
-                  {t('dashboard.calendar.allHolidays')}
-                </Button>
+                
+                {/* Ferie del team - visibile solo se admin o se il sistema lo consente */}
+                {(isAdmin || canSeeDepartmentHolidays()) && (
+                  <Button
+                    variant={viewMode === 'team' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('team')}
+                    className={`px-3 h-8 ${
+                      viewMode === 'team' 
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <Users className="h-3 w-3 mr-1" />
+                    {t('dashboard.calendar.teamHolidays')}
+                  </Button>
+                )}
+                
+                {/* Tutti - visibile solo se admin o se il sistema consente "all_see_all" */}
+                {(isAdmin || canSeeAllHolidays()) && (
+                  <Button
+                    variant={viewMode === 'all' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('all')}
+                    className={`px-3 h-8 ${
+                      viewMode === 'all' 
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <Globe className="h-3 w-3 mr-1" />
+                    {t('dashboard.calendar.allHolidays')}
+                  </Button>
+                )}
               </div>
             )}
 
@@ -497,7 +505,7 @@ export function IntegratedCalendar({
       }
 
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin
 
       // Use mock endpoint for now (switch to real endpoint when database is ready)
@@ -524,10 +532,7 @@ export function IntegratedCalendar({
         toast.success(
           action === 'approve' 
             ? '✅ Richiesta ferie approvata con successo'
-            : '❌ Richiesta ferie rifiutata',
-          {
-            description: `La richiesta è stata ${action === 'approve' ? 'approvata' : 'rifiutata'} correttamente.`
-          }
+            : '❌ Richiesta ferie rifiutata'
         )
 
         // Refresh holidays to show updated status
@@ -536,10 +541,7 @@ export function IntegratedCalendar({
     } catch (error) {
       console.error(`Error ${action}ing holiday:`, error)
       toast.error(
-        `Errore durante ${action === 'approve' ? 'l\'approvazione' : 'il rifiuto'}`,
-        {
-          description: error instanceof Error ? error.message : 'Si è verificato un errore. Riprova.'
-        }
+        `Errore durante ${action === 'approve' ? 'l\'approvazione' : 'il rifiuto'}: ${error instanceof Error ? error.message : 'Si è verificato un errore. Riprova.'}`
       )
     }
   }

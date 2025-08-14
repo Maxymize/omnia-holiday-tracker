@@ -90,21 +90,32 @@ export const handler: Handler = async (event, context) => {
     // Load new registrations from mock storage
     const registrations = loadFromMockStorage('registrations') || [];
     
+    // Load departments to get department names
+    const departments = loadFromMockStorage('departments') || [];
+    
     // Convert registrations to employee format
-    const registrationEmployees = registrations.map((reg: any) => ({
-      id: reg.id,
-      name: reg.name,
-      email: reg.email,
-      role: reg.role,
-      status: reg.status,
-      department: reg.departmentId,
-      departmentName: reg.departmentId ? 'Assegnato' : 'Non assegnato',
-      holidayAllowance: reg.holidayAllowance,
-      holidaysUsed: 0,
-      holidaysRemaining: reg.holidayAllowance,
-      createdAt: reg.createdAt,
-      lastLogin: null
-    }));
+    const registrationEmployees = registrations.map((reg: any) => {
+      let departmentName = 'Non assegnato';
+      if (reg.departmentId) {
+        const department = departments.find((dept: any) => dept.id === reg.departmentId);
+        departmentName = department ? department.name : 'Sconosciuto';
+      }
+      
+      return {
+        id: reg.id,
+        name: reg.name,
+        email: reg.email,
+        role: reg.role,
+        status: reg.status,
+        department: reg.departmentId,
+        departmentName,
+        holidayAllowance: reg.holidayAllowance,
+        holidaysUsed: 0,
+        holidaysRemaining: reg.holidayAllowance,
+        createdAt: reg.createdAt,
+        lastLogin: null
+      };
+    });
 
     // Combine existing employees with new registrations
     const allEmployees = [...mockEmployees, ...registrationEmployees];

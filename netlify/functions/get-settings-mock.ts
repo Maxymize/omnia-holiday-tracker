@@ -4,7 +4,7 @@ import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
 // Mock system settings for development
 const mockSettings = {
   // Visibility settings
-  'holidays.visibility_mode': 'admin_only',
+  'holidays.visibility_mode': 'all_see_all',
   'holidays.show_names': 'true',
   'holidays.show_details': 'false',
   

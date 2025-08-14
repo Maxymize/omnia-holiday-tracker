@@ -23,7 +23,8 @@ import {
   MessageSquare,
   MoreHorizontal,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from 'lucide-react';
 import { PendingHolidayRequest } from '@/lib/hooks/useAdminData';
 
@@ -485,25 +486,25 @@ export function HolidayRequestsManagement({
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-lg">
+                            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
                                 <DialogTitle>Dettagli Richiesta di Ferie</DialogTitle>
                               </DialogHeader>
                               {selectedRequest && (
                                 <div className="space-y-4">
                                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                                    <Avatar className="h-12 w-12">
+                                    <Avatar className="h-12 w-12 flex-shrink-0">
                                       <AvatarFallback>
                                         {getUserInitials(selectedRequest.employeeName)}
                                       </AvatarFallback>
                                     </Avatar>
-                                    <div>
-                                      <h3 className="font-semibold">{selectedRequest.employeeName}</h3>
-                                      <p className="text-sm text-gray-600">{selectedRequest.employeeEmail}</p>
+                                    <div className="min-w-0 flex-1">
+                                      <h3 className="font-semibold truncate">{selectedRequest.employeeName}</h3>
+                                      <p className="text-sm text-gray-600 break-all">{selectedRequest.employeeEmail}</p>
                                       {selectedRequest.department && (
-                                        <div className="flex items-center space-x-1 text-sm text-gray-500">
-                                          <Building2 className="h-4 w-4" />
-                                          <span>{selectedRequest.department}</span>
+                                        <div className="flex items-center space-x-1 text-sm text-gray-500 mt-1">
+                                          <Building2 className="h-4 w-4 flex-shrink-0" />
+                                          <span className="truncate">{selectedRequest.department}</span>
                                         </div>
                                       )}
                                     </div>
@@ -541,6 +542,116 @@ export function HolidayRequestsManagement({
                                       <label className="font-medium text-gray-700">Note</label>
                                       <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
                                         {selectedRequest.notes}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Medical Certificate Section for Sick Leave */}
+                                  {selectedRequest.type === 'sick' && (
+                                    <div className="border-t pt-4">
+                                      <label className="font-medium text-gray-700">Certificato Medico</label>
+                                      <div className="mt-2">
+                                        {selectedRequest.medicalCertificateOption === 'upload' && selectedRequest.medicalCertificateFileName ? (
+                                          <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
+                                            <div className="flex items-start space-x-3 min-w-0 flex-1">
+                                              <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                              <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium text-green-800 break-all">
+                                                  File caricato:
+                                                </p>
+                                                <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
+                                                  {selectedRequest.medicalCertificateFileName}
+                                                </p>
+                                                <p className="text-xs text-green-600 mt-1">
+                                                  Certificato medico presente nel sistema
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-green-700 border-green-300"
+                                              onClick={async () => {
+                                                if ((selectedRequest as any).medicalCertificateFileId) {
+                                                  try {
+                                                    const token = localStorage.getItem('accessToken');
+                                                    const baseUrl = process.env.NODE_ENV === 'development' 
+                                                      ? 'http://localhost:3000' 
+                                                      : window.location.origin;
+                                                    
+                                                    const response = await fetch(
+                                                      `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${(selectedRequest as any).medicalCertificateFileId}`,
+                                                      {
+                                                        headers: {
+                                                          'Authorization': `Bearer ${token}`
+                                                        }
+                                                      }
+                                                    );
+
+                                                    if (response.ok) {
+                                                      // Create a blob from the response
+                                                      const blob = await response.blob();
+                                                      const url = window.URL.createObjectURL(blob);
+                                                      
+                                                      // Create a download link and click it
+                                                      const a = document.createElement('a');
+                                                      a.href = url;
+                                                      a.download = selectedRequest.medicalCertificateFileName || 'certificato-medico';
+                                                      document.body.appendChild(a);
+                                                      a.click();
+                                                      document.body.removeChild(a);
+                                                      
+                                                      // Clean up the URL
+                                                      window.URL.revokeObjectURL(url);
+                                                    } else {
+                                                      alert('Errore durante il download del certificato');
+                                                    }
+                                                  } catch (error) {
+                                                    console.error('Download error:', error);
+                                                    alert('Errore durante il download del certificato');
+                                                  }
+                                                } else {
+                                                  alert('File non disponibile nel sistema');
+                                                }
+                                              }}
+                                            >
+                                              <Download className="h-4 w-4 mr-1" />
+                                              Scarica
+                                            </Button>
+                                          </div>
+                                        ) : selectedRequest.medicalCertificateOption === 'send_later' ? (
+                                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <div className="flex items-center space-x-3">
+                                              <Clock className="h-5 w-5 text-blue-600" />
+                                              <div>
+                                                <p className="text-sm font-medium text-blue-800">
+                                                  Impegno a inviare via email
+                                                </p>
+                                                <p className="text-xs text-blue-600">
+                                                  Il dipendente si è impegnato a inviare il certificato medico 
+                                                  via email alla direzione aziendale entro 3 giorni lavorativi
+                                                </p>
+                                                <p className="text-xs text-blue-500 mt-1">
+                                                  Status: {selectedRequest.medicalCertificateStatus === 'commitment_pending' ? 'In attesa di ricevimento' : 'Ricevuto'}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div className="flex items-center space-x-3">
+                                              <AlertTriangle className="h-5 w-5 text-gray-600" />
+                                              <div>
+                                                <p className="text-sm font-medium text-gray-800">
+                                                  Certificato medico non specificato
+                                                </p>
+                                                <p className="text-xs text-gray-600">
+                                                  Il dipendente non ha fornito informazioni sul certificato medico
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}

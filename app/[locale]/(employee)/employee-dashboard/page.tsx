@@ -26,10 +26,18 @@ import {
   Plus,
   RefreshCw,
   Bell,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Download,
+  Building2
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PWAInstallBanner } from '@/components/ui/pwa-install-banner';
+import { Holiday } from '@/lib/hooks/useHolidays';
+import { format } from 'date-fns';
+import { it, enUS, es } from 'date-fns/locale';
 
-type TabType = 'overview' | 'calendar' | 'requests' | 'stats' | 'profile' | 'settings';
+type TabType = 'overview' | 'calendar' | 'requests' | 'profile' | 'settings';
 
 function EmployeeDashboardContent() {
   const { t, locale } = useTranslation();
@@ -39,6 +47,9 @@ function EmployeeDashboardContent() {
   
   // Get active tab from URL params, default to 'overview'
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  
+  // Holiday details modal state
+  const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   
   // Fetch holiday data
   const { 
@@ -54,7 +65,7 @@ function EmployeeDashboardContent() {
   // Handle tab changes from URL params
   useEffect(() => {
     const tab = searchParams.get('tab') as TabType;
-    if (tab && ['overview', 'calendar', 'requests', 'stats', 'profile', 'settings'].includes(tab)) {
+    if (tab && ['overview', 'calendar', 'requests', 'profile', 'settings'].includes(tab)) {
       setActiveTab(tab);
     } else {
       setActiveTab('overview');
@@ -81,9 +92,55 @@ function EmployeeDashboardContent() {
     router.push(`/${locale}/holiday-request`);
   };
 
+  const handleHolidayClick = (holiday: Holiday) => {
+    setSelectedHoliday(holiday);
+  };
+
   const getUserInitials = (name?: string) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Get date-fns locale
+  const getDateLocale = () => {
+    switch (locale) {
+      case 'it': return it;
+      case 'es': return es;
+      default: return enUS;
+    }
+  };
+
+  const getTypeIcon = (type: Holiday['type']) => {
+    switch (type) {
+      case 'vacation': return '🏖️';
+      case 'sick': return '🏥';
+      case 'personal': return '👤';
+      default: return '📅';
+    }
+  };
+
+  const getTypeLabel = (type: Holiday['type']) => {
+    return t(`holidays.request.types.${type}`);
+  };
+
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dateLocale = getDateLocale();
+    
+    if (start.toDateString() === end.toDateString()) {
+      return format(start, 'dd MMM yyyy', { locale: dateLocale });
+    }
+    
+    return `${format(start, 'dd MMM', { locale: dateLocale })} - ${format(end, 'dd MMM yyyy', { locale: dateLocale })}`;
+  };
+
+  const formatWorkingDays = (days: number) => {
+    if (days === 1) {
+      return locale === 'it' ? '1 giorno' : locale === 'es' ? '1 día' : '1 day';
+    }
+    const dayLabel = locale === 'it' ? 'giorni' : locale === 'es' ? 'días' : 'days';
+    return `${days} ${dayLabel}`;
   };
 
   // Prepare sidebar stats
@@ -168,7 +225,7 @@ function EmployeeDashboardContent() {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Quick Stats */}
+              {/* Quick Stats Cards */}
               {stats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card>
@@ -178,7 +235,7 @@ function EmployeeDashboardContent() {
                           <Calendar className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni rimasti</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
                           <p className="text-2xl font-bold text-green-600">{stats.remainingDays}</p>
                         </div>
                       </div>
@@ -192,7 +249,7 @@ function EmployeeDashboardContent() {
                           <CheckCircle className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni utilizzati</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.usedDays')}</p>
                           <p className="text-2xl font-bold text-blue-600">{stats.usedDays}</p>
                         </div>
                       </div>
@@ -206,7 +263,7 @@ function EmployeeDashboardContent() {
                           <Clock className="h-5 w-5 text-amber-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">In attesa</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.pendingRequests')}</p>
                           <p className="text-2xl font-bold text-amber-600">{stats.pendingRequests}</p>
                         </div>
                       </div>
@@ -220,7 +277,7 @@ function EmployeeDashboardContent() {
                           <TrendingUp className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Prossime</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.upcomingHolidays')}</p>
                           <p className="text-2xl font-bold text-purple-600">{stats.upcomingHolidays}</p>
                         </div>
                       </div>
@@ -229,19 +286,20 @@ function EmployeeDashboardContent() {
                 </div>
               )}
 
-              {/* Main Overview Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Holiday Balance */}
-                <div className="lg:col-span-1">
+              {/* Main Overview Grid - Holiday Balance and Statistics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Holiday Balance & Usage */}
+                <div>
                   <HolidayBalance stats={stats} loading={holidaysLoading} />
                 </div>
 
                 {/* Upcoming Holidays */}
-                <div className="lg:col-span-2">
+                <div>
                   <UpcomingHolidays 
                     holidays={getUpcomingHolidays()} 
                     loading={holidaysLoading}
                     onCreateRequest={handleCreateRequest}
+                    onHolidayClick={handleHolidayClick}
                   />
                 </div>
               </div>
@@ -260,22 +318,27 @@ function EmployeeDashboardContent() {
 
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-              <div className="flex flex-col lg:flex-row gap-6">
-                {/* Main Calendar */}
-                <div className="flex-1">
-                  <ResponsiveCalendar
-                    showAddButton={true}
-                    showTeamHolidays={true}
-                    onHolidayCreated={handleHolidayCreated}
-                    showLegend={false}
-                  />
-                </div>
-
-                {/* Desktop Legend Sidebar */}
-                <div className="hidden lg:block lg:w-80 space-y-4">
+              {/* Legend and Balance Above Calendar - Compact Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Calendar Legend */}
+                <div>
                   <CalendarLegend />
+                </div>
+                
+                {/* Holiday Balance */}
+                <div>
                   <HolidayBalance stats={stats} loading={holidaysLoading} />
                 </div>
+              </div>
+
+              {/* Main Calendar - Full Width */}
+              <div>
+                <ResponsiveCalendar
+                  showAddButton={true}
+                  showTeamHolidays={true}
+                  onHolidayCreated={handleHolidayCreated}
+                  showLegend={false}
+                />
               </div>
             </div>
           )}
@@ -299,54 +362,6 @@ function EmployeeDashboardContent() {
             </div>
           )}
 
-          {activeTab === 'stats' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Statistiche Ferie</h2>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <HolidayBalance stats={stats} loading={holidaysLoading} />
-                <UpcomingHolidays 
-                  holidays={getUpcomingHolidays()} 
-                  loading={holidaysLoading}
-                  onCreateRequest={handleCreateRequest}
-                />
-              </div>
-
-              {/* Additional Stats Cards */}
-              {stats && (
-                <StatsCards stats={[
-                  {
-                    title: 'Richieste Totali',
-                    value: stats.totalRequests.toString(),
-                    description: 'Richieste create quest\'anno',
-                    icon: Calendar,
-                    variant: 'default'
-                  },
-                  {
-                    title: 'Richieste Approvate',
-                    value: stats.approvedRequests.toString(),
-                    description: 'Approvazioni ricevute',
-                    icon: CheckCircle,
-                    variant: 'success'
-                  },
-                  {
-                    title: 'In Attesa',
-                    value: stats.pendingRequests.toString(),
-                    description: 'Richieste da approvare',
-                    icon: Clock,
-                    variant: 'warning'
-                  },
-                  {
-                    title: 'Rifiutate',
-                    value: stats.rejectedRequests.toString(),
-                    description: 'Richieste rifiutate',
-                    icon: AlertTriangle,
-                    variant: 'error'
-                  }
-                ]} />
-              )}
-            </div>
-          )}
 
           {activeTab === 'profile' && (
             <div className="space-y-6">
@@ -385,9 +400,33 @@ function EmployeeDashboardContent() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Stato Account</label>
-                      <p className="text-sm text-gray-900 mt-1">
-                        {user.status === 'active' ? 'Attivo' : 'In attesa di approvazione'}
-                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        {user.status === 'active' ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="text-sm text-green-700 font-medium">Attivo</span>
+                          </>
+                        ) : user.status === 'pending' ? (
+                          <>
+                            <Clock className="h-4 w-4 text-amber-600" />
+                            <span className="text-sm text-amber-700 font-medium">In attesa di approvazione</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="h-4 w-4 text-red-600" />
+                            <span className="text-sm text-red-700 font-medium">Inattivo</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Dipartimento</label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-900">
+                          {user.departmentName || 'Non assegnato'}
+                        </span>
+                      </div>
                     </div>
                     {stats && (
                       <>
@@ -428,6 +467,175 @@ function EmployeeDashboardContent() {
           )}
         </div>
       </div>
+
+      {/* Holiday Details Modal */}
+      <Dialog open={!!selectedHoliday} onOpenChange={(open) => !open && setSelectedHoliday(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Dettagli Ferie</DialogTitle>
+          </DialogHeader>
+          {selectedHoliday && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-lg">
+                  {getTypeIcon(selectedHoliday.type)}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{getTypeLabel(selectedHoliday.type)}</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedHoliday.status === 'approved' ? 'Approvata' : 
+                     selectedHoliday.status === 'pending' ? 'In attesa di approvazione' : 
+                     selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="font-medium text-gray-700">Periodo</label>
+                  <p className="mt-1 text-gray-900">
+                    {formatDateRange(selectedHoliday.startDate, selectedHoliday.endDate)}
+                  </p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Giorni lavorativi</label>
+                  <p className="mt-1 text-gray-900">{formatWorkingDays(selectedHoliday.workingDays)}</p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Tipo</label>
+                  <div className="mt-1">
+                    <Badge variant="outline" className={
+                      selectedHoliday.type === 'vacation' ? 'bg-blue-100 text-blue-800' :
+                      selectedHoliday.type === 'sick' ? 'bg-red-100 text-red-800' :
+                      'bg-purple-100 text-purple-800'
+                    }>
+                      {getTypeIcon(selectedHoliday.type)} {getTypeLabel(selectedHoliday.type)}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Stato</label>
+                  <div className="mt-1">
+                    <Badge className={
+                      selectedHoliday.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      selectedHoliday.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    }>
+                      {selectedHoliday.status === 'approved' ? 'Approvata' : 
+                       selectedHoliday.status === 'pending' ? 'In attesa' : 
+                       selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {selectedHoliday.notes && (
+                <div>
+                  <label className="font-medium text-gray-700">Note</label>
+                  <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
+                    {selectedHoliday.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Medical Certificate Section for Sick Leave */}
+              {selectedHoliday.type === 'sick' && (
+                <div className="border-t pt-4">
+                  <label className="font-medium text-gray-700">Certificato Medico</label>
+                  <div className="mt-2">
+                    {selectedHoliday.medicalCertificateOption === 'upload' && selectedHoliday.medicalCertificateFileName ? (
+                      <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
+                        <div className="flex items-start space-x-3 min-w-0 flex-1">
+                          <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-green-800">
+                              Certificato caricato
+                            </p>
+                            <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
+                              {selectedHoliday.medicalCertificateFileName}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-700 border-green-300"
+                          onClick={async () => {
+                            if (selectedHoliday.medicalCertificateFileId) {
+                              try {
+                                const token = localStorage.getItem('accessToken');
+                                const baseUrl = process.env.NODE_ENV === 'development' 
+                                  ? 'http://localhost:3000' 
+                                  : window.location.origin;
+                                
+                                const response = await fetch(
+                                  `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${selectedHoliday.medicalCertificateFileId}`,
+                                  {
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`
+                                    }
+                                  }
+                                );
+
+                                if (response.ok) {
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = selectedHoliday.medicalCertificateFileName || 'certificato-medico';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  
+                                  window.URL.revokeObjectURL(url);
+                                } else {
+                                  alert('Errore durante il download del certificato');
+                                }
+                              } catch (error) {
+                                console.error('Download error:', error);
+                                alert('Errore durante il download del certificato');
+                              }
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Scarica
+                        </Button>
+                      </div>
+                    ) : selectedHoliday.medicalCertificateOption === 'send_later' ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">
+                              Invio previsto via email
+                            </p>
+                            <p className="text-xs text-blue-600">
+                              Certificato da inviare entro 3 giorni lavorativi
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <AlertTriangle className="h-5 w-5 text-gray-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              Certificato non specificato
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -445,6 +653,7 @@ export default function EmployeeDashboardPage() {
       }
     >
       <EmployeeDashboardContent />
+      <PWAInstallBanner />
     </Suspense>
   );
 }

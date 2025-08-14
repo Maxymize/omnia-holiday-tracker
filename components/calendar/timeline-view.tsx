@@ -174,7 +174,7 @@ export function TimelineView({
     if (typeof window !== 'undefined') {
       const scrollContainer = document.querySelector('.flex-1.overflow-x-auto')
       if (scrollContainer) {
-        const dayWidth = 120 // Desktop cell width
+        const dayWidth = 50 // Compact cell width
         const daysFromStart = Math.floor((weekStart.getTime() - startOfMonth(currentDate).getTime()) / (1000 * 60 * 60 * 24))
         scrollContainer.scrollLeft = daysFromStart * dayWidth
       }
@@ -202,24 +202,32 @@ export function TimelineView({
 
 
   return (
-    <>
-      {/* Week Navigation Header - Optional controls for smooth scrolling */}
-      <div className="flex items-center justify-between p-4 border-b bg-white">
-        <div className="flex items-center space-x-2">
+    <div className="w-full max-w-full overflow-hidden">
+      {/* Compact Header Above Timeline - All controls stacked vertically */}
+      <div className="border rounded-t-lg bg-white p-3 space-y-2">
+        {/* Month Title */}
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {format(startOfMonth(currentDate), "MMMM yyyy", { locale: getDateFnsLocale() })}
+          </h2>
+        </div>
+        
+        {/* Navigation Controls - Compact Row */}
+        <div className="flex items-center justify-center space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={goToPreviousWeek}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
             title="Settimana precedente"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={goToCurrentWeek}
-            className="px-3 h-8 text-xs"
+            className="px-2 h-7 text-xs"
           >
             Questa Settimana
           </Button>
@@ -227,33 +235,34 @@ export function TimelineView({
             variant="outline"
             size="sm"
             onClick={goToNextWeek}
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0"
             title="Settimana successiva"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3" />
           </Button>
         </div>
-        <h2 className="text-lg font-semibold text-gray-800">
-          {format(startOfMonth(currentDate), "MMMM yyyy", { locale: getDateFnsLocale() })}
-        </h2>
-        <div className="text-sm text-gray-500">
-          Scorri orizzontalmente per vedere tutto il mese
+        
+        {/* Instructions */}
+        <div className="text-center">
+          <div className="text-xs text-gray-500">
+            Scorri orizzontalmente per vedere tutto il mese
+          </div>
         </div>
       </div>
 
-      {/* Container with sticky header and scrollable content */}
-      <div className="relative h-[600px] border rounded-lg overflow-hidden">
+      {/* Timeline Container - Constrained to viewport */}
+      <div className="relative h-[600px] border border-t-0 rounded-b-lg overflow-hidden max-w-full">
         {/* Sticky Header - Team Members + Days */}
-        <div className="sticky top-0 z-20 bg-white border-b shadow-sm flex" style={{ height: '72px' }}>
-          {/* Team Members Header */}
-          <div className="w-60 border-r bg-gray-50 p-3 flex flex-col justify-center">
-            <h3 className="font-semibold text-gray-900 text-sm">Team Members</h3>
-            <p className="text-xs text-gray-600">{employees.length} dipendenti</p>
+        <div className="sticky top-0 z-20 bg-white border-b shadow-sm flex" style={{ height: '60px' }}>
+          {/* Team Members Header - Compact */}
+          <div className="w-40 border-r bg-gray-50 p-2 flex flex-col justify-center">
+            <h3 className="font-semibold text-gray-900 text-xs">Team</h3>
+            <p className="text-xs text-gray-600">{employees.length} membri</p>
           </div>
           
-          {/* Days Header */}
+          {/* Days Header - Constrained */}
           <div ref={headerScrollRef} className="flex-1 overflow-x-auto overflow-y-hidden">
-            <div className="flex" style={{ width: `${monthDays.length * 100}px` }}>
+            <div className="flex" style={{ width: `${monthDays.length * 50}px` }}>
               {monthDays.map((day) => (
                 <div
                   key={day.toISOString()}
@@ -261,12 +270,12 @@ export function TimelineView({
                     "flex-shrink-0 p-1 text-center border-r text-xs flex flex-col justify-center",
                     isWeekend(day) && "bg-gray-50"
                   )}
-                  style={{ width: '100px', height: '72px' }}
+                  style={{ width: '50px', height: '60px' }}
                 >
-                  <div className="font-medium text-gray-900">
-                    {format(day, 'EEE', { locale: getDateFnsLocale() })}
+                  <div className="font-medium text-gray-900 text-xs">
+                    {format(day, 'EEE', { locale: getDateFnsLocale() }).slice(0, 2)}
                   </div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 text-sm font-medium">
                     {format(day, 'd')}
                   </div>
                 </div>
@@ -276,17 +285,17 @@ export function TimelineView({
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(600px - 72px)' }}>
+        <div className="overflow-y-auto overflow-x-hidden" style={{ height: 'calc(600px - 60px)' }}>
           <div className="flex">
-            {/* Employee Names Column */}
-            <div className="w-60 border-r bg-gray-50 flex-shrink-0">
+            {/* Employee Names Column - Compact */}
+            <div className="w-40 border-r bg-gray-50 flex-shrink-0">
               {employees.map((employee) => (
                 <div
                   key={employee.id}
-                  className="flex items-center space-x-2 px-3 py-2 hover:bg-white transition-colors border-b border-gray-100"
-                  style={{ height: '50px' }}
+                  className="flex items-center space-x-2 px-2 py-1 hover:bg-white transition-colors border-b border-gray-100"
+                  style={{ height: '45px' }}
                 >
-                  <Avatar className="h-5 w-5">
+                  <Avatar className="h-4 w-4">
                     <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
                       {getInitials(employee.name)}
                     </AvatarFallback>
@@ -296,11 +305,11 @@ export function TimelineView({
                       {employee.name}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {employee.department || 'Department'}
+                      {employee.department || 'Dept'}
                     </p>
                   </div>
                   {getEventsForEmployee(employee.id).length > 0 && (
-                    <Badge variant="secondary" className="text-xs h-4 px-1">
+                    <Badge variant="secondary" className="text-xs h-3 px-1">
                       {getEventsForEmployee(employee.id).length}
                     </Badge>
                   )}
@@ -310,9 +319,9 @@ export function TimelineView({
 
             {/* Holiday Rows Column */}
             <div ref={contentScrollRef} className="flex-1 overflow-x-auto overflow-y-visible">
-              <div style={{ width: `${monthDays.length * 100}px` }}>
+              <div style={{ width: `${monthDays.length * 50}px` }}>
                 {employees.map((employee) => (
-                  <div key={employee.id} className="flex border-b border-gray-100 hover:bg-gray-50" style={{ height: '50px' }}>
+                  <div key={employee.id} className="flex border-b border-gray-100 hover:bg-gray-50" style={{ height: '45px' }}>
                     {monthDays.map((day, dayIndex) => {
                       const dayEvents = getEventsForEmployeeAndDate(employee.id, day)
                       
@@ -323,7 +332,7 @@ export function TimelineView({
                             "flex-shrink-0 p-1 border-r border-gray-100 relative flex items-center",
                             isWeekend(day) && "bg-gray-25"
                           )}
-                          style={{ width: '100px' }}
+                          style={{ width: '50px' }}
                         >
                           {/* Holiday Events as horizontal bars */}
                           {dayEvents.map((event) => {
@@ -349,8 +358,8 @@ export function TimelineView({
                                   getStatusColor(event.resource.status)
                                 )}
                                 style={{
-                                  width: `calc(${spanWidth * 100}px - 6px)`,
-                                  height: '20px',
+                                  width: `calc(${spanWidth * 50}px - 6px)`,
+                                  height: '16px',
                                   left: '3px',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
@@ -361,14 +370,30 @@ export function TimelineView({
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                               >
-                                <span className="truncate px-1">
-                                  {event.resource.type === 'vacation' && '🏖️'}
-                                  {event.resource.type === 'sick' && '🏥'}  
-                                  {event.resource.type === 'personal' && '👤'}
-                                  {' '}
-                                  {event.resource.status === 'pending' ? 'Pending' : 
-                                   event.resource.status === 'approved' ? 'Approved' : 
-                                   event.resource.status}
+                                <span className="truncate px-1 text-xs">
+                                  {spanWidth > 2 ? (
+                                    <>
+                                      {/* Employee name for wider bars */}
+                                      {spanWidth > 6 && (
+                                        <span className="font-medium text-xs mr-1">
+                                          {event.resource.userName.split(' ')[0]}
+                                        </span>
+                                      )}
+                                      {event.resource.type === 'vacation' && '🏖️'}
+                                      {event.resource.type === 'sick' && '🏥'}  
+                                      {event.resource.type === 'personal' && '👤'}
+                                      {spanWidth > 8 && (
+                                        <span className="ml-1 text-xs">
+                                          {event.resource.status === 'pending' ? 'Pending' : 
+                                           event.resource.status === 'approved' ? 'OK' : 
+                                           event.resource.status === 'rejected' ? 'NO' :
+                                           event.resource.status}
+                                        </span>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <div className="w-2 h-2 rounded-full bg-white/80 mx-auto"></div>
+                                  )}
                                 </span>
                               </motion.div>
                             ) : null
@@ -458,6 +483,6 @@ export function TimelineView({
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

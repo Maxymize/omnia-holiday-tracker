@@ -9,6 +9,8 @@ interface User {
   name: string;
   role: 'admin' | 'employee';
   status: 'active' | 'inactive' | 'pending';
+  department?: string;
+  departmentName?: string;
 }
 
 interface AuthState {
@@ -58,20 +60,43 @@ export function useAuth() {
 
     try {
       // Use Netlify dev server in development, production URL in production
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+      // Multiple checks for development mode
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.port === '3001';
+      
+      const baseUrl = isDevelopment 
+        ? 'http://localhost:3000' 
         : window.location.origin;
+      
+      console.log('🔧 Login attempt:', {
+        NODE_ENV: process.env.NODE_ENV,
+        hostname: window.location.hostname,
+        port: window.location.port,
+        isDevelopment,
+        baseUrl,
+        fullUrl: `${baseUrl}/.netlify/functions/login-test`
+      });
       
       const response = await fetch(`${baseUrl}/.netlify/functions/login-test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies in request
+        // Include credentials only in production where cookies work properly
+        ...(isDevelopment ? {} : { credentials: 'include' }),
         body: JSON.stringify({ email, password }),
       });
 
+      console.log('🔧 Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       const data = await response.json();
+      console.log('🔧 Response data:', data);
 
       if (response.ok && data.success) {
         const { user, accessToken } = data.data;
@@ -115,7 +140,7 @@ export function useAuth() {
     try {
       // Call logout endpoint to clear cookies
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin;
         
       await fetch(`${baseUrl}/.netlify/functions/logout`, {
@@ -145,6 +170,45 @@ export function useAuth() {
     setAuthState(prev => ({ ...prev, error: null }));
   };
 
+  const refreshUserData = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    try {
+      // Use the same baseUrl logic as login
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost' ||
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.port === '3001';
+      
+      const baseUrl = isDevelopment 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+      // Call a profile endpoint to get updated user data
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const updatedUser = data.data.user;
+          localStorage.setItem('userData', JSON.stringify(updatedUser));
+          setAuthState(prev => ({
+            ...prev,
+            user: updatedUser
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+    }
+  };
+
   return {
     user: authState.user,
     loading: authState.loading,
@@ -152,6 +216,7 @@ export function useAuth() {
     login,
     logout,
     clearError,
+    refreshUserData,
     isAuthenticated: !!authState.user,
     isAdmin: authState.user?.role === 'admin'
   };

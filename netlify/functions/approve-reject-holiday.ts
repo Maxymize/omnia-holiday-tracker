@@ -5,9 +5,7 @@ import { z } from 'zod';
 // Input validation schema
 const approveRejectSchema = z.object({
   holidayId: z.string().min(1, 'Holiday ID is required'),
-  action: z.enum(['approve', 'reject'], {
-    errorMap: () => ({ message: 'Action must be either approve or reject' })
-  }),
+  action: z.enum(['approve', 'reject']),
   notes: z.string().optional()
 });
 
@@ -90,7 +88,7 @@ export const handler: Handler = async (event, context) => {
         headers,
         body: JSON.stringify({ 
           error: 'Dati non validi', 
-          details: error.errors 
+          details: error.issues 
         })
       };
     }

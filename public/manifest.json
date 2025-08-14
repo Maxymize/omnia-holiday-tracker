@@ -1,0 +1,108 @@
+{
+  "name": "Omnia Holiday Tracker",
+  "short_name": "Omnia Holidays",
+  "description": "Sistema di gestione ferie per OmniaGroup - Gestisci le tue ferie facilmente",
+  "theme_color": "#1e40af",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "it",
+  "dir": "ltr",
+  "categories": ["productivity", "business", "utilities"],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard principale con calendario ferie"
+    },
+    {
+      "src": "/images/screenshot-narrow.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Vista mobile del calendario ferie"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "shortcuts": [
+    {
+      "name": "Nuova Richiesta Ferie",
+      "short_name": "Nuova Richiesta",
+      "description": "Crea velocemente una nuova richiesta di ferie",
+      "url": "/it/employee-dashboard?action=new-request",
+      "icons": [
+        {
+          "src": "/images/shortcut-new-request.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Le Mie Ferie",
+      "short_name": "Le Mie Ferie",
+      "description": "Visualizza le tue ferie programmate",
+      "url": "/it/employee-dashboard",
+      "icons": [
+        {
+          "src": "/images/shortcut-my-holidays.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

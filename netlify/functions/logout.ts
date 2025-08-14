@@ -29,10 +29,7 @@ export const handler: Handler = async (event, context) => {
       statusCode: 200,
       headers: {
         ...headers,
-        'Set-Cookie': [
-          `auth-token=; ${cookieOptions}`,
-          `refresh-token=; ${cookieOptions}`
-        ]
+        'Set-Cookie': `auth-token=; ${cookieOptions}, refresh-token=; ${cookieOptions}`
       },
       body: JSON.stringify({
         success: true,

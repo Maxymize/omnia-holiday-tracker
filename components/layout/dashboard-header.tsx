@@ -5,6 +5,7 @@ import { Bell, User, Settings, LogOut, Menu } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
+import { LanguageSelector } from "@/components/layout/language-selector"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +78,9 @@ export function DashboardHeader({
 
       {/* Right side - Notifications and user menu */}
       <div className="flex items-center space-x-2">
+        {/* Language Selector */}
+        <LanguageSelector />
+        
         {/* Notifications */}
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="h-5 w-5" />

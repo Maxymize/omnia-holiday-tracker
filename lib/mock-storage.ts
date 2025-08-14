@@ -137,6 +137,30 @@ export function loadFromMockStorage(key: string): any | null {
   return null;
 }
 
+// Update holiday request with medical certificate file ID
+export function updateHolidayRequestWithFileId(holidayRequestId: string, fileId: string) {
+  try {
+    const existingRequests = loadFromMockStorage('new-holiday-requests') || [];
+    const updatedRequests = existingRequests.map((request: any) => {
+      if (request.id === holidayRequestId) {
+        return {
+          ...request,
+          medicalCertificateFileId: fileId,
+          medicalCertificateStatus: 'uploaded'
+        };
+      }
+      return request;
+    });
+    
+    saveToMockStorage('new-holiday-requests', updatedRequests);
+    console.log(`Updated holiday request ${holidayRequestId} with file ID ${fileId}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to update holiday request with file ID:', error);
+    return false;
+  }
+}
+
 // Clear all mock data (useful for testing)
 export function clearMockData() {
   try {

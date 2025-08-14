@@ -139,6 +139,15 @@ export function refreshAccessToken(refreshToken: string): string {
   return newAccessToken;
 }
 
+// Require admin access - throws error if not admin
+export function requireAdminAccess(payload: JWTPayload): void {
+  requireAccessToken(payload);
+  
+  if (payload.role !== 'admin') {
+    throw new Error('Admin access required');
+  }
+}
+
 // Get user info from token (for middleware)
 export function getUserFromToken(authHeader: string | undefined) {
   try {

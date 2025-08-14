@@ -73,12 +73,6 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
       badge: holidayStats?.pendingRequests
     },
     {
-      label: 'Statistiche',
-      href: `/${locale}/employee-dashboard?tab=stats`,
-      icon: BarChart3,
-      description: 'Analisi utilizzo ferie'
-    },
-    {
       label: 'Profilo',
       href: `/${locale}/employee-dashboard?tab=profile`,
       icon: User,

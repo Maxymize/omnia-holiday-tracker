@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+// Removed MagicToggle - using status buttons instead
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,44 @@ import {
   Info
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/hooks/useAdminData';
+
+// Status Button Component
+interface StatusButtonProps {
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  disabled?: boolean;
+}
+
+const StatusButton = ({ enabled, onToggle, disabled }: StatusButtonProps) => (
+  <div className="flex items-center space-x-2">
+    <Button
+      variant={enabled ? "default" : "outline"}
+      size="sm"
+      onClick={() => onToggle(true)}
+      disabled={Boolean(disabled) || Boolean(enabled)}
+      className={`${enabled 
+        ? 'bg-green-600 hover:bg-green-700 text-white' 
+        : 'hover:bg-green-50 hover:text-green-700 hover:border-green-200'
+      }`}
+    >
+      <CheckCircle className="h-3 w-3 mr-1" />
+      Abilitato
+    </Button>
+    <Button
+      variant={!enabled ? "default" : "outline"}
+      size="sm"
+      onClick={() => onToggle(false)}
+      disabled={Boolean(disabled) || Boolean(!enabled)}
+      className={`${!enabled 
+        ? 'bg-red-600 hover:bg-red-700 text-white' 
+        : 'hover:bg-red-50 hover:text-red-700 hover:border-red-200'
+      }`}
+    >
+      <AlertTriangle className="h-3 w-3 mr-1" />
+      Disabilitato
+    </Button>
+  </div>
+);
 
 interface SystemSettingsProps {
   settings: Partial<SystemSettings>;
@@ -139,13 +177,13 @@ export function SystemSettingsComponent({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onRefresh} disabled={loading}>
+          <Button variant="outline" onClick={onRefresh} disabled={Boolean(loading)}>
             Aggiorna
           </Button>
           {hasChanges && (
             <Button 
               onClick={handleSaveAll} 
-              disabled={saveLoading === 'all'}
+              disabled={Boolean(saveLoading === 'all')}
               className="bg-green-600 hover:bg-green-700"
             >
               <Save className="h-4 w-4 mr-2" />
@@ -201,31 +239,29 @@ export function SystemSettingsComponent({
               </p>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div>
                 <Label htmlFor="show-names">Mostra Nomi</Label>
                 <p className="text-xs text-gray-500">
                   Mostra i nomi dei dipendenti negli eventi del calendario
                 </p>
               </div>
-              <Switch
-                id="show-names"
-                checked={localSettings['holidays.show_names'] ?? true}
-                onCheckedChange={(checked) => handleSettingChange('holidays.show_names', checked)}
+              <StatusButton
+                enabled={localSettings['holidays.show_names'] ?? true}
+                onToggle={(enabled) => handleSettingChange('holidays.show_names', enabled)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div>
                 <Label htmlFor="show-details">Mostra Dettagli</Label>
                 <p className="text-xs text-gray-500">
                   Mostra dettagli delle ferie (tipo, note) negli eventi
                 </p>
               </div>
-              <Switch
-                id="show-details"
-                checked={localSettings['holidays.show_details'] ?? true}
-                onCheckedChange={(checked) => handleSettingChange('holidays.show_details', checked)}
+              <StatusButton
+                enabled={localSettings['holidays.show_details'] ?? true}
+                onToggle={(enabled) => handleSettingChange('holidays.show_details', enabled)}
               />
             </div>
 
@@ -233,10 +269,10 @@ export function SystemSettingsComponent({
               size="sm"
               variant="outline"
               onClick={() => handleSaveSetting('holidays.visibility_mode')}
-              disabled={
+              disabled={Boolean(
                 saveLoading === 'holidays.visibility_mode' ||
                 localSettings['holidays.visibility_mode'] === settings['holidays.visibility_mode']
-              }
+              )}
               className="w-full"
             >
               {saveLoading === 'holidays.visibility_mode' ? 'Salvando...' : 'Salva Visibilità'}
@@ -306,10 +342,10 @@ export function SystemSettingsComponent({
               size="sm"
               variant="outline"
               onClick={() => handleSaveSetting('holidays.approval_mode')}
-              disabled={
+              disabled={Boolean(
                 saveLoading === 'holidays.approval_mode' ||
                 localSettings['holidays.approval_mode'] === settings['holidays.approval_mode']
-              }
+              )}
               className="w-full"
             >
               {saveLoading === 'holidays.approval_mode' ? 'Salvando...' : 'Salva Approvazioni'}
@@ -324,17 +360,16 @@ export function SystemSettingsComponent({
           icon={Shield}
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="registration-enabled">Registrazione Abilitata</Label>
+                <Label htmlFor="registration-enabled">Registrazione</Label>
                 <p className="text-xs text-gray-500">
                   Permetti a nuovi dipendenti di registrarsi
                 </p>
               </div>
-              <Switch
-                id="registration-enabled"
-                checked={localSettings['system.registration_enabled'] ?? true}
-                onCheckedChange={(checked) => handleSettingChange('system.registration_enabled', checked)}
+              <StatusButton
+                enabled={localSettings['system.registration_enabled'] ?? true}
+                onToggle={(enabled) => handleSettingChange('system.registration_enabled', enabled)}
               />
             </div>
 
@@ -358,11 +393,11 @@ export function SystemSettingsComponent({
               size="sm"
               variant="outline"
               onClick={() => handleSaveSetting('system.registration_enabled')}
-              disabled={
+              disabled={Boolean(
                 saveLoading === 'system.registration_enabled' ||
                 (localSettings['system.registration_enabled'] === settings['system.registration_enabled'] &&
                  localSettings['system.default_holiday_allowance'] === settings['system.default_holiday_allowance'])
-              }
+              )}
               className="w-full"
             >
               {saveLoading === 'system.registration_enabled' ? 'Salvando...' : 'Salva Sistema'}
@@ -377,31 +412,29 @@ export function SystemSettingsComponent({
           icon={Users}
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div>
                 <Label htmlFor="dept-visibility">Visibilità Dipartimenti</Label>
                 <p className="text-xs text-gray-500">
                   I dipendenti possono vedere i colleghi del loro dipartimento
                 </p>
               </div>
-              <Switch
-                id="dept-visibility"
-                checked={localSettings['departments.visibility_enabled'] ?? true}
-                onCheckedChange={(checked) => handleSettingChange('departments.visibility_enabled', checked)}
+              <StatusButton
+                enabled={localSettings['departments.visibility_enabled'] ?? true}
+                onToggle={(enabled) => handleSettingChange('departments.visibility_enabled', enabled)}
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="space-y-3">
               <div>
                 <Label htmlFor="cross-dept">Vista Inter-Dipartimentale</Label>
                 <p className="text-xs text-gray-500">
                   Permetti ai dipendenti di vedere altri dipartimenti
                 </p>
               </div>
-              <Switch
-                id="cross-dept"
-                checked={localSettings['departments.cross_department_view'] ?? false}
-                onCheckedChange={(checked) => handleSettingChange('departments.cross_department_view', checked)}
+              <StatusButton
+                enabled={localSettings['departments.cross_department_view'] ?? false}
+                onToggle={(enabled) => handleSettingChange('departments.cross_department_view', enabled)}
               />
             </div>
 
@@ -409,11 +442,11 @@ export function SystemSettingsComponent({
               size="sm"
               variant="outline"
               onClick={() => handleSaveSetting('departments.visibility_enabled')}
-              disabled={
+              disabled={Boolean(
                 saveLoading === 'departments.visibility_enabled' ||
                 (localSettings['departments.visibility_enabled'] === settings['departments.visibility_enabled'] &&
                  localSettings['departments.cross_department_view'] === settings['departments.cross_department_view'])
-              }
+              )}
               className="w-full"
             >
               {saveLoading === 'departments.visibility_enabled' ? 'Salvando...' : 'Salva Dipartimenti'}
@@ -430,47 +463,44 @@ export function SystemSettingsComponent({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div>
-                    <Label htmlFor="email-notifications">Email Abilitate</Label>
+                    <Label htmlFor="email-notifications">Email</Label>
                     <p className="text-xs text-gray-500">
                       Invia notifiche via email per approvazioni e aggiornamenti
                     </p>
                   </div>
-                  <Switch
-                    id="email-notifications"
-                    checked={localSettings['notifications.email_enabled'] ?? false}
-                    onCheckedChange={(checked) => handleSettingChange('notifications.email_enabled', checked)}
+                  <StatusButton
+                    enabled={localSettings['notifications.email_enabled'] ?? false}
+                    onToggle={(enabled) => handleSettingChange('notifications.email_enabled', enabled)}
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div>
                     <Label htmlFor="browser-notifications">Notifiche Browser</Label>
                     <p className="text-xs text-gray-500">
                       Mostra notifiche nel browser per eventi importanti
                     </p>
                   </div>
-                  <Switch
-                    id="browser-notifications"
-                    checked={localSettings['notifications.browser_enabled'] ?? true}
-                    onCheckedChange={(checked) => handleSettingChange('notifications.browser_enabled', checked)}
+                  <StatusButton
+                    enabled={localSettings['notifications.browser_enabled'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div>
                     <Label htmlFor="manager-reminders">Promemoria Manager</Label>
                     <p className="text-xs text-gray-500">
                       Invia promemoria ai manager per richieste pendenti
                     </p>
                   </div>
-                  <Switch
-                    id="manager-reminders"
-                    checked={localSettings['notifications.remind_managers'] ?? true}
-                    onCheckedChange={(checked) => handleSettingChange('notifications.remind_managers', checked)}
+                  <StatusButton
+                    enabled={localSettings['notifications.remind_managers'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.remind_managers', enabled)}
                   />
                 </div>
 
@@ -478,12 +508,12 @@ export function SystemSettingsComponent({
                   size="sm"
                   variant="outline"
                   onClick={() => handleSaveSetting('notifications.email_enabled')}
-                  disabled={
+                  disabled={Boolean(
                     saveLoading === 'notifications.email_enabled' ||
                     (localSettings['notifications.email_enabled'] === settings['notifications.email_enabled'] &&
                      localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'] &&
                      localSettings['notifications.remind_managers'] === settings['notifications.remind_managers'])
-                  }
+                  )}
                   className="w-full"
                 >
                   {saveLoading === 'notifications.email_enabled' ? 'Salvando...' : 'Salva Notifiche'}

@@ -35,7 +35,7 @@ export default function HolidayRequestPage() {
     try {
       setIsLoading(true);
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin;
 
       const token = localStorage.getItem('accessToken');
@@ -61,35 +61,16 @@ export default function HolidayRequestPage() {
   };
 
   const handleSubmit = async (data: any) => {
+    // FIXED: This function now only handles success/error UI and navigation
+    // All API calls are handled by the MultiStepHolidayRequest component
     setIsSubmitting(true);
+    console.log('Holiday request completed successfully:', data);
+    
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
-        : window.location.origin;
-
-      const token = localStorage.getItem('accessToken');
-      
-      const response = await fetch(`${baseUrl}/.netlify/functions/holidays/create-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          startDate: data.startDate.toISOString().split('T')[0],
-          endDate: data.endDate.toISOString().split('T')[0],
-          type: data.type,
-          notes: data.notes || '',
-          workingDays: data.workingDays
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Errore durante la creazione della richiesta');
-      }
-
-      toast.success('Richiesta inviata con successo!', 'La tua richiesta di ferie è stata inviata per l\'approvazione.');
+      // Show success message 
+      toast.success('✅ Richiesta ferie inviata con successo!', 
+        'La tua richiesta è stata inviata per approvazione.'
+      );
       
       // Redirect back to dashboard after a short delay
       setTimeout(() => {
@@ -97,8 +78,7 @@ export default function HolidayRequestPage() {
       }, 2000);
 
     } catch (error) {
-      console.error('Error creating holiday request:', error);
-      throw error; // Let the form handle error display
+      console.error('Error in post-submission handling:', error);
     } finally {
       setIsSubmitting(false);
     }

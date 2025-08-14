@@ -285,6 +285,7 @@ export default function AdminDashboard() {
           {activeTab === 'employees' && (
             <EmployeeManagement
               employees={employees}
+              departments={departments}
               loading={adminLoading}
               error={adminError}
               onApproveEmployee={approveEmployee}

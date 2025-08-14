@@ -25,6 +25,7 @@ import {
 import { useAuth } from "@/lib/hooks/useAuth"
 import { useI18n } from "@/lib/i18n/provider"
 import { MultiStepHolidayRequest } from "@/components/forms/multi-step-holiday-request"
+import { useMobileGestures } from "@/lib/hooks/useMobileGestures"
 import { cn } from "@/lib/utils"
 
 interface HolidayEvent {
@@ -73,6 +74,13 @@ export function MobileCalendar({
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false)
   const [showDayEventsDialog, setShowDayEventsDialog] = useState(false)
 
+  // Mobile gesture support for month navigation
+  const calendarRef = useMobileGestures<HTMLDivElement>({
+    onSwipeLeft: () => navigateMonth('next'),
+    onSwipeRight: () => navigateMonth('prev'),
+    threshold: 75, // Increased threshold for calendar navigation
+  })
+
   // Get locale for date-fns
   const getDateFnsLocale = () => {
     switch (locale) {
@@ -102,7 +110,7 @@ export function MobileCalendar({
       })
 
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888' 
+        ? 'http://localhost:3000' 
         : window.location.origin
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?${params}`, {
@@ -713,8 +721,12 @@ export function MobileCalendar({
             </div>
           )}
 
-          {/* Mobile view container with proper overflow handling */}
-          <div className="w-full overflow-hidden">
+          {/* Mobile view container with proper overflow handling and gesture support */}
+          <div 
+            ref={calendarRef}
+            className="w-full overflow-hidden touch-pan-y select-none"
+            data-calendar-container
+          >
             {renderMobileView()}
           </div>
         </CardContent>
@@ -753,7 +765,7 @@ export function MobileCalendar({
               try {
                 // Call the backend API to create the holiday request
                 const baseUrl = process.env.NODE_ENV === 'development' 
-                  ? 'http://localhost:8888' 
+                  ? 'http://localhost:3000' 
                   : window.location.origin
 
                 const token = localStorage.getItem('accessToken')

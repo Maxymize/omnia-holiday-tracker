@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, 
@@ -26,12 +27,14 @@ import {
   XCircle,
   AlertTriangle,
   UserPlus,
-  RefreshCw
+  RefreshCw,
+  Edit3
 } from 'lucide-react';
-import { Employee } from '@/lib/hooks/useAdminData';
+import { Employee, Department } from '@/lib/hooks/useAdminData';
 
 interface EmployeeManagementProps {
   employees: Employee[];
+  departments: Department[];
   loading: boolean;
   error: string | null;
   onApproveEmployee: (employeeId: string) => Promise<boolean>;
@@ -41,6 +44,7 @@ interface EmployeeManagementProps {
 
 export function EmployeeManagement({ 
   employees, 
+  departments,
   loading, 
   error, 
   onApproveEmployee, 
@@ -48,7 +52,7 @@ export function EmployeeManagement({
   onRefresh 
 }: EmployeeManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'approved' | 'pending' | 'rejected' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'employee'>('all');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -57,6 +61,12 @@ export function EmployeeManagement({
     employee: Employee | null;
     action: 'approve' | 'reject';
   }>({ isOpen: false, employee: null, action: 'approve' });
+  
+  // Department assignment state
+  const [showDepartmentDialog, setShowDepartmentDialog] = useState(false);
+  const [assigningEmployee, setAssigningEmployee] = useState<Employee | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [assignLoading, setAssignLoading] = useState(false);
 
   // Filter and search employees
   const filteredEmployees = useMemo(() => {
@@ -139,16 +149,61 @@ export function EmployeeManagement({
     }
   };
 
+  const handleAssignDepartment = async () => {
+    if (!assigningEmployee) return;
+
+    setAssignLoading(true);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-department`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          employeeId: assigningEmployee.id,
+          departmentId: selectedDepartment === 'none' ? null : selectedDepartment
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to assign department');
+      }
+
+      // Reset form and close dialog
+      setAssigningEmployee(null);
+      setSelectedDepartment('');
+      setShowDepartmentDialog(false);
+      
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error assigning department:', err);
+      // TODO: Show error toast
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const openDepartmentDialog = (employee: Employee) => {
+    setAssigningEmployee(employee);
+    setSelectedDepartment(employee.department || '');
+    setShowDepartmentDialog(true);
+  };
+
   const getStatusBadge = (status: Employee['status']) => {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-100 text-green-800">Attivo</Badge>;
-      case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approvato</Badge>;
       case 'pending':
         return <Badge className="bg-amber-100 text-amber-800">In attesa</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rifiutato</Badge>;
       case 'inactive':
         return <Badge className="bg-gray-100 text-gray-800">Inattivo</Badge>;
       default:
@@ -175,7 +230,7 @@ export function EmployeeManagement({
   };
 
   const pendingEmployees = employees.filter(emp => emp.status === 'pending');
-  const activeEmployees = employees.filter(emp => emp.status === 'active' || emp.status === 'approved');
+  const activeEmployees = employees.filter(emp => emp.status === 'active');
   const totalHolidaysUsed = employees.reduce((sum, emp) => sum + emp.holidaysUsed, 0);
 
   if (loading && employees.length === 0) {
@@ -302,9 +357,7 @@ export function EmployeeManagement({
                 <SelectContent>
                   <SelectItem value="all">Tutti gli stati</SelectItem>
                   <SelectItem value="active">Attivi</SelectItem>
-                  <SelectItem value="approved">Approvati</SelectItem>
                   <SelectItem value="pending">In attesa</SelectItem>
-                  <SelectItem value="rejected">Rifiutati</SelectItem>
                   <SelectItem value="inactive">Inattivi</SelectItem>
                 </SelectContent>
               </Select>
@@ -415,7 +468,7 @@ export function EmployeeManagement({
                           )}
                           
                           {/* Per dipendenti attivi/approvati: consenti di rifiutare */}
-                          {(employee.status === 'active' || employee.status === 'approved') && (
+                          {employee.status === 'active' && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -429,7 +482,7 @@ export function EmployeeManagement({
                           )}
                           
                           {/* Per dipendenti rifiutati: consenti di approvare */}
-                          {employee.status === 'rejected' && (
+                          {employee.status === 'inactive' && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -441,6 +494,17 @@ export function EmployeeManagement({
                               <UserCheck className="h-4 w-4" />
                             </Button>
                           )}
+                          
+                          {/* Assegna Dipartimento Button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openDepartmentDialog(employee)}
+                            title="Assegna dipartimento"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
@@ -591,6 +655,69 @@ export function EmployeeManagement({
               }
             >
               {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Department Assignment Dialog */}
+      <Dialog open={showDepartmentDialog} onOpenChange={setShowDepartmentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assegna Dipartimento</DialogTitle>
+          </DialogHeader>
+          {assigningEmployee && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback>
+                    {getUserInitials(assigningEmployee.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{assigningEmployee.name}</h3>
+                  <p className="text-sm text-gray-600">{assigningEmployee.email}</p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="department-select">Dipartimento</Label>
+                <Select 
+                  value={selectedDepartment} 
+                  onValueChange={setSelectedDepartment}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Seleziona un dipartimento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nessun dipartimento</SelectItem>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name} {dept.location && `(${dept.location})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                Dipartimento attuale: {assigningEmployee.departmentName || 'Nessuno'}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDepartmentDialog(false)}
+              disabled={assignLoading}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleAssignDepartment}
+              disabled={assignLoading}
+            >
+              {assignLoading ? 'Assegnando...' : 'Assegna Dipartimento'}
             </Button>
           </DialogFooter>
         </DialogContent>
