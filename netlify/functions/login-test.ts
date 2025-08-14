@@ -1,19 +1,11 @@
 import { Handler } from '@netlify/functions';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { loadFromMockStorage, getEmployeeStatus } from '../../lib/mock-storage';
+import { getUserByEmail, getDepartments } from '../../lib/db/operations';
+import { createAuditLog } from '../../lib/db/helpers';
+import { autoInitializeDatabase, isDatabaseInitialized } from '../../lib/db/auto-init';
 
-// Simulazione connessione database per test rapido
-const testUsers = [
-  {
-    id: 'c2c282ce-5723-4049-8428-7a28d4a12b73',
-    email: 'max.giurastante@omniaservices.net',
-    name: 'Massimiliano Giurastante',
-    passwordHash: '$2b$12$qPfeGTGXjHda4ru0hoF.5OWtClfftXPCKDf4Sr7gQej.pN9AyYBpe', // admin123
-    role: 'admin',
-    status: 'active'
-  }
-];
+// Production database will be used - no hardcoded users needed
 
 export const handler: Handler = async (event, context) => {
   // CORS headers
@@ -37,6 +29,8 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
+    // Check if database needs initialization (for admin login)
+    const adminEmail = process.env.ADMIN_EMAIL || 'max.giurastante@omniaservices.net';
     const body = JSON.parse(event.body || '{}');
     const { email, password } = body;
 
@@ -47,27 +41,42 @@ export const handler: Handler = async (event, context) => {
         body: JSON.stringify({ error: 'Email e password sono richiesti' })
       };
     }
+    
+    // If this is admin login attempt and database is not initialized, initialize it
+    if (email.toLowerCase() === adminEmail.toLowerCase()) {
+      const isInitialized = await isDatabaseInitialized();
+      if (!isInitialized) {
+        console.log('🚀 Database not initialized, starting auto-initialization...');
+        await autoInitializeDatabase();
+        console.log('✅ Database auto-initialization completed');
+      }
+    }
 
-    // Load registered users from mock storage
-    const registrations = loadFromMockStorage('registrations') || [];
-    
-    // Convert registrations to user format and combine with test users
-    const registeredUsers = registrations.map((reg: any) => ({
-      id: reg.id,
-      email: reg.email,
-      name: reg.name,
-      passwordHash: reg.passwordHash,
-      role: reg.role,
-      status: reg.status
-    }));
-    
-    // Combine hardcoded test users with registered users
-    const allUsers = [...testUsers, ...registeredUsers];
-    
-    // Trova utente tra tutti gli utenti disponibili
-    const user = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    // Try to find user in database
+    const user = await getUserByEmail(email.toLowerCase());
     if (!user) {
       console.log(`Login attempt for unknown user: ${email}`);
+      
+      // Log failed login attempt
+      try {
+        await createAuditLog(
+          'login_attempt',
+          null,
+          { 
+            email, 
+            success: false, 
+            reason: 'User not found' 
+          },
+          undefined,
+          undefined,
+          'authentication',
+          event.headers['x-forwarded-for'] || event.headers['client-ip'],
+          event.headers['user-agent']
+        );
+      } catch (auditError) {
+        console.error('Failed to log failed login attempt:', auditError);
+      }
+      
       return {
         statusCode: 401,
         headers,
@@ -75,13 +84,30 @@ export const handler: Handler = async (event, context) => {
       };
     }
     
-    // Check for status updates from admin panel
-    const updatedStatus = getEmployeeStatus(user.id);
-    const finalStatus = updatedStatus || user.status;
-    
-    // Check if user is approved (active or approved status)
-    if (finalStatus !== 'active' && finalStatus !== 'approved') {
-      console.log(`Login attempt for unapproved user: ${email} (original status: ${user.status}, updated: ${updatedStatus || 'none'})`);
+    // Check if user is approved (active status)
+    if (user.status !== 'active') {
+      console.log(`Login attempt for unapproved user: ${email} (status: ${user.status})`);
+      
+      // Log failed login attempt  
+      try {
+        await createAuditLog(
+          'login_attempt',
+          user.id,
+          { 
+            email, 
+            success: false, 
+            reason: `Account not active: ${user.status}` 
+          },
+          user.id,
+          undefined,
+          'authentication',
+          event.headers['x-forwarded-for'] || event.headers['client-ip'],
+          event.headers['user-agent']
+        );
+      } catch (auditError) {
+        console.error('Failed to log failed login attempt:', auditError);
+      }
+      
       return {
         statusCode: 401,
         headers,
@@ -89,11 +115,33 @@ export const handler: Handler = async (event, context) => {
       };
     }
     
-    console.log(`Successful login for user: ${email} (status: ${finalStatus})`)
+    console.log(`Database user found: ${email} (status: ${user.status})`);
 
-    // Verifica password
+    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
+      console.log(`Invalid password for user: ${email}`);
+      
+      // Log failed login attempt
+      try {
+        await createAuditLog(
+          'login_attempt',
+          user.id,
+          { 
+            email, 
+            success: false, 
+            reason: 'Invalid password' 
+          },
+          user.id,
+          undefined,
+          'authentication',
+          event.headers['x-forwarded-for'] || event.headers['client-ip'],
+          event.headers['user-agent']
+        );
+      } catch (auditError) {
+        console.error('Failed to log failed login attempt:', auditError);
+      }
+      
       return {
         statusCode: 401,
         headers,
@@ -101,56 +149,45 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Get user department information
+    // Get user department information from database
     let department = null;
     let departmentName = null;
     
-    // Load employees to get department information
-    const mockEmployees = [
-      {
-        id: 'e1',
-        name: 'Mario Rossi',
-        email: 'mario.rossi@ominiaservice.net',
-        department: 'dept1',
-        departmentName: 'IT Development'
-      },
-      {
-        id: 'e2',
-        name: 'Giulia Bianchi',
-        email: 'giulia.bianchi@ominiaservice.net',
-        department: 'dept2',
-        departmentName: 'Marketing'
-      },
-      {
-        id: 'e3',
-        name: 'Luca Verdi',
-        email: 'luca.verdi@ominiaservice.net',
-        department: 'dept1',
-        departmentName: 'IT Development'
-      }
-    ];
-    
-    // Check if this is a hardcoded employee
-    const mockEmployee = mockEmployees.find(emp => emp.email.toLowerCase() === user.email.toLowerCase());
-    if (mockEmployee) {
-      department = mockEmployee.department;
-      departmentName = mockEmployee.departmentName;
-    } else {
-      // Check if this user has been assigned to a department (for registered users)
-      const registrations = loadFromMockStorage('registrations') || [];
-      const userRegistration = registrations.find((reg: any) => reg.id === user.id);
-      
-      if (userRegistration && userRegistration.departmentId) {
-        department = userRegistration.departmentId;
-        
-        // Get department name
-        const departments = loadFromMockStorage('departments') || [];
-        const departmentInfo = departments.find((dept: any) => dept.id === userRegistration.departmentId);
-        departmentName = departmentInfo ? departmentInfo.name : 'Sconosciuto';
+    if (user.departmentId) {
+      try {
+        const departments = await getDepartments();
+        const userDepartment = departments.find(dept => dept.id === user.departmentId);
+        if (userDepartment) {
+          department = userDepartment.id;
+          departmentName = userDepartment.name;
+        }
+      } catch (deptError) {
+        console.error('Failed to load department information:', deptError);
+        // Continue without department info
       }
     }
 
-    // Genera JWT token with proper format for jwt-utils validation
+    // Log successful login
+    try {
+      await createAuditLog(
+        'login_attempt',
+        user.id,
+        { 
+          email, 
+          success: true, 
+          userAgent: event.headers['user-agent'] || 'Unknown'
+        },
+        user.id,
+        undefined,
+        'authentication',
+        event.headers['x-forwarded-for'] || event.headers['client-ip'],
+        event.headers['user-agent']
+      );
+    } catch (auditError) {
+      console.error('Failed to log successful login:', auditError);
+    }
+    
+    // Generate JWT token with proper format for jwt-utils validation
     const tokenPayload = {
       userId: user.id,
       email: user.email,
@@ -178,7 +215,7 @@ export const handler: Handler = async (event, context) => {
             email: user.email,
             name: user.name,
             role: user.role,
-            status: finalStatus,
+            status: user.status,
             department,
             departmentName
           },
