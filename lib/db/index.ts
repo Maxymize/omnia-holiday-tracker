@@ -11,37 +11,39 @@ if (!databaseUrl) {
 }
 
 // Clean up the connection string for Neon client compatibility
-// Remove channel_binding parameter which is not supported by @neondatabase/serverless
-if (databaseUrl.includes('channel_binding=require')) {
-  console.log('🔧 Cleaning connection string: removing channel_binding parameter');
+// Use proper URL parsing to safely remove unsupported parameters
+try {
+  const url = new URL(databaseUrl);
   
-  // More precise removal of channel_binding parameter
-  // Handle different cases: ?channel_binding=require&, &channel_binding=require&, &channel_binding=require (at end)
-  databaseUrl = databaseUrl
-    .replace(/[?&]channel_binding=require&/g, '&')  // Remove channel_binding in the middle
-    .replace(/[?]channel_binding=require$/g, '')     // Remove channel_binding at end after ?
-    .replace(/&channel_binding=require$/g, '')      // Remove channel_binding at end after &
-    .replace(/[?]channel_binding=require&/g, '?');  // Replace ?channel_binding& with ?
-  
-  // If we accidentally removed the ? entirely, ensure the query string starts properly
-  if (databaseUrl.includes('sslmode=require') && !databaseUrl.includes('?') && databaseUrl.includes('&')) {
-    databaseUrl = databaseUrl.replace('&sslmode=require', '?sslmode=require');
+  // Remove channel_binding parameter if present (not supported by @neondatabase/serverless)
+  if (url.searchParams.has('channel_binding')) {
+    console.log('🔧 Removing unsupported channel_binding parameter from connection string');
+    url.searchParams.delete('channel_binding');
   }
+  
+  // Ensure sslmode is set for production
+  if (!url.searchParams.has('sslmode')) {
+    url.searchParams.set('sslmode', 'require');
+  }
+  
+  // Reconstruct the URL
+  databaseUrl = url.toString();
+  
+  console.log('🔧 Database connection configured successfully');
+  console.log('🔧 URL structure validation:', {
+    protocol: url.protocol,
+    host: url.host,
+    pathname: url.pathname,
+    hasQueryParams: url.searchParams.toString() !== '',
+    sslmode: url.searchParams.get('sslmode'),
+    channel_binding: url.searchParams.has('channel_binding') ? 'present (will be removed)' : 'not present'
+  });
+  
+} catch (urlError) {
+  console.error('❌ Failed to parse database URL:', urlError);
+  console.error('Raw URL (masked):', databaseUrl.replace(/://[^@]+@/, '://***:***@'));
+  throw new Error('Invalid database connection string format');
 }
-
-// Ensure sslmode is set correctly for production
-if (!databaseUrl.includes('sslmode=')) {
-  databaseUrl += (databaseUrl.includes('?') ? '&' : '?') + 'sslmode=require';
-}
-
-console.log('🔧 Database connection configured:', databaseUrl.replace(/:\/\/[^@]+@/, '://***:***@'));
-console.log('🔧 Full cleaned URL structure check:', {
-  hasProtocol: databaseUrl.startsWith('postgresql://'),
-  hasCredentials: databaseUrl.includes('@'),
-  hasDatabase: databaseUrl.includes('/neondb'),
-  hasQueryString: databaseUrl.includes('?'),
-  hasSslMode: databaseUrl.includes('sslmode=require')
-});
 
 // Create Neon HTTP client
 const sql = neon(databaseUrl);
