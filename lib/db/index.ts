@@ -41,7 +41,7 @@ try {
   
 } catch (urlError) {
   console.error('❌ Failed to parse database URL:', urlError);
-  console.error('Raw URL (masked):', databaseUrl.replace(/://[^@]+@/, '://***:***@'));
+  console.error('Raw URL (masked):', databaseUrl.replace(/:\/\/[^@]+@/, '://***:***@'));
   throw new Error('Invalid database connection string format');
 }
 

@@ -251,7 +251,7 @@ export function MultiStepHolidayRequest({
       
       return () => clearTimeout(timeoutId)
     }
-  }, [startDate, endDate]) // Only depend on dates, not on checkForConflicts
+  }, [startDate, endDate, checkForConflicts]) // Include checkForConflicts in dependencies
 
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {
