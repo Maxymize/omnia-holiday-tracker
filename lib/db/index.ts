@@ -14,7 +14,19 @@ if (!databaseUrl) {
 // Remove channel_binding parameter which is not supported by @neondatabase/serverless
 if (databaseUrl.includes('channel_binding=require')) {
   console.log('🔧 Cleaning connection string: removing channel_binding parameter');
-  databaseUrl = databaseUrl.replace(/[&?]channel_binding=require/g, '');
+  
+  // More precise removal of channel_binding parameter
+  // Handle different cases: ?channel_binding=require&, &channel_binding=require&, &channel_binding=require (at end)
+  databaseUrl = databaseUrl
+    .replace(/[?&]channel_binding=require&/g, '&')  // Remove channel_binding in the middle
+    .replace(/[?]channel_binding=require$/g, '')     // Remove channel_binding at end after ?
+    .replace(/&channel_binding=require$/g, '')      // Remove channel_binding at end after &
+    .replace(/[?]channel_binding=require&/g, '?');  // Replace ?channel_binding& with ?
+  
+  // If we accidentally removed the ? entirely, ensure the query string starts properly
+  if (databaseUrl.includes('sslmode=require') && !databaseUrl.includes('?') && databaseUrl.includes('&')) {
+    databaseUrl = databaseUrl.replace('&sslmode=require', '?sslmode=require');
+  }
 }
 
 // Ensure sslmode is set correctly for production
@@ -23,6 +35,13 @@ if (!databaseUrl.includes('sslmode=')) {
 }
 
 console.log('🔧 Database connection configured:', databaseUrl.replace(/:\/\/[^@]+@/, '://***:***@'));
+console.log('🔧 Full cleaned URL structure check:', {
+  hasProtocol: databaseUrl.startsWith('postgresql://'),
+  hasCredentials: databaseUrl.includes('@'),
+  hasDatabase: databaseUrl.includes('/neondb'),
+  hasQueryString: databaseUrl.includes('?'),
+  hasSslMode: databaseUrl.includes('sslmode=require')
+});
 
 // Create Neon HTTP client
 const sql = neon(databaseUrl);
