@@ -7,7 +7,7 @@ const ADMIN_USER = {
   id: 'admin-001',
   email: 'max.giurastante@omniaservices.net',
   name: 'Massimiliano Giurastante',
-  passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY3LjNFrYJXNs2W', // admin123
+  passwordHash: '$2b$12$WcdHQcg04ZC0mVC48EoyUekAvkzioVAlKkVHZtwxJqR8uQtHYDKu.', // admin123
   role: 'admin',
   status: 'active'
 };
