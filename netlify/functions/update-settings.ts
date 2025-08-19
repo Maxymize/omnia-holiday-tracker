@@ -15,6 +15,7 @@ const systemSettingSchema = z.object({
       'holidays.advance_notice_days',
       'holidays.max_consecutive_days',
       'system.registration_enabled',
+      'system.domain_restriction_enabled',
       'system.default_holiday_allowance',
       'notifications.email_enabled',
       'notifications.browser_enabled',
