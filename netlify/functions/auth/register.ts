@@ -99,6 +99,14 @@ export const handler: Handler = async (event, context) => {
     const passwordHash = await bcrypt.hash(validatedData.password, saltRounds);
 
     // Create user with pending status
+    console.log('Creating user with data:', {
+      name: validatedData.name,
+      email: validatedData.email,
+      role: 'employee',
+      status: 'pending',
+      holidayAllowance: 20
+    });
+    
     const newUser = await createUser({
       name: validatedData.name,
       email: validatedData.email,
@@ -107,6 +115,8 @@ export const handler: Handler = async (event, context) => {
       status: 'pending', // Requires admin approval
       holidayAllowance: 20, // Default Italian holiday allowance
     });
+    
+    console.log('User created successfully:', { id: newUser.id, email: newUser.email, status: newUser.status });
 
     // Log registration for audit trail
     console.log(`New user registration: ${validatedData.email} at ${new Date().toISOString()}`);

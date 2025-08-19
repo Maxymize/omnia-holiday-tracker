@@ -36,7 +36,7 @@ export const handler: Handler = async (event, context) => {
           holidays: holidaysCount.length,
           departments: departmentsCount.length
         },
-        users: usersCount.map(u => ({ id: u.id, email: u.email, name: u.name })),
+        users: usersCount.map(u => ({ id: u.id, email: u.email, name: u.name, status: u.status, role: u.role })),
         holidays: holidaysCount.map(h => ({ 
           id: h.id, 
           userId: h.userId, 
