@@ -135,7 +135,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-employees-mock`, createFetchConfig('GET', token || undefined));
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-employees`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -164,7 +164,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-departments-mock`, createFetchConfig('GET', token || undefined));
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-departments`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -193,7 +193,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=all`, createFetchConfig('GET', token || undefined));
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?viewMode=all`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -222,7 +222,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-settings-mock`, createFetchConfig('GET', token || undefined));
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-settings`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -325,8 +325,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      // Use mock endpoint for now (switch to real endpoint when database is ready)
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, 
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, 
         createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'approve'
@@ -354,8 +353,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      // Use mock endpoint for now (switch to real endpoint when database is ready)
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, 
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, 
         createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'reject',
