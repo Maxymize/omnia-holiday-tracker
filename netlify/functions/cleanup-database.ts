@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { db } from '../../lib/db';
-import { users, holidays, departments, auditLogs } from '../../lib/db/schema';
+import { users, holidays, departments } from '../../lib/db/schema';
 import { eq, ne, not, and, lt } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
@@ -135,6 +135,24 @@ export const handler: Handler = async (event, context) => {
         
         // 4. Skip audit logs cleanup for now - can cause issues
         results.auditLogsRemoved = 'Skipped';
+        
+        break;
+
+      case 'clean-simple':
+        // Simple cleanup without audit logs
+        
+        // 1. Delete all holidays first (due to foreign key constraints)
+        const deletedHolidaysCount = await db.delete(holidays);
+        results.holidaysRemoved = 'All';
+        
+        // 2. Delete all non-admin users
+        const deletedUsersCount = await db.delete(users)
+          .where(ne(users.email, 'max.giurastante@omniaservices.net'));
+        results.usersRemoved = 'All except admin';
+        
+        // 3. Delete all departments
+        const deletedDepartmentsCount = await db.delete(departments);
+        results.departmentsRemoved = 'All';
         
         break;
 
