@@ -83,7 +83,24 @@ export function DepartmentManagement({
   // Get employees for selected department
   const selectedDepartmentEmployees = useMemo(() => {
     if (!selectedDepartment) return [];
-    return employees.filter(emp => emp.department === selectedDepartment.id);
+    
+    // Debug: log to understand the structure
+    console.log('Selected Department:', selectedDepartment);
+    console.log('Employees:', employees);
+    
+    return employees.filter(emp => {
+      // Check multiple possible ways the department might be stored
+      const hasMatchingDepartment = 
+        emp.department === selectedDepartment.id || 
+        emp.department === selectedDepartment.name ||
+        (emp.departmentName && emp.departmentName === selectedDepartment.name);
+      
+      if (hasMatchingDepartment) {
+        console.log('Matching employee:', emp);
+      }
+      
+      return hasMatchingDepartment;
+    });
   }, [employees, selectedDepartment]);
 
   const handleCreateDepartment = async () => {
