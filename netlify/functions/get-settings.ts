@@ -159,6 +159,7 @@ export const handler: Handler = async (event, context) => {
       // System settings
       'system.maintenance_mode': 'false', // System maintenance mode
       'system.registration_enabled': 'true', // Allow new employee registration
+      'system.domain_restriction_enabled': 'true', // Restrict registration to OmniaGroup domains
       'system.default_holiday_allowance': '25', // Default vacation days per year
       
       // Company settings

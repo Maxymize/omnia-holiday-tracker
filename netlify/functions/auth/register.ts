@@ -2,6 +2,9 @@ import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { createUser, getUserByEmail } from '../../../lib/db/helpers';
+import { db } from '../../../lib/db/index';
+import { settings } from '../../../lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 // Input validation schema
 const registerSchema = z.object({
@@ -17,6 +20,26 @@ const headers = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 };
+
+// Helper function to check if domain restriction is enabled
+async function isDomainRestrictionEnabled(): Promise<boolean> {
+  try {
+    const domainSetting = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, 'system.domain_restriction_enabled'))
+      .limit(1);
+    
+    if (domainSetting.length === 0) {
+      return true; // Default to enabled if setting doesn't exist
+    }
+    
+    return domainSetting[0].value === 'true';
+  } catch (error) {
+    console.warn('Failed to check domain restriction setting:', error);
+    return true; // Default to enabled on error for security
+  }
+}
 
 export const handler: Handler = async (event, context) => {
   // Handle preflight requests
@@ -38,18 +61,27 @@ export const handler: Handler = async (event, context) => {
     const body = JSON.parse(event.body || '{}');
     const validatedData = registerSchema.parse(body);
 
-    // Validate email domain (configurable from settings later)
-    const allowedDomains = ['omniaservice.net', 'ominiaservice.net']; // OmniaGroup domains
-    const emailDomain = validatedData.email.split('@')[1];
+    // Check if domain restriction is enabled
+    const isDomainRestricted = await isDomainRestrictionEnabled();
     
-    if (!allowedDomains.includes(emailDomain)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Email non valida. Usa la tua email aziendale @omniaservice.net' 
-        })
-      };
+    if (isDomainRestricted) {
+      // Validate email domain against OmniaGroup domains
+      const allowedDomains = [
+        'omniaservices.net', 
+        'omniaelectronics.com',
+        'ominiaservice.net' // Legacy domain for backward compatibility
+      ];
+      const emailDomain = validatedData.email.split('@')[1];
+      
+      if (!allowedDomains.includes(emailDomain)) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Email non valida. Usa la tua email aziendale (@omniaservices.net o @omniaelectronics.com)' 
+          })
+        };
+      }
     }
 
     // Check if user already exists

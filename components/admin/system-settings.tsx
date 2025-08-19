@@ -373,6 +373,19 @@ export function SystemSettingsComponent({
               />
             </div>
 
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="domain-restriction">Limitazione Domini Email</Label>
+                <p className="text-xs text-gray-500">
+                  Limita registrazioni solo ai domini OmniaGroup (omniaservices.net, omniaelectronics.com)
+                </p>
+              </div>
+              <StatusButton
+                enabled={localSettings['system.domain_restriction_enabled'] ?? true}
+                onToggle={(enabled) => handleSettingChange('system.domain_restriction_enabled', enabled)}
+              />
+            </div>
+
             <div>
               <Label htmlFor="default-allowance">Giorni Ferie Predefiniti</Label>
               <Input
@@ -396,6 +409,7 @@ export function SystemSettingsComponent({
               disabled={Boolean(
                 saveLoading === 'system.registration_enabled' ||
                 (localSettings['system.registration_enabled'] === settings['system.registration_enabled'] &&
+                 localSettings['system.domain_restriction_enabled'] === settings['system.domain_restriction_enabled'] &&
                  localSettings['system.default_holiday_allowance'] === settings['system.default_holiday_allowance'])
               )}
               className="w-full"

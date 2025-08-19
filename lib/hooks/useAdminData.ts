@@ -59,6 +59,7 @@ export interface SystemSettings {
   'holidays.advance_notice_days': number;
   'holidays.max_consecutive_days': number;
   'system.registration_enabled': boolean;
+  'system.domain_restriction_enabled': boolean;
   'system.default_holiday_allowance': number;
   'notifications.email_enabled': boolean;
   'notifications.browser_enabled': boolean;
