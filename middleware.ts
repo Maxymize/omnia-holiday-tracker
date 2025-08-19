@@ -104,18 +104,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip auth check in development (Netlify dev has cookie issues)
-  // In production, let's also temporarily skip to debug
-  if (process.env.NODE_ENV === 'development' || process.env.NETLIFY_DEV) {
-    console.log('🚧 Development mode: skipping auth middleware');
-    return NextResponse.next();
-  }
-  
-  // TEMPORARY: Skip auth check in production while debugging
-  // Remove this after fixing cookie issue
-  console.log('🔧 Temporarily skipping auth middleware in production for debugging');
+  // TEMPORARY: Skip all auth checks while we fix cookie handling
+  // This allows access to all routes without authentication
+  // TODO: Remove this bypass after fixing cookie/JWT integration
+  console.log('🔧 Auth middleware temporarily disabled for debugging');
   return NextResponse.next();
-
+  
+  /* DISABLED UNTIL COOKIE ISSUE IS FIXED
   // Get auth token from cookies or headers
   const authToken = request.cookies.get('auth-token')?.value || 
     request.headers.get('authorization')?.replace('Bearer ', '');
@@ -167,6 +162,7 @@ export function middleware(request: NextRequest) {
     
     return response;
   }
+  */
 }
 
 export const config = {
