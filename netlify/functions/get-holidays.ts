@@ -286,7 +286,13 @@ export const handler: Handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         success: true,
-        holidays: holidaysData,
+        data: {
+          holidays: holidaysData,
+          total: holidaysData.length,
+          pending: holidaysData.filter(h => h.status === 'pending').length,
+          approved: holidaysData.filter(h => h.status === 'approved').length,
+          rejected: holidaysData.filter(h => h.status === 'rejected').length
+        },
         pagination: {
           currentPage: validatedParams.page,
           limit: validatedParams.limit,
