@@ -22,7 +22,8 @@ import {
   MapPin,
   MoreHorizontal,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  UserX
 } from 'lucide-react';
 import { Department, Employee } from '@/lib/hooks/useAdminData';
 
@@ -49,6 +50,7 @@ export function DepartmentManagement({
   const [createLoading, setCreateLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [unassignLoading, setUnassignLoading] = useState<string | null>(null);
   
   // Form states
   const [newDepartment, setNewDepartment] = useState({
@@ -77,6 +79,12 @@ export function DepartmentManagement({
   const availableManagers = useMemo(() => {
     return employees.filter(emp => emp.status === 'active');
   }, [employees]);
+
+  // Get employees for selected department
+  const selectedDepartmentEmployees = useMemo(() => {
+    if (!selectedDepartment) return [];
+    return employees.filter(emp => emp.department === selectedDepartment.id);
+  }, [employees, selectedDepartment]);
 
   const handleCreateDepartment = async () => {
     if (!newDepartment.name.trim()) return;
@@ -209,6 +217,46 @@ export function DepartmentManagement({
       alert(`Errore durante l'eliminazione del dipartimento: ${errorMessage}`);
     } finally {
       setDeleteLoading(null);
+    }
+  };
+
+  const handleUnassignEmployee = async (employeeId: string, employeeName: string) => {
+    if (!confirm(`Sei sicuro di voler rimuovere "${employeeName}" dal dipartimento? L'dipendente rimarrà nel sistema ma non sarà assegnato a nessun dipartimento.`)) {
+      return;
+    }
+
+    setUnassignLoading(employeeId);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/unassign-employee`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          employeeId: employeeId
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to unassign employee');
+      }
+
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error unassigning employee:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      alert(`Errore durante la rimozione del dipendente: ${errorMessage}`);
+    } finally {
+      setUnassignLoading(null);
     }
   };
 
@@ -600,7 +648,7 @@ export function DepartmentManagement({
                                 <DialogTitle>Dettagli Dipartimento</DialogTitle>
                               </DialogHeader>
                               {selectedDepartment && (
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                                     <div className="p-3 bg-blue-100 rounded-lg">
                                       <Building2 className="h-6 w-6 text-blue-600" />
@@ -635,6 +683,49 @@ export function DepartmentManagement({
                                       </p>
                                     </div>
                                   </div>
+
+                                  {/* Employees List */}
+                                  {selectedDepartmentEmployees.length > 0 && (
+                                    <div className="space-y-3">
+                                      <label className="font-medium text-gray-700 text-sm">
+                                        Dipendenti Assegnati ({selectedDepartmentEmployees.length})
+                                      </label>
+                                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        {selectedDepartmentEmployees.map((employee) => (
+                                          <div key={employee.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                                            <div className="flex items-center space-x-3">
+                                              <div className="p-2 bg-blue-100 rounded-full">
+                                                <Users className="h-4 w-4 text-blue-600" />
+                                              </div>
+                                              <div>
+                                                <p className="font-medium text-sm text-gray-900">{employee.name}</p>
+                                                <p className="text-xs text-gray-600">{employee.email}</p>
+                                              </div>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => handleUnassignEmployee(employee.id, employee.name)}
+                                              disabled={unassignLoading === employee.id}
+                                              className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                            >
+                                              {unassignLoading === employee.id ? (
+                                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                              ) : (
+                                                <UserX className="h-4 w-4" />
+                                              )}
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {selectedDepartmentEmployees.length === 0 && (
+                                    <div className="text-center py-4 text-gray-500 text-sm">
+                                      Nessun dipendente assegnato a questo dipartimento
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </DialogContent>
