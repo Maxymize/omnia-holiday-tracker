@@ -643,7 +643,7 @@ export function DepartmentManagement({
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
+                            <DialogContent className="sm:max-w-lg lg:max-w-xl">
                               <DialogHeader>
                                 <DialogTitle>Dettagli Dipartimento</DialogTitle>
                               </DialogHeader>

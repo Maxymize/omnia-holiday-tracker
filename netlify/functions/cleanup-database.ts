@@ -156,6 +156,12 @@ export const handler: Handler = async (event, context) => {
         
         break;
 
+      case 'clean-holidays-only':
+        // Delete only holidays, keep users and departments
+        const deletedHolidaysOnly = await db.delete(holidays);
+        results.holidaysRemoved = 'All holidays deleted';
+        break;
+
       case 'reset-admin':
         // Reset admin password to admin123
         const adminUser = await db.select()
