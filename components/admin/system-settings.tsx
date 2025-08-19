@@ -405,16 +405,34 @@ export function SystemSettingsComponent({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => handleSaveSetting('system.registration_enabled')}
+              onClick={async () => {
+                setSaveLoading('all');
+                try {
+                  const systemKeys = [
+                    'system.registration_enabled',
+                    'system.domain_restriction_enabled', 
+                    'system.default_holiday_allowance'
+                  ];
+                  
+                  const promises = systemKeys
+                    .filter(key => localSettings[key as keyof SystemSettings] !== settings[key as keyof SystemSettings])
+                    .map(key => onUpdateSetting(key as keyof SystemSettings, localSettings[key as keyof SystemSettings]));
+                  
+                  await Promise.all(promises);
+                  setHasChanges(false);
+                } finally {
+                  setSaveLoading(null);
+                }
+              }}
               disabled={Boolean(
-                saveLoading === 'system.registration_enabled' ||
+                saveLoading === 'all' ||
                 (localSettings['system.registration_enabled'] === settings['system.registration_enabled'] &&
                  localSettings['system.domain_restriction_enabled'] === settings['system.domain_restriction_enabled'] &&
                  localSettings['system.default_holiday_allowance'] === settings['system.default_holiday_allowance'])
               )}
               className="w-full"
             >
-              {saveLoading === 'system.registration_enabled' ? 'Salvando...' : 'Salva Sistema'}
+              {saveLoading === 'all' ? 'Salvando...' : 'Salva Sistema'}
             </Button>
           </div>
         </SettingCard>
