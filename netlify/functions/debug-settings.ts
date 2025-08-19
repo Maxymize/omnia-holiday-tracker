@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { db } from '../../lib/db/index';
 import { settings } from '../../lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 
 // CORS headers
 const headers = {
@@ -50,9 +50,11 @@ export const handler: Handler = async (event, context) => {
       .select()
       .from(settings)
       .where(
-        eq(settings.key, 'system.registration_enabled')
-        .or(eq(settings.key, 'system.domain_restriction_enabled'))
-        .or(eq(settings.key, 'system.default_holiday_allowance'))
+        or(
+          eq(settings.key, 'system.registration_enabled'),
+          eq(settings.key, 'system.domain_restriction_enabled'),
+          eq(settings.key, 'system.default_holiday_allowance')
+        )
       );
 
     console.log('All system settings:', allSystemSettings);
