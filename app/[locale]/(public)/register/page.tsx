@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
     try {
       // Call the registration API
-      const response = await fetch('/.netlify/functions/register-mock', {
+      const response = await fetch('/.netlify/functions/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
