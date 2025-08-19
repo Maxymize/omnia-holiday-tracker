@@ -133,12 +133,8 @@ export const handler: Handler = async (event, context) => {
           .where(ne(users.email, 'max.giurastante@omniaservices.net'));
         results.usersRemoved = 'All except admin';
         
-        // 4. Clean audit logs older than 7 days
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        await db.delete(auditLogs)
-          .where(lt(auditLogs.timestamp, sevenDaysAgo));
-        results.auditLogsRemoved = 'Older than 7 days';
+        // 4. Skip audit logs cleanup for now - can cause issues
+        results.auditLogsRemoved = 'Skipped';
         
         break;
 
