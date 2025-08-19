@@ -19,6 +19,17 @@ export const handler: Handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
+  // Allow GET for testing
+  if (event.httpMethod === 'GET') {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ 
+        message: 'Test function is ready. Call with admin authorization header to test settings save.' 
+      })
+    };
+  }
+
   try {
     // Verify authentication
     const userToken = verifyAuthHeader(event.headers.authorization);
