@@ -48,6 +48,7 @@ export function DepartmentManagement({
   const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   
   // Form states
   const [newDepartment, setNewDepartment] = useState({
@@ -163,6 +164,51 @@ export function DepartmentManagement({
       // TODO: Show error toast
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleDeleteDepartment = async (department: Department) => {
+    if (department.employeeCount > 0) {
+      alert(`Non è possibile eliminare il dipartimento "${department.name}" perché ha ${department.employeeCount} dipendenti assegnati.`);
+      return;
+    }
+
+    if (!confirm(`Sei sicuro di voler eliminare il dipartimento "${department.name}"? Questa azione non può essere annullata.`)) {
+      return;
+    }
+
+    setDeleteLoading(department.id);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/delete-department`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          departmentId: department.id
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete department');
+      }
+
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error deleting department:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      alert(`Errore durante l'eliminazione del dipartimento: ${errorMessage}`);
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -525,6 +571,19 @@ export function DepartmentManagement({
                             onClick={() => openEditDialog(department)}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteDepartment(department)}
+                            disabled={deleteLoading === department.id || department.employeeCount > 0}
+                            className={department.employeeCount > 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 hover:text-red-600 hover:border-red-200"}
+                          >
+                            {deleteLoading === department.id ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </Button>
                           <Dialog>
                             <DialogTrigger asChild>

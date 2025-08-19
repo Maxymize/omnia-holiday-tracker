@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { db } from '../../lib/db';
 import { users, holidays, departments, auditLogs } from '../../lib/db/schema';
-import { eq, ne, not, and } from 'drizzle-orm';
+import { eq, ne, not, and, lt } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 export const handler: Handler = async (event, context) => {
@@ -84,7 +84,7 @@ export const handler: Handler = async (event, context) => {
               user.email.includes('test') ||
               user.email.includes('example')) {
             const deleted = await db.delete(holidays)
-              .where(eq(holidays.employeeId, user.id));
+              .where(eq(holidays.userId, user.id));
             holidaysDeleted++;
           }
         }
@@ -137,7 +137,7 @@ export const handler: Handler = async (event, context) => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         await db.delete(auditLogs)
-          .where(eq(auditLogs.timestamp, sevenDaysAgo.toISOString()));
+          .where(lt(auditLogs.timestamp, sevenDaysAgo));
         results.auditLogsRemoved = 'Older than 7 days';
         
         break;
