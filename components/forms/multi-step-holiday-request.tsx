@@ -210,7 +210,7 @@ export function MultiStepHolidayRequest({
 
         const token = localStorage.getItem('accessToken')
         
-        const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock`, {
+        const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

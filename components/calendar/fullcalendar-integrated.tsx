@@ -208,7 +208,7 @@ export function FullCalendarIntegrated({
         ? 'http://localhost:3000' 
         : window.location.origin
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?${params}`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

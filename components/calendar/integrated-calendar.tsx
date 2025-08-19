@@ -119,7 +119,7 @@ export function IntegratedCalendar({
         ? 'http://localhost:3000' 
         : window.location.origin
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays-mock?viewMode=${viewMode}`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?viewMode=${viewMode}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
