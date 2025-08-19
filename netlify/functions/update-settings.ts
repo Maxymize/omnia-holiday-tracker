@@ -88,6 +88,12 @@ export const handler: Handler = async (event, context) => {
       updatedBy: userToken.email,
       timestamp: new Date().toISOString()
     });
+    
+    // Detailed logging for debugging
+    console.log('Raw settings received:', JSON.stringify(settings, null, 2));
+    for (const [key, value] of Object.entries(settings)) {
+      console.log(`Setting ${key}: ${value} (type: ${typeof value})`);
+    }
 
     // Mock validation for specific settings
     const validatedSettings: Record<string, any> = {};
@@ -121,6 +127,7 @@ export const handler: Handler = async (event, context) => {
         case 'holidays.show_names':
         case 'holidays.show_details':
         case 'system.registration_enabled':
+        case 'system.domain_restriction_enabled':
         case 'notifications.email_enabled':
         case 'notifications.browser_enabled':
         case 'notifications.remind_managers':
@@ -138,11 +145,20 @@ export const handler: Handler = async (event, context) => {
     const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
     const userAgent = event.headers['user-agent'] || 'unknown';
     
+    console.log('About to save validated settings:', JSON.stringify(validatedSettings, null, 2));
+    
     // Update each setting in the database
     const savedSettings: string[] = [];
     for (const [key, value] of Object.entries(validatedSettings)) {
-      await upsertSetting(key, JSON.stringify(value), `System setting for ${key}`, adminUser.id);
-      savedSettings.push(key);
+      console.log(`Saving setting ${key}: ${value} as JSON: ${JSON.stringify(value)}`);
+      try {
+        await upsertSetting(key, JSON.stringify(value), `System setting for ${key}`, adminUser.id);
+        savedSettings.push(key);
+        console.log(`Successfully saved setting ${key}`);
+      } catch (error) {
+        console.error(`Failed to save setting ${key}:`, error);
+        throw error;
+      }
       
       // Create audit log for each setting change
       await createAuditLog(
