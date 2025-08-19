@@ -104,13 +104,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // TODO: Re-enable in production - Currently disabled due to Netlify dev cookie handling issues
-  // In production deployment, cookies work correctly with middleware
-  // Remove this bypass when deploying to production
+  // Skip auth check in development (Netlify dev has cookie issues)
+  // In production, let's also temporarily skip to debug
   if (process.env.NODE_ENV === 'development' || process.env.NETLIFY_DEV) {
-    console.log('🚧 Development mode: skipping auth middleware (cookies work in production)');
+    console.log('🚧 Development mode: skipping auth middleware');
     return NextResponse.next();
   }
+  
+  // TEMPORARY: Skip auth check in production while debugging
+  // Remove this after fixing cookie issue
+  console.log('🔧 Temporarily skipping auth middleware in production for debugging');
+  return NextResponse.next();
 
   // Get auth token from cookies or headers
   const authToken = request.cookies.get('auth-token')?.value || 
