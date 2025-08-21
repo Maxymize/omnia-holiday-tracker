@@ -232,7 +232,47 @@ export function useAdminData() {
       }
 
       if (data.success) {
-        setSystemSettings(data.settings || data.data || {});
+        const rawSettings = data.settings || data.data || {};
+        
+        // Convert string values to appropriate types
+        const convertedSettings = { ...rawSettings };
+        
+        // Boolean settings that need conversion
+        const booleanSettings = [
+          'holidays.show_names',
+          'holidays.show_details',
+          'system.registration_enabled',
+          'system.domain_restriction_enabled',
+          'notifications.email_enabled',
+          'notifications.browser_enabled',
+          'notifications.remind_managers',
+          'departments.visibility_enabled',
+          'departments.cross_department_view'
+        ];
+        
+        // Convert string values to booleans
+        booleanSettings.forEach(key => {
+          if (convertedSettings[key] !== undefined) {
+            convertedSettings[key] = convertedSettings[key] === 'true';
+          }
+        });
+        
+        // Number settings that need conversion
+        const numberSettings = [
+          'holidays.advance_notice_days',
+          'holidays.max_consecutive_days', 
+          'system.default_holiday_allowance'
+        ];
+        
+        // Convert string values to numbers
+        numberSettings.forEach(key => {
+          if (convertedSettings[key] !== undefined) {
+            convertedSettings[key] = Number(convertedSettings[key]);
+          }
+        });
+        
+        console.log('Converted settings:', convertedSettings);
+        setSystemSettings(convertedSettings);
       }
     } catch (err) {
       console.error('Error fetching system settings:', err);
