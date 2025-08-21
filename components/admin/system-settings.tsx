@@ -408,25 +408,6 @@ export function SystemSettingsComponent({
               onClick={async () => {
                 setSaveLoading('all');
                 try {
-                  // TEMPORARY: Test with isolated function
-                  const response = await fetch('/.netlify/functions/test-settings-save', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-                    }
-                  });
-                  
-                  const result = await response.json();
-                  
-                  if (!response.ok) {
-                    console.error('Test save error:', result);
-                    throw new Error(result.error || 'Errore durante il test di salvataggio');
-                  }
-                  
-                  console.log('Test save success:', result);
-                  
-                  // If test works, proceed with normal save
                   const systemKeys = [
                     'system.registration_enabled',
                     'system.domain_restriction_enabled', 

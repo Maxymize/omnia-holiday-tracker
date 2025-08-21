@@ -383,11 +383,10 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-settings`, 
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-settings-simple`, 
         createFetchConfig('POST', token || undefined, {
-          settings: {
-            [key]: value
-          }
+          key: key,
+          value: value
         }));
 
       const data = await response.json();
