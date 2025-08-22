@@ -231,7 +231,7 @@ export function EmployeeManagement({
 
   const pendingEmployees = employees.filter(emp => emp.status === 'pending');
   const activeEmployees = employees.filter(emp => emp.status === 'active');
-  const totalHolidaysUsed = employees.reduce((sum, emp) => sum + emp.holidaysUsed, 0);
+  const totalHolidaysUsed = employees.reduce((sum, emp) => sum + (emp.holidaysUsed || 0), 0);
 
   if (loading && employees.length === 0) {
     return (
