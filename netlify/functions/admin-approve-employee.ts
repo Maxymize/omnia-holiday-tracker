@@ -19,6 +19,11 @@ const headers = {
 };
 
 export const handler: Handler = async (event, context) => {
+  console.log('DEBUG: admin-approve-employee function started');
+  console.log('DEBUG: HTTP method:', event.httpMethod);
+  console.log('DEBUG: Headers received:', JSON.stringify(event.headers, null, 2));
+  console.log('DEBUG: Body received:', event.body);
+
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
@@ -34,28 +39,52 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
+    console.log('DEBUG: Starting authentication verification');
+    
     // Verify authentication
     const userToken = verifyAuthHeader(event.headers.authorization);
+    console.log('DEBUG: User token extracted:', {
+      email: userToken?.email,
+      role: userToken?.role,
+      hasToken: !!userToken
+    });
+    
     requireAccessToken(userToken);
+    console.log('DEBUG: Access token validation passed');
 
     // Check admin permissions
     if (userToken.role !== 'admin') {
+      console.log('DEBUG: User role check failed - not admin:', userToken.role);
       return {
         statusCode: 403,
         headers,
         body: JSON.stringify({ error: 'Solo gli amministratori possono approvare o rifiutare dipendenti' })
       };
     }
+    console.log('DEBUG: Admin role verified');
 
     // Parse and validate request body
+    console.log('DEBUG: Parsing request body');
     const body = JSON.parse(event.body || '{}');
+    console.log('DEBUG: Parsed body:', body);
+    
     const validatedData = approveEmployeeSchema.parse(body);
+    console.log('DEBUG: Data validation passed:', validatedData);
 
     const { employeeId, action, reason } = validatedData;
+    console.log('DEBUG: Extracted data:', { employeeId, action, reason });
     
     // Get admin user details
+    console.log('DEBUG: Getting admin user details for email:', userToken.email);
     const adminUser = await getUserByEmail(userToken.email);
+    console.log('DEBUG: Admin user retrieved:', {
+      found: !!adminUser,
+      id: adminUser?.id,
+      email: adminUser?.email
+    });
+    
     if (!adminUser) {
+      console.log('DEBUG: Admin user not found in database');
       return {
         statusCode: 401,
         headers,
@@ -68,6 +97,15 @@ export const handler: Handler = async (event, context) => {
     const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
     const userAgent = event.headers['user-agent'] || 'unknown';
     
+    console.log('DEBUG: Preparing to update employee status:', {
+      employeeId,
+      newStatus,
+      adminUserId: adminUser.id,
+      reason,
+      ipAddress,
+      userAgent
+    });
+    
     await updateEmployeeStatusWithAudit(
       employeeId,
       newStatus,
@@ -76,6 +114,8 @@ export const handler: Handler = async (event, context) => {
       ipAddress,
       userAgent
     );
+    
+    console.log('DEBUG: Employee status update completed successfully');
     
     console.log('Employee approval action completed:', {
       employeeId,
@@ -100,6 +140,7 @@ export const handler: Handler = async (event, context) => {
       ? `Dipendente approvato con successo` 
       : `Dipendente rifiutato`;
 
+    console.log('DEBUG: Returning success response');
     return {
       statusCode: 200,
       headers,
@@ -110,11 +151,16 @@ export const handler: Handler = async (event, context) => {
       })
     };
 
-  } catch (error) {
-    console.error('Employee approval error:', error);
+  } catch (error: any) {
+    console.error('DEBUG: Employee approval error occurred');
+    console.error('DEBUG: Error type:', error?.constructor?.name);
+    console.error('DEBUG: Error message:', error?.message);
+    console.error('DEBUG: Error stack:', error?.stack);
+    console.error('DEBUG: Full error object:', error);
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
+      console.log('DEBUG: Zod validation error detected');
       return {
         statusCode: 400,
         headers,
@@ -127,6 +173,7 @@ export const handler: Handler = async (event, context) => {
 
     // Handle authentication errors
     if (error instanceof Error && error.message.includes('Token')) {
+      console.log('DEBUG: Token/authentication error detected');
       return {
         statusCode: 401,
         headers,
@@ -134,11 +181,19 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Generic error response
+    // Generic error response with more details in debug mode
+    console.log('DEBUG: Returning generic 500 error');
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Errore interno del server' })
+      body: JSON.stringify({ 
+        error: 'Errore interno del server',
+        debug: {
+          message: error?.message,
+          type: error?.constructor?.name,
+          timestamp: new Date().toISOString()
+        }
+      })
     };
   }
 };
