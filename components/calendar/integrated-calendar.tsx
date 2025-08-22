@@ -508,8 +508,8 @@ export function IntegratedCalendar({
         ? 'http://localhost:3000' 
         : window.location.origin
 
-      // Use mock endpoint for now (switch to real endpoint when database is ready)
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status-mock`, {
+      // Use real database endpoint
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

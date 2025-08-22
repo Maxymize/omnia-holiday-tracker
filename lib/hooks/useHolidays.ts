@@ -88,7 +88,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
       if (options.offset) params.append('offset', options.offset.toString());
 
       const response = await fetch(
-        `${getBaseUrl()}/.netlify/functions/get-holidays-mock?${params}`,
+        `${getBaseUrl()}/.netlify/functions/get-holidays?${params}`,
         {
           method: 'GET',
           headers: {
