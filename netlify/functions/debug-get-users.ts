@@ -21,17 +21,26 @@ export const handler: Handler = async (event, context) => {
     console.log('=== DEBUG GET USERS ===');
     console.log('Query params:', event.queryStringParameters);
 
-    const status = event.queryStringParameters?.status || 'all';
+    const statusParam = event.queryStringParameters?.status || 'all';
     
-    console.log('Filtering by status:', status);
+    console.log('Filtering by status:', statusParam);
 
     // Get users based on status
     let usersQuery;
     
-    if (status === 'all') {
+    if (statusParam === 'all') {
       usersQuery = db.select().from(users);
     } else {
-      usersQuery = db.select().from(users).where(eq(users.status, status));
+      // Cast to the correct enum type
+      const validStatuses = ['pending', 'active', 'inactive'] as const;
+      type UserStatus = typeof validStatuses[number];
+      
+      if (validStatuses.includes(statusParam as UserStatus)) {
+        usersQuery = db.select().from(users).where(eq(users.status, statusParam as UserStatus));
+      } else {
+        // Invalid status, return all users
+        usersQuery = db.select().from(users);
+      }
     }
 
     const allUsers = await usersQuery;
@@ -47,7 +56,7 @@ export const handler: Handler = async (event, context) => {
         data: {
           users: allUsers,
           total: allUsers.length,
-          statusFilter: status,
+          statusFilter: statusParam,
           timestamp: new Date().toISOString()
         }
       })
