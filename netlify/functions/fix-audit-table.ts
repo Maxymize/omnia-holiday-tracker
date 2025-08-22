@@ -37,7 +37,7 @@ export const handler: Handler = async (event, context) => {
     console.log('Creating audit_logs table if it doesn\'t exist...');
     
     // Create audit_logs table
-    const createTableQuery = `
+    await db`
       CREATE TABLE IF NOT EXISTS audit_logs (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         action VARCHAR(100) NOT NULL,
@@ -51,18 +51,14 @@ export const handler: Handler = async (event, context) => {
         timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
-    
-    await db`${createTableQuery}`;
     console.log('Audit logs table created or already exists');
     
     // Create index for better performance
-    const createIndexQuery = `
+    await db`
       CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
       CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
     `;
-    
-    await db`${createIndexQuery}`;
     console.log('Audit logs indexes created');
     
     // Test that we can query the table
