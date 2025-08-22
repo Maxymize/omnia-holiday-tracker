@@ -11,6 +11,7 @@ interface User {
   status: 'active' | 'inactive' | 'pending';
   department?: string;
   departmentName?: string;
+  holidayAllowance?: number;
 }
 
 interface AuthState {

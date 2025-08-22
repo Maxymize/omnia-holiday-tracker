@@ -126,7 +126,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
           .filter((h: Holiday) => h.status === 'pending' && h.type === 'vacation')
           .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
 
-        const totalAllowance = 20; // Default allowance, should come from user profile
+        const totalAllowance = user?.holidayAllowance || 25; // Get from user profile or system default
         const remainingDays = totalAllowance - usedDays;
 
         const upcomingHolidays = currentYearHolidays.filter((h: Holiday) => {

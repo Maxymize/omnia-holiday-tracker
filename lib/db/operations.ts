@@ -484,6 +484,35 @@ export async function createUser(userData: NewUser): Promise<User> {
   }
 }
 
+export async function getUserById(userId: string): Promise<User | null> {
+  try {
+    const result = await db.select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Failed to get user by ID:', error);
+    return null;
+  }
+}
+
+export async function updateEmployeeHolidayAllowance(employeeId: string, holidayAllowance: number): Promise<void> {
+  try {
+    await db.update(users)
+      .set({ 
+        holidayAllowance,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, employeeId));
+    
+    console.log(`Employee holiday allowance updated: ${employeeId} -> ${holidayAllowance} days`);
+  } catch (error) {
+    console.error('Failed to update employee holiday allowance:', error);
+    throw error;
+  }
+}
+
 export async function createHoliday(holidayData: NewHoliday): Promise<Holiday> {
   try {
     const result = await db.insert(holidays).values(holidayData).returning();

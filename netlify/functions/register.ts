@@ -41,6 +41,27 @@ async function isDomainRestrictionEnabled(): Promise<boolean> {
   }
 }
 
+// Helper function to get default holiday allowance from system settings
+async function getDefaultHolidayAllowance(): Promise<number> {
+  try {
+    const allowanceSetting = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, 'system.default_holiday_allowance'))
+      .limit(1);
+    
+    if (allowanceSetting.length === 0) {
+      return 25; // Default Italian standard if setting doesn't exist
+    }
+    
+    const allowance = parseInt(allowanceSetting[0].value);
+    return isNaN(allowance) ? 25 : allowance;
+  } catch (error) {
+    console.warn('Failed to get default holiday allowance setting:', error);
+    return 25; // Default to Italian standard on error
+  }
+}
+
 export const handler: Handler = async (event, context) => {
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
@@ -98,13 +119,16 @@ export const handler: Handler = async (event, context) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(validatedData.password, saltRounds);
 
+    // Get default holiday allowance from system settings
+    const defaultHolidayAllowance = await getDefaultHolidayAllowance();
+
     // Create user with pending status
     console.log('Creating user with data:', {
       name: validatedData.name,
       email: validatedData.email,
       role: 'employee',
       status: 'pending',
-      holidayAllowance: 20
+      holidayAllowance: defaultHolidayAllowance
     });
     
     const newUser = await createUser({
@@ -113,7 +137,7 @@ export const handler: Handler = async (event, context) => {
       passwordHash,
       role: 'employee',
       status: 'pending', // Requires admin approval
-      holidayAllowance: 20, // Default Italian holiday allowance
+      holidayAllowance: defaultHolidayAllowance, // From system settings (default 25)
     });
     
     console.log('User created successfully:', { id: newUser.id, email: newUser.email, status: newUser.status });

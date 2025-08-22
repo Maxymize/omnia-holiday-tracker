@@ -217,7 +217,8 @@ export const handler: Handler = async (event, context) => {
             role: user.role,
             status: user.status,
             department,
-            departmentName
+            departmentName,
+            holidayAllowance: user.holidayAllowance
           },
           accessToken
         }
