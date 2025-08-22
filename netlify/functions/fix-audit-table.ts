@@ -52,7 +52,7 @@ export const handler: Handler = async (event, context) => {
       );
     `;
     
-    await db(createTableQuery);
+    await db`${createTableQuery}`;
     console.log('Audit logs table created or already exists');
     
     // Create index for better performance
@@ -62,12 +62,11 @@ export const handler: Handler = async (event, context) => {
       CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
     `;
     
-    await db(createIndexQuery);
+    await db`${createIndexQuery}`;
     console.log('Audit logs indexes created');
     
     // Test that we can query the table
-    const testQuery = 'SELECT COUNT(*) as count FROM audit_logs';
-    const result = await db(testQuery);
+    const result = await db`SELECT COUNT(*) as count FROM audit_logs`;
     
     console.log('Table test successful, current audit log count:', result[0]?.count || 0);
     
