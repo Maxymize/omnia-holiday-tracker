@@ -136,7 +136,8 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-employees`, createFetchConfig('GET', token || undefined));
+      // TEMPORARY: Use debug function that works
+      const response = await fetch(`${baseUrl}/.netlify/functions/debug-get-users`, createFetchConfig('GET', token || undefined));
 
       const data = await response.json();
       
@@ -145,7 +146,9 @@ export function useAdminData() {
       }
 
       if (data.success && data.data) {
-        setEmployees(data.data.employees || data.data || []);
+        // Adapt the debug response format to what the frontend expects
+        const employees = data.data.users || [];
+        setEmployees(employees);
       }
     } catch (err) {
       console.error('Error fetching employees:', err);
