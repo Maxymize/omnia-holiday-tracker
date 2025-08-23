@@ -77,6 +77,14 @@ export const translations = {
         allHolidays: 'Tutti',
         newRequest: 'Nuova richiesta',
         legend: 'Legenda',
+        dateFilters: {
+          label: 'Filtra per periodo',
+          all: 'Tutte le date',
+          yearToDate: 'Da inizio anno ad oggi',
+          last12Months: 'Ultimi 12 mesi',
+          last6Months: 'Ultimi 6 mesi',
+          last3Months: 'Ultimi 3 mesi',
+        },
         legendDetails: {
           approved: 'Approvata',
           pending: 'In attesa',
@@ -291,6 +299,14 @@ export const translations = {
         allHolidays: 'All',
         newRequest: 'New request',
         legend: 'Legend',
+        dateFilters: {
+          label: 'Filter by period',
+          all: 'All dates',
+          yearToDate: 'Year to date',
+          last12Months: 'Last 12 months',
+          last6Months: 'Last 6 months',
+          last3Months: 'Last 3 months',
+        },
         legendDetails: {
           approved: 'Approved',
           pending: 'Pending',
@@ -499,6 +515,14 @@ export const translations = {
         allHolidays: 'Todas',
         newRequest: 'Nueva solicitud',
         legend: 'Leyenda',
+        dateFilters: {
+          label: 'Filtrar por período',
+          all: 'Todas las fechas',
+          yearToDate: 'Desde inicio del año hasta hoy',
+          last12Months: 'Últimos 12 meses',
+          last6Months: 'Últimos 6 meses',
+          last3Months: 'Últimos 3 meses',
+        },
         legendDetails: {
           approved: 'Aprobada',
           pending: 'Pendiente',

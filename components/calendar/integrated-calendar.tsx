@@ -36,6 +36,7 @@ import { MultiStepHolidayRequest } from "@/components/forms/multi-step-holiday-r
 import { TimelineView } from "./timeline-view"
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/utils/toast"
+import { DateRangeFilter, buildDateFilterParams } from "@/lib/utils/date-filters"
 
 interface HolidayEvent {
   id: string
@@ -83,6 +84,7 @@ export function IntegratedCalendar({
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<string>('timeline')
   const [viewMode, setViewMode] = useState<'own' | 'team' | 'all'>('all')
+  const [dateFilter, setDateFilter] = useState<DateRangeFilter>('all')
   
   // Dialog states
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false)
@@ -119,7 +121,18 @@ export function IntegratedCalendar({
         ? 'http://localhost:3000' 
         : window.location.origin
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?viewMode=${viewMode}`, {
+      // Build URL with date filter parameters
+      const dateParams = buildDateFilterParams(dateFilter);
+      const urlParams = new URLSearchParams(`viewMode=${viewMode}`);
+      
+      if (dateParams) {
+        const dateParamsObj = new URLSearchParams(dateParams);
+        dateParamsObj.forEach((value, key) => {
+          urlParams.set(key, value);
+        });
+      }
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?${urlParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -177,7 +190,7 @@ export function IntegratedCalendar({
     } finally {
       setLoading(false)
     }
-  }, [isAuthenticated, user, viewMode])
+  }, [isAuthenticated, user, viewMode, dateFilter])
 
   // Events are already filtered by the backend based on system settings and viewMode
   // No need for additional client-side filtering - trust the backend logic
@@ -349,6 +362,27 @@ export function IntegratedCalendar({
 
           {/* Right side controls */}
           <div className="flex items-center gap-3">
+            {/* Date Range Filter - Exclude from weekly view */}
+            {currentView !== 'timeGridWeek' && (
+              <div className="flex items-center gap-2">
+                <Select 
+                  value={dateFilter} 
+                  onValueChange={(value) => setDateFilter(value as DateRangeFilter)}
+                >
+                  <SelectTrigger className="w-48 h-8 bg-white/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('dashboard.calendar.dateFilters.all')}</SelectItem>
+                    <SelectItem value="yearToDate">{t('dashboard.calendar.dateFilters.yearToDate')}</SelectItem>
+                    <SelectItem value="last12Months">{t('dashboard.calendar.dateFilters.last12Months')}</SelectItem>
+                    <SelectItem value="last6Months">{t('dashboard.calendar.dateFilters.last6Months')}</SelectItem>
+                    <SelectItem value="last3Months">{t('dashboard.calendar.dateFilters.last3Months')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             {/* Holiday Visibility Toggle */}
             {showTeamHolidays && !settingsLoading && (
               <div className="flex items-center rounded-lg border bg-white/50 p-1">
