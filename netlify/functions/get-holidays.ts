@@ -241,6 +241,9 @@ export const handler: Handler = async (event, context) => {
     const holidaysData = results.map((result: any) => ({
       id: result.holiday.id,
       userId: result.holiday.userId,
+      employeeId: result.holiday.userId, // Calendar compatibility
+      employeeName: result.user.name, // Calendar compatibility 
+      employeeEmail: isAdmin ? result.user.email : undefined, // Calendar compatibility
       user: {
         id: result.user.id,
         name: result.user.name,
@@ -262,6 +265,7 @@ export const handler: Handler = async (event, context) => {
         name: result.approver.name,
         email: isAdmin ? result.approver.email : undefined
       } : null,
+      approvedBy: result.holiday.approvedBy, // Calendar compatibility
       approvedAt: result.holiday.approvedAt,
       rejectionReason: result.holiday.rejectionReason,
       createdAt: result.holiday.createdAt,
