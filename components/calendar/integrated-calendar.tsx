@@ -509,7 +509,7 @@ export function IntegratedCalendar({
         : window.location.origin
 
       // Use real database endpoint
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -117,8 +117,8 @@ export function HolidayHistoryTable({
                            window.location.hostname === '127.0.0.1' ||
                            window.location.port === '3001';
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, {
-        method: 'PUT',
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getToken()}`,
@@ -126,7 +126,7 @@ export function HolidayHistoryTable({
         ...(isDevelopment ? {} : { credentials: 'include' }),
         body: JSON.stringify({
           holidayId: holiday.id,
-          status: 'cancelled',
+          action: 'reject',
           notes: 'Annullata dal dipendente'
         }),
       });

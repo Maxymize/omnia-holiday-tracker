@@ -369,7 +369,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, 
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, 
         createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'approve'
@@ -397,7 +397,7 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/update-holiday-status`, 
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, 
         createFetchConfig('POST', token || undefined, {
           holidayId: requestId,
           action: 'reject',
