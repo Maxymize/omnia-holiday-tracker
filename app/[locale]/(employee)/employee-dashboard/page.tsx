@@ -74,21 +74,23 @@ function EmployeeDashboardContent() {
 
   // Auto-refresh user data when page becomes visible (for vacation days updates)
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (!document.hidden && user) {
         console.log('🔄 Page visible - refreshing user data...');
-        refreshUserData();
-        refreshHolidays(); // Also refresh holiday data
+        // Simply refresh user data - display uses user.holidayAllowance directly
+        await refreshUserData();
+        refreshHolidays();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Also refresh on page focus (when switching tabs/windows)
-    const handleFocus = () => {
+    const handleFocus = async () => {
       if (user) {
         console.log('🔄 Page focused - refreshing user data...');
-        refreshUserData();
+        // Simply refresh user data - display uses user.holidayAllowance directly
+        await refreshUserData();
         refreshHolidays();
       }
     };
@@ -172,11 +174,11 @@ function EmployeeDashboardContent() {
     return `${days} ${dayLabel}`;
   };
 
-  // Prepare sidebar stats
-  const sidebarStats = stats ? {
+  // Prepare sidebar stats (use user.holidayAllowance for real-time updates)
+  const sidebarStats = stats && user ? {
     pendingRequests: stats.pendingRequests,
     upcomingHolidays: stats.upcomingHolidays,
-    remainingDays: stats.remainingDays
+    remainingDays: user.holidayAllowance - stats.usedDays // Calculate using real-time allowance
   } : undefined;
 
   if (!user) {
@@ -216,19 +218,24 @@ function EmployeeDashboardContent() {
                       {getUserInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
-                  {stats && (
+                  {user && (
                     <div className="text-right">
-                      <div className="text-2xl font-bold">{stats.remainingDays}</div>
+                      <div className="text-2xl font-bold">
+                        {user.holidayAllowance || 0}
+                      </div>
                       <div className="text-sm text-blue-200">giorni rimasti</div>
                     </div>
                   )}
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => {
-                      console.log('🔄 Header refresh triggered');
-                      refreshUserData();
+                    onClick={async () => {
+                      console.log('🔄 Header refresh triggered - using direct user.holidayAllowance');
+                      // Simply refresh user data - the display now uses user.holidayAllowance directly
+                      await refreshUserData();
+                      // Also refresh holidays for completeness (stats, sidebar, etc.)
                       refreshHolidays();
+                      console.log('✅ Refresh completed - user.holidayAllowance:', user?.holidayAllowance);
                     }}
                     className="text-blue-700 border-white hover:bg-white/20"
                   >
@@ -278,7 +285,7 @@ function EmployeeDashboardContent() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
-                          <p className="text-2xl font-bold text-green-600">{stats.remainingDays}</p>
+                          <p className="text-2xl font-bold text-green-600">{user.holidayAllowance - stats.usedDays}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -332,7 +339,7 @@ function EmployeeDashboardContent() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Holiday Balance & Usage */}
                 <div>
-                  <HolidayBalance stats={stats} loading={holidaysLoading} />
+                  <HolidayBalance stats={stats} user={user} loading={holidaysLoading} />
                 </div>
 
                 {/* Upcoming Holidays */}
@@ -369,7 +376,7 @@ function EmployeeDashboardContent() {
                 
                 {/* Holiday Balance */}
                 <div>
-                  <HolidayBalance stats={stats} loading={holidaysLoading} />
+                  <HolidayBalance stats={stats} user={user} loading={holidaysLoading} />
                 </div>
               </div>
 
@@ -420,10 +427,13 @@ function EmployeeDashboardContent() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => {
-                        console.log('🔄 Manual refresh triggered');
-                        refreshUserData();
+                      onClick={async () => {
+                        console.log('🔄 Profile refresh triggered - using direct user.holidayAllowance');
+                        // Simply refresh user data - the display now uses user.holidayAllowance directly
+                        await refreshUserData();
+                        // Also refresh holidays for completeness
                         refreshHolidays();
+                        console.log('✅ Profile refresh completed - user.holidayAllowance:', user?.holidayAllowance);
                       }}
                       className="text-xs"
                     >
@@ -489,11 +499,11 @@ function EmployeeDashboardContent() {
                       <>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Giorni Ferie Annuali</label>
-                          <p className="text-sm text-gray-900 mt-1">{stats.totalAllowance} giorni</p>
+                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance} giorni</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Giorni Rimanenti</label>
-                          <p className="text-sm text-gray-900 mt-1">{stats.remainingDays} giorni</p>
+                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance - stats.usedDays} giorni</p>
                         </div>
                       </>
                     )}

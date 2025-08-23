@@ -8,13 +8,22 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  holidayAllowance: number;
+  // other user properties...
+}
+
 interface HolidayBalanceProps {
   stats: HolidayStats | null;
+  user?: User | null;
   loading?: boolean;
   className?: string;
 }
 
-export function HolidayBalance({ stats, loading = false, className }: HolidayBalanceProps) {
+export function HolidayBalance({ stats, user, loading = false, className }: HolidayBalanceProps) {
   const { t } = useTranslation();
 
   if (loading) {
@@ -57,14 +66,17 @@ export function HolidayBalance({ stats, loading = false, className }: HolidayBal
     );
   }
 
-  const usagePercentage = (stats.usedDays / stats.totalAllowance) * 100;
-  const pendingPercentage = (stats.pendingDays / stats.totalAllowance) * 100;
+  // Use user.holidayAllowance for real-time updates, fallback to stats.totalAllowance
+  const totalAllowance = user?.holidayAllowance || stats.totalAllowance;
+  const remainingDays = totalAllowance - stats.usedDays;
+  
+  const usagePercentage = (stats.usedDays / totalAllowance) * 100;
+  const pendingPercentage = (stats.pendingDays / totalAllowance) * 100;
   
   // Determine color based on remaining days
   const getRemainingDaysColor = () => {
-    const remaining = stats.remainingDays;
-    if (remaining <= 5) return 'text-red-600';
-    if (remaining <= 10) return 'text-amber-600';
+    if (remainingDays <= 5) return 'text-red-600';
+    if (remainingDays <= 10) return 'text-amber-600';
     return 'text-green-600';
   };
 
@@ -87,8 +99,8 @@ export function HolidayBalance({ stats, loading = false, className }: HolidayBal
         {/* Compact Balance Display */}
         <div className="flex items-center justify-between mb-2">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{stats.remainingDays}</div>
-            <div className="text-xs text-gray-600">giorni disponibili su {stats.totalAllowance}</div>
+            <div className="text-2xl font-bold text-gray-900">{remainingDays}</div>
+            <div className="text-xs text-gray-600">giorni disponibili su {totalAllowance}</div>
           </div>
           
           {/* Usage Progress - Compact */}
@@ -104,10 +116,10 @@ export function HolidayBalance({ stats, loading = false, className }: HolidayBal
 
           {/* Status Badge */}
           <Badge 
-            variant={stats.remainingDays > 10 ? "default" : stats.remainingDays > 5 ? "secondary" : "destructive"}
+            variant={remainingDays > 10 ? "default" : remainingDays > 5 ? "secondary" : "destructive"}
             className="text-xs"
           >
-            {stats.remainingDays > 10 ? 'Ottimo' : stats.remainingDays > 5 ? 'Buono' : 'Attenzione'}
+            {remainingDays > 10 ? 'Ottimo' : remainingDays > 5 ? 'Buono' : 'Attenzione'}
           </Badge>
         </div>
 
