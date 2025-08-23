@@ -444,7 +444,7 @@ export function SystemSettingsComponent({
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Giorni di ferie assegnati ai nuovi dipendenti. Usa "Applica a Tutti" per aggiornare anche i dipendenti esistenti.
+                Giorni di ferie assegnati ai nuovi dipendenti. Usa &quot;Applica a Tutti&quot; per aggiornare anche i dipendenti esistenti.
               </p>
             </div>
 

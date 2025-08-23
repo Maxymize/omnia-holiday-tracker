@@ -18,6 +18,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/hooks/useAuth"
+import { useHolidays } from "@/lib/hooks/useHolidays"
 import { useTranslation } from "@/lib/i18n/provider"
 import { toast } from "@/lib/utils/toast"
 
@@ -118,8 +119,6 @@ export function MultiStepHolidayRequest({
 }: MultiStepHolidayRequestProps) {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [workingDays, setWorkingDays] = React.useState(0)
-  const [holidayAllowance] = React.useState(20) // This would come from user data
-  const [usedDays] = React.useState(5) // This would be calculated from existing holidays
   const [isCheckingConflicts, setIsCheckingConflicts] = React.useState(false)
   const [conflictWarning, setConflictWarning] = React.useState<string | null>(null)
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
@@ -128,6 +127,7 @@ export function MultiStepHolidayRequest({
   const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
   
   const { user } = useAuth()
+  const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
   const { t } = useTranslation()
 
   const form = useForm<HolidayRequestFormData>({
@@ -279,6 +279,9 @@ export function MultiStepHolidayRequest({
     }
   }
 
+  // Calculate real-time vacation days using user.holidayAllowance and stats.usedDays
+  const holidayAllowance = user?.holidayAllowance || 25 // Use real user allowance
+  const usedDays = stats?.usedDays || 0 // Use real used days from stats
   const remainingDays = holidayAllowance - usedDays
 
   const nextStep = async () => {

@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DateRangePicker } from "@/components/ui/date-picker"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/lib/hooks/useAuth"
+import { useHolidays } from "@/lib/hooks/useHolidays"
 
 // Form validation schema
 const holidayRequestSchema = z.object({
@@ -49,7 +51,9 @@ export function HolidayRequestForm({
   className,
 }: HolidayRequestFormProps) {
   const [workingDays, setWorkingDays] = React.useState(0)
-  const [holidayAllowance] = React.useState(20) // This would come from user data
+  
+  const { user } = useAuth()
+  const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
 
   const form = useForm<HolidayRequestFormData>({
     resolver: zodResolver(holidayRequestSchema),
@@ -121,7 +125,10 @@ export function HolidayRequestForm({
     }
   }
 
-  const remainingDays = holidayAllowance - 5 // This would be calculated from user's used holidays
+  // Calculate real-time vacation days using user.holidayAllowance and stats.usedDays
+  const holidayAllowance = user?.holidayAllowance || 25 // Use real user allowance
+  const usedDays = stats?.usedDays || 0 // Use real used days from stats
+  const remainingDays = holidayAllowance - usedDays
 
   return (
     <Card className={className}>

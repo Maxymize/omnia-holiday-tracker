@@ -8,17 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface User {
+interface HolidayBalanceUser {
   id: string;
   name: string;
   email: string;
-  holidayAllowance: number;
+  holidayAllowance?: number; // Made optional to match useAuth User type
   // other user properties...
 }
 
 interface HolidayBalanceProps {
   stats: HolidayStats | null;
-  user?: User | null;
+  user?: HolidayBalanceUser | null;
   loading?: boolean;
   className?: string;
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useHolidays } from '@/lib/hooks/useHolidays';
 import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-request';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ interface Holiday {
 export default function HolidayRequestPage() {
   const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { stats, loading: holidaysLoading } = useHolidays({ viewMode: 'own' });
   const router = useRouter();
   const [existingHolidays, setExistingHolidays] = useState<Holiday[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -133,14 +135,20 @@ export default function HolidayRequestPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats - Real-time data */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardContent className="flex items-center p-4">
               <Calendar className="h-8 w-8 text-blue-600 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Giorni disponibili</p>
-                <p className="text-2xl font-bold text-blue-600">20</p>
+                {holidaysLoading ? (
+                  <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-blue-600">
+                    {user?.holidayAllowance || 25}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -150,7 +158,13 @@ export default function HolidayRequestPage() {
               <Clock className="h-8 w-8 text-orange-600 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">In attesa</p>
-                <p className="text-2xl font-bold text-orange-600">1</p>
+                {holidaysLoading ? (
+                  <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-orange-600">
+                    {stats?.pendingRequests || 0}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -160,7 +174,13 @@ export default function HolidayRequestPage() {
               <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Approvate</p>
-                <p className="text-2xl font-bold text-green-600">3</p>
+                {holidaysLoading ? (
+                  <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
+                ) : (
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats?.approvedRequests || 0}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -178,7 +178,7 @@ function EmployeeDashboardContent() {
   const sidebarStats = stats && user ? {
     pendingRequests: stats.pendingRequests,
     upcomingHolidays: stats.upcomingHolidays,
-    remainingDays: user.holidayAllowance - stats.usedDays // Calculate using real-time allowance
+    remainingDays: (user.holidayAllowance || 25) - stats.usedDays // Calculate using real-time allowance
   } : undefined;
 
   if (!user) {
@@ -285,7 +285,7 @@ function EmployeeDashboardContent() {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
-                          <p className="text-2xl font-bold text-green-600">{user.holidayAllowance - stats.usedDays}</p>
+                          <p className="text-2xl font-bold text-green-600">{(user.holidayAllowance || 25) - stats.usedDays}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -499,11 +499,11 @@ function EmployeeDashboardContent() {
                       <>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Giorni Ferie Annuali</label>
-                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance} giorni</p>
+                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance || 25} giorni</p>
                         </div>
                         <div>
                           <label className="text-sm font-medium text-gray-700">Giorni Rimanenti</label>
-                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance - stats.usedDays} giorni</p>
+                          <p className="text-sm text-gray-900 mt-1">{(user.holidayAllowance || 25) - stats.usedDays} giorni</p>
                         </div>
                       </>
                     )}

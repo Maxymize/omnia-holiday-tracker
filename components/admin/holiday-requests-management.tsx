@@ -179,7 +179,10 @@ export function HolidayRequestsManagement({
     }
   };
 
-  const getUserInitials = (name: string) => {
+  const getUserInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string') {
+      return '??';
+    }
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
