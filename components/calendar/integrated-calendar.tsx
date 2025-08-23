@@ -36,7 +36,7 @@ import { MultiStepHolidayRequest } from "@/components/forms/multi-step-holiday-r
 import { TimelineView } from "./timeline-view"
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/utils/toast"
-import { DateRangeFilter, buildDateFilterParams } from "@/lib/utils/date-filters"
+import { DateRangeFilter, buildDateFilterParams, calculateDateRange } from "@/lib/utils/date-filters"
 
 interface HolidayEvent {
   id: string
@@ -280,8 +280,29 @@ export function IntegratedCalendar({
     }
   }
 
+  // Generate label based on view and filter
+  const getToolbarLabel = () => {
+    // For list view with active date filter, show filter description
+    if (view === 'listMonth' && dateFilter !== 'all') {
+      switch (dateFilter) {
+        case 'yearToDate':
+          return t('dashboard.calendar.dateFilters.yearToDate');
+        case 'last12Months':
+          return t('dashboard.calendar.dateFilters.last12Months');
+        case 'last6Months':
+          return t('dashboard.calendar.dateFilters.last6Months');
+        case 'last3Months':
+          return t('dashboard.calendar.dateFilters.last3Months');
+        default:
+          return format(currentDate, "MMMM yyyy", { locale: getDateFnsLocale() });
+      }
+    }
+    // Default: show current month/year
+    return format(currentDate, "MMMM yyyy", { locale: getDateFnsLocale() });
+  }
+
   // Custom toolbar component
-  const CustomToolbar = ({ label, onNavigate, onView, view: currentView, onViewChange }: any) => {
+  const CustomToolbar = ({ label, onNavigate, onView, view: currentView, onViewChange, dateFilter }: any) => {
     const viewLabels: Record<string, string> = {
       'timeline': 'Timeline',
       'dayGridMonth': t('dashboard.calendar.monthView'),
@@ -295,32 +316,35 @@ export function IntegratedCalendar({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Navigation Controls and Date */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigate("prev")}
-                className="h-9 w-9 p-0 hover:bg-blue-100"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigate("today")}
-                className="px-4 h-9"
-              >
-                {t('dashboard.calendar.today')}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigate("next")}
-                className="h-9 w-9 p-0 hover:bg-blue-100"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Hide navigation controls for list view with active filter */}
+            {!(currentView === 'listMonth' && dateFilter !== 'all') && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate("prev")}
+                  className="h-9 w-9 p-0 hover:bg-blue-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate("today")}
+                  className="px-4 h-9"
+                >
+                  {t('dashboard.calendar.today')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onNavigate("next")}
+                  className="h-9 w-9 p-0 hover:bg-blue-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
 
             {/* Current Date/Period - More prominent */}
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 px-2">{label}</h2>
@@ -362,8 +386,8 @@ export function IntegratedCalendar({
 
           {/* Right side controls */}
           <div className="flex items-center gap-3">
-            {/* Date Range Filter - Exclude from weekly view */}
-            {currentView !== 'timeGridWeek' && (
+            {/* Date Range Filter - Only for List view */}
+            {currentView === 'listMonth' && (
               <div className="flex items-center gap-2">
                 <Select 
                   value={dateFilter} 
@@ -636,11 +660,12 @@ export function IntegratedCalendar({
           )}>
             {/* Always render CustomToolbar for all views */}
             <CustomToolbar 
-              label={format(currentDate, "MMMM yyyy", { locale: getDateFnsLocale() })}
+              label={getToolbarLabel()}
               onNavigate={handleNavigate}
               onView={handleViewChange}
               onViewChange={handleViewChange}
               view={view}
+              dateFilter={dateFilter}
             />
             
             {view === 'timeline' ? (
