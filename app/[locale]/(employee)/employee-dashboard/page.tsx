@@ -41,7 +41,7 @@ type TabType = 'overview' | 'calendar' | 'requests' | 'profile' | 'settings';
 
 function EmployeeDashboardContent() {
   const { t, locale } = useTranslation();
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -71,6 +71,35 @@ function EmployeeDashboardContent() {
       setActiveTab('overview');
     }
   }, [searchParams]);
+
+  // Auto-refresh user data when page becomes visible (for vacation days updates)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        console.log('🔄 Page visible - refreshing user data...');
+        refreshUserData();
+        refreshHolidays(); // Also refresh holiday data
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also refresh on page focus (when switching tabs/windows)
+    const handleFocus = () => {
+      if (user) {
+        console.log('🔄 Page focused - refreshing user data...');
+        refreshUserData();
+        refreshHolidays();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, refreshUserData, refreshHolidays]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -193,6 +222,19 @@ function EmployeeDashboardContent() {
                       <div className="text-sm text-blue-200">giorni rimasti</div>
                     </div>
                   )}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      console.log('🔄 Header refresh triggered');
+                      refreshUserData();
+                      refreshHolidays();
+                    }}
+                    className="text-blue-700 border-white hover:bg-white/20"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Aggiorna
+                  </Button>
                 </div>
               </div>
             </div>
@@ -370,9 +412,24 @@ function EmployeeDashboardContent() {
               {/* Profile Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <User className="h-5 w-5" />
-                    <span>Informazioni Personali</span>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <User className="h-5 w-5" />
+                      <span>Informazioni Personali</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        console.log('🔄 Manual refresh triggered');
+                        refreshUserData();
+                        refreshHolidays();
+                      }}
+                      className="text-xs"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      Aggiorna
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

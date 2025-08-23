@@ -1,11 +1,11 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { getUserById } from '../../../lib/db/helpers';
-import { db } from '../../../lib/db/index';
-import { users } from '../../../lib/db/schema';
+import { getUserById } from '../../lib/db/helpers';
+import { db } from '../../lib/db/index';
+import { users } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken } from '../../../lib/auth/jwt-utils';
+import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Input validation schemas
 const getProfileSchema = z.object({

@@ -388,17 +388,63 @@ export function SystemSettingsComponent({
 
             <div>
               <Label htmlFor="default-allowance">Giorni Ferie Predefiniti</Label>
-              <Input
-                id="default-allowance"
-                type="number"
-                min="0"
-                max="365"
-                value={localSettings['system.default_holiday_allowance'] || 20}
-                onChange={(e) => handleSettingChange('system.default_holiday_allowance', parseInt(e.target.value) || 20)}
-                className="mt-1"
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  id="default-allowance"
+                  type="number"
+                  min="0"
+                  max="365"
+                  value={localSettings['system.default_holiday_allowance'] || 20}
+                  onChange={(e) => handleSettingChange('system.default_holiday_allowance', parseInt(e.target.value) || 20)}
+                  className="flex-1"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    console.log('🔧 Apply to all button clicked');
+                    const currentAllowance = localSettings['system.default_holiday_allowance'] || 20;
+                    
+                    // First save the current setting to make sure database is updated
+                    console.log('🔧 Saving setting first to ensure database sync');
+                    await handleSaveSetting('system.default_holiday_allowance');
+                    
+                    if (confirm(`Vuoi applicare ${currentAllowance} giorni di ferie a TUTTI i dipendenti esistenti? Questa azione non può essere annullata.`)) {
+                      try {
+                        const token = localStorage.getItem('accessToken');
+                        const baseUrl = process.env.NODE_ENV === 'development' 
+                          ? 'http://localhost:3000' 
+                          : window.location.origin;
+                        
+                        const response = await fetch(`${baseUrl}/.netlify/functions/apply-default-allowance`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                          }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          alert(`✅ Successo! Applicati ${result.data.defaultAllowance} giorni a ${result.data.updatedCount} dipendenti.`);
+                          if (onRefresh) onRefresh(); // Refresh the page data
+                        } else {
+                          alert(`❌ Errore: ${result.error}`);
+                        }
+                      } catch (error) {
+                        console.error('Apply default allowance error:', error);
+                        alert('❌ Errore durante l\'applicazione dei giorni predefiniti');
+                      }
+                    }
+                  }}
+                  className="text-blue-600 hover:text-blue-700 border-blue-300"
+                >
+                  Applica a Tutti
+                </Button>
+              </div>
               <p className="text-xs text-gray-500 mt-1">
-                Giorni di ferie assegnati ai nuovi dipendenti
+                Giorni di ferie assegnati ai nuovi dipendenti. Usa "Applica a Tutti" per aggiornare anche i dipendenti esistenti.
               </p>
             </div>
 

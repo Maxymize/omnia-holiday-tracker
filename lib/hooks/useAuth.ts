@@ -197,7 +197,7 @@ export function useAuth() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          const updatedUser = data.data.user;
+          const updatedUser = data.user; // The profile endpoint returns user directly, not data.user
           localStorage.setItem('userData', JSON.stringify(updatedUser));
           setAuthState(prev => ({
             ...prev,
