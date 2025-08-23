@@ -86,7 +86,7 @@ export const handler: Handler = async (event, context) => {
     const userAgent = event.headers['user-agent'] || 'unknown';
     
     await createAuditLog(
-      'employee_allowance_updated',
+      'user_updated',
       adminUser.id,
       {
         employeeId,

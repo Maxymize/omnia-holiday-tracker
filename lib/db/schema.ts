@@ -115,7 +115,7 @@ export const auditLogActionEnum = pgEnum('audit_log_action', [
   'user_created', 'user_updated', 'user_deleted', 'user_status_changed',
   'holiday_created', 'holiday_updated', 'holiday_approved', 'holiday_rejected', 'holiday_deleted',
   'department_created', 'department_updated', 'department_deleted',
-  'setting_updated', 'login_attempt', 'data_export', 'data_deletion'
+  'setting_updated', 'employee_allowance_updated', 'login_attempt', 'data_export', 'data_deletion'
 ]);
 
 export const auditLogs = pgTable('audit_logs', {

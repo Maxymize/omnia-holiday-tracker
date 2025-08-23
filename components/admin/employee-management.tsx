@@ -68,6 +68,13 @@ export function EmployeeManagement({
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [assignLoading, setAssignLoading] = useState(false);
 
+  // Vacation allowance editing state
+  const [showAllowanceDialog, setShowAllowanceDialog] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [newAllowance, setNewAllowance] = useState<number>(0);
+  const [allowanceReason, setAllowanceReason] = useState<string>('');
+  const [allowanceLoading, setAllowanceLoading] = useState(false);
+
   // Filter and search employees
   const filteredEmployees = useMemo(() => {
     return employees.filter(employee => {
@@ -196,6 +203,58 @@ export function EmployeeManagement({
     setAssigningEmployee(employee);
     setSelectedDepartment(employee.department || '');
     setShowDepartmentDialog(true);
+  };
+
+  const openAllowanceDialog = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setNewAllowance(employee.holidayAllowance || 25);
+    setAllowanceReason('');
+    setShowAllowanceDialog(true);
+  };
+
+  const handleUpdateAllowance = async () => {
+    if (!editingEmployee) return;
+
+    setAllowanceLoading(true);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/update-employee-allowance`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        body: JSON.stringify({
+          employeeId: editingEmployee.id,
+          holidayAllowance: newAllowance,
+          reason: allowanceReason || 'Modifica manuale da admin dashboard'
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update vacation allowance');
+      }
+
+      // Reset form and close dialog
+      setEditingEmployee(null);
+      setNewAllowance(0);
+      setAllowanceReason('');
+      setShowAllowanceDialog(false);
+      
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error updating vacation allowance:', err);
+      // TODO: Show error toast
+    } finally {
+      setAllowanceLoading(false);
+    }
   };
 
   const getStatusBadge = (status: Employee['status']) => {
@@ -559,9 +618,20 @@ export function EmployeeManagement({
                                     </div>
                                     <div>
                                       <label className="font-medium text-gray-700">Giorni di ferie</label>
-                                      <p className="mt-1 text-gray-900">
-                                        {selectedEmployee.holidayAllowance} all&apos;anno
-                                      </p>
+                                      <div className="flex items-center justify-between mt-1">
+                                        <span className="text-gray-900">
+                                          {selectedEmployee.holidayAllowance} all&apos;anno
+                                        </span>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => openAllowanceDialog(selectedEmployee)}
+                                          className="text-blue-600 hover:text-blue-700"
+                                        >
+                                          <Edit3 className="h-3 w-3 mr-1" />
+                                          Modifica
+                                        </Button>
+                                      </div>
                                     </div>
                                     <div>
                                       <label className="font-medium text-gray-700">Giorni utilizzati</label>
@@ -718,6 +788,102 @@ export function EmployeeManagement({
               disabled={assignLoading}
             >
               {assignLoading ? 'Assegnando...' : 'Assegna Dipartimento'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vacation Allowance Editing Dialog */}
+      <Dialog open={showAllowanceDialog} onOpenChange={setShowAllowanceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Giorni di Ferie</DialogTitle>
+          </DialogHeader>
+          {editingEmployee && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback>
+                    {getUserInitials(editingEmployee.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{editingEmployee.name}</h3>
+                  <p className="text-sm text-gray-600">{editingEmployee.email}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="current-allowance">Giorni di ferie attuali</Label>
+                  <div className="mt-1 p-3 bg-gray-100 rounded-lg">
+                    <span className="font-medium">{editingEmployee.holidayAllowance} giorni all&apos;anno</span>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Utilizzati: {editingEmployee.holidaysUsed} • 
+                      Rimanenti: {(editingEmployee.holidayAllowance || 0) - (editingEmployee.holidaysUsed || 0)}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="new-allowance">Nuovi giorni di ferie</Label>
+                  <Input
+                    id="new-allowance"
+                    type="number"
+                    min="0"
+                    max="365"
+                    value={newAllowance}
+                    onChange={(e) => setNewAllowance(parseInt(e.target.value) || 0)}
+                    className="mt-1"
+                    placeholder="Inserisci il nuovo numero di giorni"
+                  />
+                  <div className="text-sm text-gray-500 mt-1">
+                    Inserisci un valore tra 0 e 365 giorni
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="allowance-reason">Motivo della modifica (opzionale)</Label>
+                  <Input
+                    id="allowance-reason"
+                    value={allowanceReason}
+                    onChange={(e) => setAllowanceReason(e.target.value)}
+                    className="mt-1"
+                    placeholder="Es: Aumento contrattuale, periodo di prova completato..."
+                  />
+                </div>
+
+                {newAllowance !== editingEmployee.holidayAllowance && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">
+                        Riepilogo modifica
+                      </span>
+                    </div>
+                    <div className="text-sm text-blue-700 mt-1">
+                      Da {editingEmployee.holidayAllowance} a {newAllowance} giorni 
+                      ({newAllowance > (editingEmployee.holidayAllowance || 0) ? '+' : ''}{newAllowance - (editingEmployee.holidayAllowance || 0)} giorni)
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAllowanceDialog(false)}
+              disabled={allowanceLoading}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleUpdateAllowance}
+              disabled={allowanceLoading || newAllowance === editingEmployee?.holidayAllowance}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {allowanceLoading ? 'Aggiornando...' : 'Aggiorna Giorni di Ferie'}
             </Button>
           </DialogFooter>
         </DialogContent>
