@@ -3,7 +3,72 @@
 ## 📚 Context Optimization
 **This file contains all COMPLETED tasks to keep TASK.md lightweight and preserve Claude Code context.**
 
-## 🆕 Latest Completed Tasks - August 22, 2025
+## 🆕 Latest Completed Tasks - August 23, 2025
+
+### Individual Vacation Days Management System ✅
+**Completed**: 2025-08-23 | **Session**: Claude Code Direct
+**Priority**: HIGH | **Context**: Implemented complete UI and backend for individual employee vacation day editing
+
+#### User Request Fulfilled:
+> "Sarebbe utile inoltre, oltre a poter vedere i giorni di ferie e utilizzati di ogni dipendente avere anche un modo per aggiungerglieli in più o toglierne, quindi variarli per ogni singolo dipendente, posto che tutti partone con i giorni definiti nei settings dell'admin"
+
+#### Tasks Completed:
+- ✅ **Dynamic Settings System IMPLEMENTED**: Admin 25-day setting now properly applies to all employees
+  - Fixed hardcoded 20-day values throughout the system (useAuth.ts, useHolidays.ts, register.ts)
+  - New user registration reads from `system.default_holiday_allowance` setting
+  - System now dynamically uses admin-configured vacation days
+- ✅ **Individual Vacation Day Editing UI CREATED**: Complete admin interface for modifying employee allowances
+  - Added "Modifica" button in employee details modal (`employee-management.tsx`)
+  - Created comprehensive vacation editing dialog with validation (0-365 days)
+  - Visual change preview showing difference (+/- days) before confirmation
+  - Optional reason field for audit trail documentation
+- ✅ **Backend API Integration COMPLETED**: Connected UI to existing `update-employee-allowance` function
+  - Full form validation with Zod schema
+  - Proper error handling and loading states
+  - Audit logging using `user_updated` action (temporary until schema migration)
+- ✅ **Database Migration EXECUTED**: Fixed existing users with outdated vacation allowances
+  - Created and ran `scripts/fix-existing-users-allowance.ts` migration script
+  - Updated users from hardcoded 20 days to system default 25 days
+  - Verified migration success with comprehensive logging
+- ✅ **Schema Enhancement PREPARED**: Added support for `employee_allowance_updated` audit action
+  - Updated `lib/db/schema.ts` with new audit log action type
+  - Generated database migration for schema update
+  - TypeScript types updated for proper validation
+- ✅ **NaN Display Bug FIXED**: Resolved "Giorni Ferie Utilizzati" showing NaN in admin dashboard
+  - Fixed calculation to use `(emp.holidaysUsed || 0)` for null safety
+- ✅ **Mobile-Responsive Design**: Vacation editing interface works perfectly on all devices
+
+#### Technical Implementation:
+**Frontend Features**:
+- `EmployeeManagement` component enhanced with vacation editing capabilities
+- Real-time data refresh after allowance updates
+- Comprehensive form validation with visual feedback
+- Italian localization for all UI elements
+- Touch-friendly mobile interface
+
+**Backend Enhancements**:  
+- `updateEmployeeHolidayAllowance()` and `getUserById()` database operations
+- `getDefaultHolidayAllowance()` helper for dynamic settings reading
+- Complete audit trail with admin user tracking and IP logging
+- Proper error handling and response formatting
+
+**Database Improvements**:
+- Migration script to fix historical data inconsistencies
+- Schema support for new audit log actions
+- Drizzle ORM integration for type-safe database operations
+
+#### User Experience:
+- **Admin Workflow**: View employee details → Click "Modifica" → Set new allowance → Add reason → Confirm → See updated values
+- **Visual Feedback**: Change summary shows exact difference before confirmation
+- **Audit Compliance**: All changes logged with admin user, timestamp, IP, and reason
+- **Real-time Updates**: Employee list refreshes immediately after changes
+
+#### Production Impact:
+🎯 **COMPLETE SUCCESS**: Admin can now modify individual employee vacation days through intuitive UI, fulfilling exact user requirements. System maintains proper audit trails, data validation, and user experience standards.
+
+---
+
+## 🗄️ Previous Completed Tasks - August 22, 2025
 
 ### Admin Approval Workflow Fix & Production Validation ✅
 **Completed**: 2025-08-22 | **Session**: Claude Code Direct
