@@ -5,6 +5,54 @@
 
 ## 🆕 Latest Completed Tasks - August 23, 2025
 
+### Vacation Days Calculation & getUserInitials Fix (v1.9.3) ✅
+**Completed**: 2025-08-23 | **Session**: Claude Code Direct  
+**Priority**: CRITICAL | **Context**: Fixed vacation days calculation divergence and JavaScript runtime error
+
+#### Issues Identified:
+1. **Hardcoded Values in Holiday Forms**: Multi-step holiday request form showed incorrect vacation days calculations
+2. **getUserInitials JavaScript Error**: Admin panel crashed when displaying employee avatars with null names
+
+#### User Feedback Analysis:
+> "nell'interfaccia dipendente, nuova richiesta ferie, ci sono ancora valori hardcoded... mentre dovrebbero essere entrmbi 0"
+> "getUserInitials@... [Error] TypeError: undefined is not an object (evaluating 'name.split')"
+
+#### Problems Fixed:
+- **HolidayRequestForm & MultiStepHolidayRequest**: Used hardcoded `holidayAllowance = 20` and `usedDays = 5`
+- **Holiday Request Page Header**: Statistics cards showed hardcoded values instead of real user data
+- **Admin Holiday Requests**: getUserInitials function failed on null/undefined employee names
+- **TypeScript Errors**: Multiple "possibly undefined" errors for user.holidayAllowance
+
+#### Solution Implemented:
+- ✅ **Real-time Data Integration**: Replaced hardcoded values with useAuth() and useHolidays() hooks
+- ✅ **Dynamic Calculations**: `remainingDays = user.holidayAllowance - stats.usedDays`
+- ✅ **getUserInitials Fix**: Added null checks and fallback return '??' for undefined names
+- ✅ **TypeScript Compliance**: Added proper null checks and optional chaining throughout
+- ✅ **ESLint Fix**: Corrected quote escaping in system-settings.tsx
+- ✅ **Consistent Data Display**: All components now use real-time user data
+
+#### Files Modified:
+- `components/forms/multi-step-holiday-request.tsx` - Real-time data integration
+- `components/forms/holiday-request-form.tsx` - Dynamic vacation calculations  
+- `app/[locale]/(employee)/holiday-request/page.tsx` - Fixed header statistics
+- `components/admin/holiday-requests-management.tsx` - getUserInitials error fix
+- `components/dashboard/holiday-balance.tsx` - Interface updates for optional props
+- `app/[locale]/(employee)/employee-dashboard/page.tsx` - TypeScript null checks
+- `components/admin/system-settings.tsx` - ESLint quote fix
+
+#### Testing & Validation:
+- ✅ Holiday request form shows accurate remaining days calculation
+- ✅ Admin panel displays employee avatars without JavaScript errors
+- ✅ All vacation day displays synchronized across components
+- ✅ TypeScript build successful with no errors
+- ✅ Server runs without runtime errors
+
+#### Impact:
+- **User Experience**: Holiday request form now shows accurate vacation days information
+- **System Stability**: Admin panel no longer crashes when viewing employee requests
+- **Data Consistency**: All vacation day displays use real-time database values
+- **Developer Experience**: Clean TypeScript build with proper null handling
+
 ### Real-time Vacation Days Display Fix ✅
 **Completed**: 2025-08-23 | **Session**: Claude Code Direct
 **Priority**: CRITICAL | **Context**: Fixed all vacation day displays to update instantly without page refresh

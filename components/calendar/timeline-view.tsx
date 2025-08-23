@@ -119,11 +119,20 @@ export function TimelineView({
     const uniqueEmployees = new Map<string, Employee>()
     
     events.forEach(event => {
+      // Add null checks for userName
+      if (!event.resource.userName || !event.resource.userId) {
+        return // Skip events with missing user data
+      }
+      
       if (!uniqueEmployees.has(event.resource.userId)) {
+        // Safe email generation with fallback
+        const safeUserName = event.resource.userName || 'unknown'
+        const emailUsername = safeUserName.toLowerCase().replace(/\s+/g, '.')
+        
         uniqueEmployees.set(event.resource.userId, {
           id: event.resource.userId,
-          name: event.resource.userName,
-          email: `${event.resource.userName.toLowerCase().replace(' ', '.')}@ominiaservice.net`,
+          name: safeUserName,
+          email: `${emailUsername}@omniaservices.net`,
           department: "Department" // Would come from API in real app
         })
       }
@@ -154,7 +163,10 @@ export function TimelineView({
   }
 
   // Get employee initials for avatar
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== 'string') {
+      return '??';
+    }
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
