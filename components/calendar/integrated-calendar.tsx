@@ -699,23 +699,26 @@ export function IntegratedCalendar({
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                     initialView={view === 'timeline' ? 'dayGridMonth' : view}
                     height="100%"
-                    events={filteredEvents.map(event => ({
-                      id: event.id,
-                      title: event.title,
-                      start: event.start,
-                      end: event.end,
-                      allDay: event.allDay,
-                      backgroundColor: getStatusColor(event.resource.status),
-                      borderColor: getStatusColor(event.resource.status),
-                      textColor: 'white',
-                      extendedProps: {
-                        employeeName: event.resource.userName,
-                        status: event.resource.status,
-                        type: event.resource.type,
-                        workingDays: event.resource.workingDays,
-                        notes: event.resource.notes
-                      }
-                    }))}
+                    events={(() => {
+                      const mappedEvents = filteredEvents.map(event => ({
+                        id: event.id,
+                        title: event.title,
+                        start: event.start,
+                        end: event.end,
+                        allDay: event.allDay,
+                        backgroundColor: getStatusColor(event.resource.status),
+                        borderColor: getStatusColor(event.resource.status),
+                        textColor: 'white',
+                        extendedProps: {
+                          employeeName: event.resource.userName,
+                          status: event.resource.status,
+                          type: event.resource.type,
+                          workingDays: event.resource.workingDays,
+                          notes: event.resource.notes
+                        }
+                      }))
+                      return mappedEvents
+                    })()}
                     eventClick={handleEventClick}
                     select={handleDateSelect}
                     selectable={true}
@@ -726,6 +729,13 @@ export function IntegratedCalendar({
                     headerToolbar={false} // We use custom toolbar
                     locale={locale}
                     firstDay={1} // Monday
+                    validRange={dateFilter !== 'all' && view === 'listMonth' ? (() => {
+                      const range = calculateDateRange(dateFilter);
+                      return {
+                        start: range.startDate,
+                        end: range.endDate
+                      };
+                    })() : undefined}
                     eventDisplay="block"
                     displayEventTime={false}
                     eventClassNames="holiday-event"
