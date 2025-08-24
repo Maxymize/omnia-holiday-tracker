@@ -308,7 +308,7 @@ export function IntegratedCalendar({
   }
 
   // Custom toolbar component
-  const CustomToolbar = ({ label, onNavigate, onView, view: currentView, onViewChange, dateFilter }: any) => {
+  const CustomToolbar = ({ label, onNavigate, onView, view: currentView, onViewChange, dateFilter, setDateFilter }: any) => {
     const viewLabels: Record<string, string> = {
       'timeline': 'Timeline',
       'dayGridMonth': t('dashboard.calendar.monthView'),
@@ -675,6 +675,7 @@ export function IntegratedCalendar({
               onViewChange={handleViewChange}
               view={view}
               dateFilter={dateFilter}
+              setDateFilter={setDateFilter}
             />
             
             {view === 'timeline' ? (
