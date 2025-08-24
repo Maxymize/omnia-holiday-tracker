@@ -82,7 +82,7 @@ export function IntegratedCalendar({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [view, setView] = useState<string>('timeline')
+  const [view, setView] = useState<string>('dayGridMonth')
   const [viewMode, setViewMode] = useState<'own' | 'team' | 'all'>('all')
   const [dateFilter, setDateFilter] = useState<DateRangeFilter>('all')
   
@@ -697,7 +697,7 @@ export function IntegratedCalendar({
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-                    initialView={view === 'timeline' ? 'dayGridMonth' : view}
+                    initialView={view === 'timeline' ? 'dayGridMonth' : view === 'list' ? 'listYear' : view}
                     height="100%"
                     events={(() => {
                       const mappedEvents = filteredEvents.map(event => ({
