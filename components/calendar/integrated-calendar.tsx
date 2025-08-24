@@ -293,6 +293,12 @@ export function IntegratedCalendar({
           return t('dashboard.calendar.dateFilters.last6Months');
         case 'last3Months':
           return t('dashboard.calendar.dateFilters.last3Months');
+        case 'next3Months':
+          return t('dashboard.calendar.dateFilters.next3Months');
+        case 'next6Months':
+          return t('dashboard.calendar.dateFilters.next6Months');
+        case 'next12Months':
+          return t('dashboard.calendar.dateFilters.next12Months');
         default:
           return format(currentDate, "MMMM yyyy", { locale: getDateFnsLocale() });
       }
@@ -402,6 +408,9 @@ export function IntegratedCalendar({
                     <SelectItem value="last12Months">{t('dashboard.calendar.dateFilters.last12Months')}</SelectItem>
                     <SelectItem value="last6Months">{t('dashboard.calendar.dateFilters.last6Months')}</SelectItem>
                     <SelectItem value="last3Months">{t('dashboard.calendar.dateFilters.last3Months')}</SelectItem>
+                    <SelectItem value="next3Months">{t('dashboard.calendar.dateFilters.next3Months')}</SelectItem>
+                    <SelectItem value="next6Months">{t('dashboard.calendar.dateFilters.next6Months')}</SelectItem>
+                    <SelectItem value="next12Months">{t('dashboard.calendar.dateFilters.next12Months')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

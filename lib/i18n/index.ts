@@ -84,6 +84,9 @@ export const translations = {
           last12Months: 'Ultimi 12 mesi',
           last6Months: 'Ultimi 6 mesi',
           last3Months: 'Ultimi 3 mesi',
+          next3Months: 'Prossimi 3 mesi',
+          next6Months: 'Prossimi 6 mesi',
+          next12Months: 'Prossimi 12 mesi',
         },
         legendDetails: {
           approved: 'Approvata',
@@ -306,6 +309,9 @@ export const translations = {
           last12Months: 'Last 12 months',
           last6Months: 'Last 6 months',
           last3Months: 'Last 3 months',
+          next3Months: 'Next 3 months',
+          next6Months: 'Next 6 months',
+          next12Months: 'Next 12 months',
         },
         legendDetails: {
           approved: 'Approved',
@@ -522,6 +528,9 @@ export const translations = {
           last12Months: 'Últimos 12 meses',
           last6Months: 'Últimos 6 meses',
           last3Months: 'Últimos 3 meses',
+          next3Months: 'Próximos 3 meses',
+          next6Months: 'Próximos 6 meses',
+          next12Months: 'Próximos 12 meses',
         },
         legendDetails: {
           approved: 'Aprobada',

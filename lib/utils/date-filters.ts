@@ -1,6 +1,6 @@
-import { subMonths, startOfYear, format } from 'date-fns';
+import { subMonths, addMonths, startOfYear, format } from 'date-fns';
 
-export type DateRangeFilter = 'all' | 'yearToDate' | 'last12Months' | 'last6Months' | 'last3Months';
+export type DateRangeFilter = 'all' | 'yearToDate' | 'last12Months' | 'last6Months' | 'last3Months' | 'next3Months' | 'next6Months' | 'next12Months';
 
 export interface DateRange {
   startDate?: string;
@@ -45,6 +45,27 @@ export function calculateDateRange(filter: DateRangeFilter): DateRange {
       return {
         startDate: format(threeMonthsAgo, 'yyyy-MM-dd'),
         endDate: today
+      };
+
+    case 'next3Months':
+      const threeMonthsFromNow = addMonths(now, 3);
+      return {
+        startDate: today,
+        endDate: format(threeMonthsFromNow, 'yyyy-MM-dd')
+      };
+
+    case 'next6Months':
+      const sixMonthsFromNow = addMonths(now, 6);
+      return {
+        startDate: today,
+        endDate: format(sixMonthsFromNow, 'yyyy-MM-dd')
+      };
+
+    case 'next12Months':
+      const twelveMonthsFromNow = addMonths(now, 12);
+      return {
+        startDate: today,
+        endDate: format(twelveMonthsFromNow, 'yyyy-MM-dd')
       };
 
     default:
