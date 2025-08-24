@@ -283,7 +283,7 @@ export function IntegratedCalendar({
   // Generate label based on view and filter
   const getToolbarLabel = () => {
     // For list view with active date filter, show filter description
-    if (view === 'listMonth' && dateFilter !== 'all') {
+    if (view === 'list' && dateFilter !== 'all') {
       switch (dateFilter) {
         case 'yearToDate':
           return t('dashboard.calendar.dateFilters.yearToDate');
@@ -313,7 +313,7 @@ export function IntegratedCalendar({
       'timeline': 'Timeline',
       'dayGridMonth': t('dashboard.calendar.monthView'),
       'timeGridWeek': t('dashboard.calendar.weekView'),
-      'listMonth': 'Lista'
+      'list': 'Lista'
     }
 
     return (
@@ -323,7 +323,7 @@ export function IntegratedCalendar({
           {/* Navigation Controls and Date */}
           <div className="flex items-center gap-3">
             {/* Hide navigation controls for list view with active filter */}
-            {!(currentView === 'listMonth' && dateFilter !== 'all') && (
+            {!(currentView === 'list' && dateFilter !== 'all') && (
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
@@ -372,7 +372,7 @@ export function IntegratedCalendar({
           {/* View Toggle Buttons */}
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center rounded-lg border bg-white/50 p-1">
-              {['timeline', 'dayGridMonth', 'timeGridWeek', 'listMonth'].map((viewType) => (
+              {['timeline', 'dayGridMonth', 'timeGridWeek', 'list'].map((viewType) => (
                 <Button
                   key={viewType}
                   variant={currentView === viewType ? 'default' : 'ghost'}
@@ -393,7 +393,7 @@ export function IntegratedCalendar({
           {/* Right side controls */}
           <div className="flex items-center gap-3">
             {/* Date Range Filter - Only for List view */}
-            {currentView === 'listMonth' && (
+            {currentView === 'list' && (
               <div className="flex items-center gap-2">
                 <Select 
                   value={dateFilter} 
@@ -729,13 +729,6 @@ export function IntegratedCalendar({
                     headerToolbar={false} // We use custom toolbar
                     locale={locale}
                     firstDay={1} // Monday
-                    validRange={dateFilter !== 'all' && view === 'listMonth' ? (() => {
-                      const range = calculateDateRange(dateFilter);
-                      return {
-                        start: range.startDate,
-                        end: range.endDate
-                      };
-                    })() : undefined}
                     eventDisplay="block"
                     displayEventTime={false}
                     eventClassNames="holiday-event"
