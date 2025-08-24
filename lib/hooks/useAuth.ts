@@ -9,7 +9,7 @@ interface User {
   name: string;
   role: 'admin' | 'employee';
   status: 'active' | 'inactive' | 'pending';
-  department?: string;
+  departmentId?: string;
   departmentName?: string;
   holidayAllowance?: number;
 }

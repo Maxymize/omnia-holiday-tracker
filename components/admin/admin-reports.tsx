@@ -19,7 +19,10 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  CalendarCheck,
+  CalendarDays,
+  Hourglass
 } from 'lucide-react';
 import { Employee, PendingHolidayRequest } from '@/lib/hooks/useAdminData';
 
@@ -34,27 +37,56 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
 
-  // Calculate statistics
+  // Helper function to safely get numeric value
+  const safeNumber = (value: any): number => {
+    const num = Number(value);
+    return isNaN(num) || !isFinite(num) ? 0 : num;
+  };
+
+  // Helper function to format percentage
+  const safePercentage = (numerator: number, denominator: number): number => {
+    if (denominator === 0 || !isFinite(denominator) || !isFinite(numerator)) {
+      return 0;
+    }
+    const result = (numerator / denominator) * 100;
+    return isNaN(result) || !isFinite(result) ? 0 : result;
+  };
+
+  // Calculate statistics with enhanced vacation metrics
   const statistics = useMemo(() => {
     const activeEmployees = employees.filter(emp => emp.status === 'active');
-    const totalHolidaysUsed = employees.reduce((sum, emp) => sum + emp.holidaysUsed, 0);
-    const totalHolidaysAllowed = employees.reduce((sum, emp) => sum + emp.holidayAllowance, 0);
+    
+    // Enhanced vacation metrics calculations
+    const totalAvailable = employees.reduce((sum, emp) => sum + safeNumber(emp.availableDays || (emp.holidayAllowance - (emp.holidaysUsed || 0))), 0);
+    const totalTaken = employees.reduce((sum, emp) => sum + safeNumber(emp.takenDays || 0), 0);
+    const totalBooked = employees.reduce((sum, emp) => sum + safeNumber(emp.bookedDays || 0), 0);
+    const totalPending = employees.reduce((sum, emp) => sum + safeNumber(emp.pendingDays || 0), 0);
+    
+    // Legacy calculations for backward compatibility
+    const totalHolidaysUsed = employees.reduce((sum, emp) => sum + safeNumber(emp.holidaysUsed), 0);
+    const totalHolidaysAllowed = employees.reduce((sum, emp) => sum + safeNumber(emp.holidayAllowance), 0);
     const averageHolidaysUsed = activeEmployees.length > 0 ? totalHolidaysUsed / activeEmployees.length : 0;
     
     const approvedRequests = requests.filter(req => req.status === 'approved');
     const pendingRequests = requests.filter(req => req.status === 'pending');
     const rejectedRequests = requests.filter(req => req.status === 'rejected');
     
-    const approvalRate = requests.length > 0 ? (approvedRequests.length / requests.length) * 100 : 0;
+    const approvalRate = safePercentage(approvedRequests.length, requests.length);
     
     return {
       totalEmployees: employees.length,
       activeEmployees: activeEmployees.length,
       pendingEmployees: employees.filter(emp => emp.status === 'pending').length,
+      // Enhanced vacation metrics
+      totalAvailable,
+      totalTaken,
+      totalBooked,
+      totalPending,
+      // Legacy metrics
       totalHolidaysUsed,
       totalHolidaysAllowed,
-      averageHolidaysUsed,
-      utilizationRate: totalHolidaysAllowed > 0 ? (totalHolidaysUsed / totalHolidaysAllowed) * 100 : 0,
+      averageHolidaysUsed: safeNumber(averageHolidaysUsed),
+      utilizationRate: safePercentage(totalHolidaysUsed, totalHolidaysAllowed),
       totalRequests: requests.length,
       approvedRequests: approvedRequests.length,
       pendingRequests: pendingRequests.length,
@@ -81,8 +113,8 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
       
       const deptData = deptMap.get(dept);
       deptData.employeeCount++;
-      deptData.holidaysUsed += emp.holidaysUsed;
-      deptData.holidaysAllowed += emp.holidayAllowance;
+      deptData.holidaysUsed += safeNumber(emp.holidaysUsed);
+      deptData.holidaysAllowed += safeNumber(emp.holidayAllowance);
     });
 
     requests.forEach(req => {
@@ -94,7 +126,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
 
     return Array.from(deptMap.values()).map(dept => ({
       ...dept,
-      utilizationRate: dept.holidaysAllowed > 0 ? (dept.holidaysUsed / dept.holidaysAllowed) * 100 : 0
+      utilizationRate: safePercentage(dept.holidaysUsed, dept.holidaysAllowed)
     }));
   }, [employees, requests]);
 
@@ -104,7 +136,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
       .filter(emp => emp.status === 'active')
       .map(emp => ({
         ...emp,
-        utilizationRate: emp.holidayAllowance > 0 ? (emp.holidaysUsed / emp.holidayAllowance) * 100 : 0,
+        holidaysUsed: safeNumber(emp.holidaysUsed),
+        holidayAllowance: safeNumber(emp.holidayAllowance),
+        utilizationRate: safePercentage(safeNumber(emp.holidaysUsed), safeNumber(emp.holidayAllowance)),
         requestCount: requests.filter(req => req.employeeId === emp.id).length
       }))
       .sort((a, b) => b.utilizationRate - a.utilizationRate);
@@ -168,8 +202,8 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
         </div>
       </div>
 
-      {/* Overview Statistics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Enhanced Overview Statistics with Temporal Vacation Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
@@ -191,14 +225,27 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-green-600" />
+                <CalendarCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Utilizzati</p>
-                <p className="text-2xl font-bold text-green-600">{statistics.totalHolidaysUsed}</p>
-                <p className="text-xs text-gray-500">
-                  su {statistics.totalHolidaysAllowed} disponibili
-                </p>
+                <p className="text-sm text-gray-600">Giorni Disponibili</p>
+                <p className="text-2xl font-bold text-green-600">{statistics.totalAvailable}</p>
+                <p className="text-xs text-gray-500">per nuove richieste</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Giorni Goduti</p>
+                <p className="text-2xl font-bold text-blue-600">{statistics.totalTaken}</p>
+                <p className="text-xs text-gray-500">già trascorsi</p>
               </div>
             </div>
           </CardContent>
@@ -208,16 +255,12 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <CalendarDays className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tasso Utilizzo</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {statistics.utilizationRate.toFixed(1)}%
-                </p>
-                <p className="text-xs text-gray-500">
-                  Media: {statistics.averageHolidaysUsed.toFixed(1)} giorni
-                </p>
+                <p className="text-sm text-gray-600">Giorni Prenotati</p>
+                <p className="text-2xl font-bold text-purple-600">{statistics.totalBooked}</p>
+                <p className="text-xs text-gray-500">futuri approvati</p>
               </div>
             </div>
           </CardContent>
@@ -227,15 +270,30 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-amber-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-amber-600" />
+                <Hourglass className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tasso Approvazione</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {statistics.approvalRate.toFixed(1)}%
+                <p className="text-sm text-gray-600">In Approvazione</p>
+                <p className="text-2xl font-bold text-amber-600">{statistics.totalPending}</p>
+                <p className="text-xs text-gray-500">giorni pendenti</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Tasso Utilizzo</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {safeNumber(statistics.utilizationRate).toFixed(1)}%
                 </p>
                 <p className="text-xs text-gray-500">
-                  {statistics.approvedRequests} su {statistics.totalRequests}
+                  Media: {safeNumber(statistics.averageHolidaysUsed).toFixed(1)} giorni
                 </p>
               </div>
             </div>
@@ -264,7 +322,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                       </p>
                     </div>
                     <Badge className={getUtilizationColor(dept.utilizationRate)}>
-                      {dept.utilizationRate.toFixed(1)}%
+                      {safeNumber(dept.utilizationRate).toFixed(1)}%
                     </Badge>
                   </div>
                   <div className="space-y-1">
@@ -272,7 +330,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                       <span>Utilizzo ferie</span>
                       <span>{dept.holidaysUsed} / {dept.holidaysAllowed} giorni</span>
                     </div>
-                    <Progress value={dept.utilizationRate} className="h-2" />
+                    <Progress value={safeNumber(dept.utilizationRate)} className="h-2" />
                   </div>
                 </div>
               ))}
@@ -325,9 +383,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Tasso di approvazione</span>
-                  <span>{statistics.approvalRate.toFixed(1)}%</span>
+                  <span>{safeNumber(statistics.approvalRate).toFixed(1)}%</span>
                 </div>
-                <Progress value={statistics.approvalRate} className="h-2" />
+                <Progress value={safeNumber(statistics.approvalRate)} className="h-2" />
               </div>
             </div>
           </CardContent>
@@ -349,8 +407,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <TableRow>
                   <TableHead>Dipendente</TableHead>
                   <TableHead>Dipartimento</TableHead>
-                  <TableHead>Giorni Utilizzati</TableHead>
-                  <TableHead>Giorni Disponibili</TableHead>
+                  <TableHead>Stato Ferie</TableHead>
                   <TableHead>Tasso Utilizzo</TableHead>
                   <TableHead>Richieste</TableHead>
                 </TableRow>
@@ -370,15 +427,33 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium">{employee.holidaysUsed}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span>{employee.holidayAllowance}</span>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                        <div className="flex items-center space-x-1">
+                          <CalendarCheck className="h-3 w-3 text-green-600" />
+                          <span className="font-medium text-green-700">{employee.availableDays || (employee.holidayAllowance - employee.holidaysUsed)}</span>
+                          <span className="text-gray-600">disp.</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <CheckCircle className="h-3 w-3 text-blue-600" />
+                          <span className="font-medium text-blue-700">{employee.takenDays || 0}</span>
+                          <span className="text-gray-600">goduti</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <CalendarDays className="h-3 w-3 text-purple-600" />
+                          <span className="font-medium text-purple-700">{employee.bookedDays || 0}</span>
+                          <span className="text-gray-600">pren.</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Hourglass className="h-3 w-3 text-amber-600" />
+                          <span className="font-medium text-amber-700">{employee.pendingDays || 0}</span>
+                          <span className="text-gray-600">att.</span>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Badge className={getUtilizationColor(employee.utilizationRate)}>
-                          {employee.utilizationRate.toFixed(1)}%
+                          {safeNumber(employee.utilizationRate).toFixed(1)}%
                         </Badge>
                         <span className="text-xs text-gray-500">
                           {getUtilizationLabel(employee.utilizationRate)}

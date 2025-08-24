@@ -33,9 +33,12 @@ export interface Holiday {
 
 export interface HolidayStats {
   totalAllowance: number;
-  usedDays: number;
-  remainingDays: number;
-  pendingDays: number;
+  usedDays: number; // Total approved days (past + future)
+  takenDays: number; // Days already taken (past dates)
+  bookedDays: number; // Days booked for future (future dates)
+  pendingDays: number; // Days in pending requests
+  availableDays: number; // Days available for new requests
+  remainingDays: number; // For backward compatibility
   upcomingHolidays: number;
   totalRequests: number;
   approvedRequests: number;
@@ -117,17 +120,32 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
           return startDate.getFullYear() === currentYear;
         });
 
-        // Calculate statistics
-        const usedDays = currentYearHolidays
-          .filter((h: Holiday) => h.status === 'approved' && h.type === 'vacation')
+        // Calculate statistics with date-based distinction
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+        const approvedVacations = currentYearHolidays.filter((h: Holiday) => h.status === 'approved' && h.type === 'vacation');
+        
+        // Days already taken (end date is in the past)
+        const takenDays = approvedVacations
+          .filter((h: Holiday) => new Date(h.endDate) < today)
           .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
+
+        // Days booked for future (start date is today or in the future)
+        const bookedDays = approvedVacations
+          .filter((h: Holiday) => new Date(h.startDate) >= today)
+          .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
+
+        // Total approved days (for backward compatibility)
+        const usedDays = takenDays + bookedDays;
 
         const pendingDays = currentYearHolidays
           .filter((h: Holiday) => h.status === 'pending' && h.type === 'vacation')
           .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
 
         const totalAllowance = user?.holidayAllowance || 25; // Get from user profile or system default
-        const remainingDays = totalAllowance - usedDays;
+        const availableDays = totalAllowance - usedDays - pendingDays;
+        const remainingDays = totalAllowance - usedDays; // For backward compatibility
 
         const upcomingHolidays = currentYearHolidays.filter((h: Holiday) => {
           const startDate = new Date(h.startDate);
@@ -143,8 +161,11 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         const calculatedStats: HolidayStats = {
           totalAllowance,
           usedDays,
-          remainingDays,
+          takenDays,
+          bookedDays,
           pendingDays,
+          availableDays,
+          remainingDays,
           upcomingHolidays,
           totalRequests,
           approvedRequests,

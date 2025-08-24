@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
   const { t, locale } = useTranslation();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const getUserInitials = (name?: string) => {
@@ -93,9 +94,17 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
   const isActive = (href: string) => {
     if (href.includes('?tab=')) {
       const [basePath, tabParam] = href.split('?tab=');
-      return pathname === basePath && (window?.location.search.includes(`tab=${tabParam}`) || (!window?.location.search && tabParam === 'calendar'));
+      const currentTab = searchParams.get('tab');
+      
+      // If we're on the base path, check if the current tab matches the target tab
+      if (pathname === basePath) {
+        return currentTab === tabParam;
+      }
+      return false;
     }
-    return pathname === href;
+    // For non-tab navigation items (like dashboard root)
+    // Only active when on the exact path with NO tab parameter
+    return pathname === href && !searchParams.get('tab');
   };
 
   const SidebarContent = () => (

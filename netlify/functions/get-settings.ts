@@ -133,7 +133,7 @@ export const handler: Handler = async (event, context) => {
     // Default settings structure for reference
     const defaultSettings = {
       // Visibility settings
-      'holidays.visibility_mode': 'admin_only', // 'all_employees' | 'department_only' | 'admin_only'
+      'holidays.visibility_mode': 'all_see_all', // 'all_see_all' | 'department_only' | 'admin_only'
       'holidays.show_names': 'true', // Show employee names in holiday calendar
       'holidays.show_details': 'false', // Show holiday details (notes, etc.)
       

@@ -10,11 +10,16 @@ export interface Employee {
   email: string;
   status: 'active' | 'inactive' | 'pending';
   role: 'admin' | 'employee';
-  department?: string;
+  departmentId?: string;
   departmentName?: string;
   holidayAllowance: number;
   holidaysUsed: number;
   holidaysRemaining: number;
+  // Enhanced vacation metrics
+  availableDays?: number; // Days available for new requests
+  takenDays?: number; // Days already taken (past dates)
+  bookedDays?: number; // Days booked for future (future dates)
+  pendingDays?: number; // Days in pending requests
   createdAt: string;
   lastLogin?: string;
 }
@@ -126,7 +131,7 @@ export function useAdminData() {
   const [systemSettings, setSystemSettings] = useState<Partial<SystemSettings>>({});
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
 
-  // Fetch all employees
+  // Fetch all employees with enhanced vacation metrics
   const fetchEmployees = useCallback(async () => {
     if (!isAdmin) return;
     
@@ -136,8 +141,12 @@ export function useAdminData() {
     try {
       const baseUrl = getBaseUrl();
       const token = localStorage.getItem('accessToken');
-      // TEMPORARY: Use debug function that works
-      const response = await fetch(`${baseUrl}/.netlify/functions/debug-get-users`, createFetchConfig('GET', token || undefined));
+      
+      // Use proper get-employees function with holiday balance calculation
+      const response = await fetch(
+        `${baseUrl}/.netlify/functions/get-employees?includeHolidayBalance=true&includeDepartment=true&year=${new Date().getFullYear()}`,
+        createFetchConfig('GET', token || undefined)
+      );
 
       const data = await response.json();
       
@@ -145,10 +154,68 @@ export function useAdminData() {
         throw new Error(data.error || 'Failed to fetch employees');
       }
 
-      if (data.success && data.data) {
-        // Adapt the debug response format to what the frontend expects
-        const employees = data.data.users || [];
-        setEmployees(employees);
+      if (data.success && data.employees) {
+        // Need to fetch holiday data to calculate temporal metrics
+        const holidaysResponse = await fetch(
+          `${baseUrl}/.netlify/functions/get-holidays?viewMode=all&year=${new Date().getFullYear()}`,
+          createFetchConfig('GET', token || undefined)
+        );
+
+        const holidaysData = await holidaysResponse.json();
+        const allHolidays = holidaysData.success ? (holidaysData.data?.holidays || []) : [];
+
+        // Transform employees data to match our interface and calculate temporal metrics
+        const employeesWithMetrics = data.employees.map((emp: any) => {
+          const userHolidays = allHolidays.filter((h: any) => h.employeeId === emp.id && h.type === 'vacation');
+          
+          // Calculate temporal metrics
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const approvedHolidays = userHolidays.filter((h: any) => h.status === 'approved');
+          const pendingHolidays = userHolidays.filter((h: any) => h.status === 'pending');
+
+          // Days already taken (end date is in the past)
+          const takenDays = approvedHolidays
+            .filter((h: any) => new Date(h.endDate) < today)
+            .reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0);
+
+          // Days booked for future (start date is today or in the future)
+          const bookedDays = approvedHolidays
+            .filter((h: any) => new Date(h.startDate) >= today)
+            .reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0);
+
+          // Days in pending requests
+          const pendingDays = pendingHolidays
+            .reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0);
+
+          // Total used days (for backward compatibility)
+          const usedDays = takenDays + bookedDays;
+          const totalAllowance = emp.holidayBalance?.allowance || emp.holidayAllowance || 25;
+          const availableDays = totalAllowance - usedDays - pendingDays;
+
+          return {
+            id: emp.id,
+            name: emp.name,
+            email: emp.email,
+            status: emp.status,
+            role: emp.role,
+            departmentId: emp.department?.id,
+            departmentName: emp.department?.name,
+            holidayAllowance: totalAllowance,
+            holidaysUsed: usedDays,
+            holidaysRemaining: totalAllowance - usedDays,
+            // Enhanced vacation metrics
+            availableDays: Math.max(0, availableDays),
+            takenDays,
+            bookedDays,
+            pendingDays,
+            createdAt: emp.createdAt,
+            lastLogin: emp.lastLoginAt
+          };
+        });
+
+        setEmployees(employeesWithMetrics);
       }
     } catch (err) {
       console.error('Error fetching employees:', err);
@@ -176,8 +243,8 @@ export function useAdminData() {
         throw new Error(data.error || 'Failed to fetch departments');
       }
 
-      if (data.success && data.data) {
-        setDepartments(data.data || []);
+      if (data.success && data.departments) {
+        setDepartments(data.departments || []);
       }
     } catch (err) {
       console.error('Error fetching departments:', err);

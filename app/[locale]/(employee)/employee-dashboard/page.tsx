@@ -29,7 +29,10 @@ import {
   AlertTriangle,
   FileText,
   Download,
-  Building2
+  Building2,
+  CalendarDays,
+  CalendarCheck,
+  CalendarClock
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PWAInstallBanner } from '@/components/ui/pwa-install-banner';
@@ -174,11 +177,11 @@ function EmployeeDashboardContent() {
     return `${days} ${dayLabel}`;
   };
 
-  // Prepare sidebar stats (use user.holidayAllowance for real-time updates)
+  // Prepare sidebar stats (use new detailed metrics)
   const sidebarStats = stats && user ? {
     pendingRequests: stats.pendingRequests,
     upcomingHolidays: stats.upcomingHolidays,
-    remainingDays: (user.holidayAllowance || 25) - stats.usedDays // Calculate using real-time allowance
+    remainingDays: stats.availableDays // Available days for new requests
   } : undefined;
 
   if (!user) {
@@ -208,9 +211,19 @@ function EmployeeDashboardContent() {
                   <h1 className="text-2xl font-bold">
                     {t('dashboard.welcome.title', { name: user.name || 'Dipendente' })}
                   </h1>
-                  <p className="mt-1 text-blue-100">
-                    {t('dashboard.welcome.subtitle')}
-                  </p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-blue-100">
+                      {t('dashboard.welcome.subtitle')}
+                    </p>
+                    {user.departmentName && (
+                      <div className="flex items-center space-x-2">
+                        <Building2 className="h-4 w-4 text-blue-200" />
+                        <span className="text-sm text-blue-200">
+                          Dipartimento: <span className="font-medium text-white">{user.departmentName}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="hidden md:flex items-center space-x-4">
                   <Avatar className="h-12 w-12 border-2 border-white">
@@ -218,12 +231,12 @@ function EmployeeDashboardContent() {
                       {getUserInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
-                  {user && (
+                  {user && stats && (
                     <div className="text-right">
                       <div className="text-2xl font-bold">
-                        {user.holidayAllowance || 0}
+                        {stats.availableDays}
                       </div>
-                      <div className="text-sm text-blue-200">giorni rimasti</div>
+                      <div className="text-sm text-blue-200">giorni disponibili</div>
                     </div>
                   )}
                   <Button 
@@ -274,9 +287,10 @@ function EmployeeDashboardContent() {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Quick Stats Cards */}
+              {/* Enhanced Holiday Stats Cards */}
               {stats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Available Days */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
@@ -284,50 +298,57 @@ function EmployeeDashboardContent() {
                           <Calendar className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
-                          <p className="text-2xl font-bold text-green-600">{(user.holidayAllowance || 25) - stats.usedDays}</p>
+                          <p className="text-sm text-gray-600">Giorni disponibili</p>
+                          <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
+                          <p className="text-xs text-gray-500">per nuove richieste</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                   
+                  {/* Days Already Taken */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-blue-100 rounded-lg">
-                          <CheckCircle className="h-5 w-5 text-blue-600" />
+                          <CalendarCheck className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">{t('dashboard.stats.usedDays')}</p>
-                          <p className="text-2xl font-bold text-blue-600">{stats.usedDays}</p>
+                          <p className="text-sm text-gray-600">Giorni già goduti</p>
+                          <p className="text-2xl font-bold text-blue-600">{stats.takenDays}</p>
+                          <p className="text-xs text-gray-500">ferie passate</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                   
+                  {/* Days Booked Future */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-amber-100 rounded-lg">
-                          <Clock className="h-5 w-5 text-amber-600" />
+                          <CalendarDays className="h-5 w-5 text-amber-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">{t('dashboard.stats.pendingRequests')}</p>
-                          <p className="text-2xl font-bold text-amber-600">{stats.pendingRequests}</p>
+                          <p className="text-sm text-gray-600">Giorni prenotati</p>
+                          <p className="text-2xl font-bold text-amber-600">{stats.bookedDays}</p>
+                          <p className="text-xs text-gray-500">ferie future</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                   
+                  {/* Pending Days */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className="p-2 bg-purple-100 rounded-lg">
-                          <TrendingUp className="h-5 w-5 text-purple-600" />
+                          <CalendarClock className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">{t('dashboard.stats.upcomingHolidays')}</p>
-                          <p className="text-2xl font-bold text-purple-600">{stats.upcomingHolidays}</p>
+                          <p className="text-sm text-gray-600">Giorni in attesa</p>
+                          <p className="text-2xl font-bold text-purple-600">{stats.pendingDays}</p>
+                          <p className="text-xs text-gray-500">da approvare</p>
                         </div>
                       </div>
                     </CardContent>

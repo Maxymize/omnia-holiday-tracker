@@ -68,6 +68,11 @@ export function TimelineView({
   // Refs for scroll synchronization
   const headerScrollRef = useRef<HTMLDivElement>(null)
   const contentScrollRef = useRef<HTMLDivElement>(null)
+  
+  // Drag-to-scroll state
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, scrollLeft: 0 })
+  const [dragActive, setDragActive] = useState(false)
 
   // Scroll synchronization effect
   useEffect(() => {
@@ -157,6 +162,9 @@ export function TimelineView({
 
   // Handle event click
   const handleEventClick = (event: HolidayEvent) => {
+    // Prevent event click if we were dragging
+    if (dragActive) return
+    
     setSelectedEvent(event)
     setShowEventDialog(true)
     onEventClick?.(event)
@@ -211,53 +219,59 @@ export function TimelineView({
     scrollToWeek(newWeekStart)
   }
 
+  // Drag-to-scroll handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragActive(true)
+    const scrollContainer = contentScrollRef.current
+    if (scrollContainer) {
+      setDragStart({
+        x: e.pageX - scrollContainer.offsetLeft,
+        scrollLeft: scrollContainer.scrollLeft,
+      })
+    }
+    // Prevent text selection during drag
+    e.preventDefault()
+  }
+
+  const handleMouseLeave = () => {
+    setIsDragging(false)
+    setDragActive(false)
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    // Small delay to prevent click events immediately after drag
+    setTimeout(() => setDragActive(false), 100)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    e.preventDefault()
+    
+    const scrollContainer = contentScrollRef.current
+    const headerContainer = headerScrollRef.current
+    if (scrollContainer && headerContainer) {
+      const x = e.pageX - scrollContainer.offsetLeft
+      const walk = (x - dragStart.x) * 2 // Adjust scroll speed multiplier
+      const newScrollLeft = dragStart.scrollLeft - walk
+      
+      // Update both containers to keep them in sync
+      scrollContainer.scrollLeft = newScrollLeft
+      headerContainer.scrollLeft = newScrollLeft
+    }
+  }
+
 
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      {/* Compact Header Above Timeline - All controls stacked vertically */}
-      <div className="border rounded-t-lg bg-white p-3 space-y-2">
-        {/* Month Title */}
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-800">
-            {format(startOfMonth(currentDate), "MMMM yyyy", { locale: getDateFnsLocale() })}
-          </h2>
-        </div>
-        
-        {/* Navigation Controls - Compact Row */}
-        <div className="flex items-center justify-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToPreviousWeek}
-            className="h-7 w-7 p-0"
-            title="Settimana precedente"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToCurrentWeek}
-            className="px-2 h-7 text-xs"
-          >
-            Questa Settimana
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToNextWeek}
-            className="h-7 w-7 p-0"
-            title="Settimana successiva"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
-        </div>
-        
-        {/* Instructions */}
+      {/* Compact Header Above Timeline */}
+      <div className="border rounded-t-lg bg-white p-2">
+        {/* Instructions only */}
         <div className="text-center">
           <div className="text-xs text-gray-500">
-            Scorri orizzontalmente per vedere tutto il mese
+            Scorri orizzontalmente per vedere tutto il mese • Clicca e trascina per navigare
           </div>
         </div>
       </div>
@@ -273,7 +287,21 @@ export function TimelineView({
           </div>
           
           {/* Days Header - Constrained */}
-          <div ref={headerScrollRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div 
+            ref={headerScrollRef} 
+            className={cn(
+              "flex-1 overflow-x-auto overflow-y-hidden select-none",
+              isDragging ? "cursor-grabbing" : "cursor-grab"
+            )}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            style={{ 
+              userSelect: isDragging ? 'none' : 'auto',
+              WebkitUserSelect: isDragging ? 'none' : 'auto'
+            }}
+          >
             <div className="flex" style={{ width: `${monthDays.length * 50}px` }}>
               {monthDays.map((day) => (
                 <div
@@ -330,7 +358,21 @@ export function TimelineView({
             </div>
 
             {/* Holiday Rows Column */}
-            <div ref={contentScrollRef} className="flex-1 overflow-x-auto overflow-y-visible">
+            <div 
+              ref={contentScrollRef} 
+              className={cn(
+                "flex-1 overflow-x-auto overflow-y-visible select-none",
+                isDragging ? "cursor-grabbing" : "cursor-grab"
+              )}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              style={{ 
+                userSelect: isDragging ? 'none' : 'auto',
+                WebkitUserSelect: isDragging ? 'none' : 'auto'
+              }}
+            >
               <div style={{ width: `${monthDays.length * 50}px` }}>
                 {employees.map((employee) => (
                   <div key={employee.id} className="flex border-b border-gray-100 hover:bg-gray-50" style={{ height: '45px' }}>

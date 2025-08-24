@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { db } from '../../lib/db/index';
-import { users } from '../../lib/db/schema';
+import { users, departments } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 // CORS headers
@@ -25,21 +25,67 @@ export const handler: Handler = async (event, context) => {
     
     console.log('Filtering by status:', statusParam);
 
-    // Get users based on status
+    // Get users with department data
     let usersQuery;
     
     if (statusParam === 'all') {
-      usersQuery = db.select().from(users);
+      usersQuery = db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          passwordHash: users.passwordHash,
+          role: users.role,
+          status: users.status,
+          departmentId: users.departmentId,
+          departmentName: departments.name,
+          holidayAllowance: users.holidayAllowance,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt
+        })
+        .from(users)
+        .leftJoin(departments, eq(users.departmentId, departments.id));
     } else {
       // Cast to the correct enum type
       const validStatuses = ['pending', 'active', 'inactive'] as const;
       type UserStatus = typeof validStatuses[number];
       
       if (validStatuses.includes(statusParam as UserStatus)) {
-        usersQuery = db.select().from(users).where(eq(users.status, statusParam as UserStatus));
+        usersQuery = db
+          .select({
+            id: users.id,
+            email: users.email,
+            name: users.name,
+            passwordHash: users.passwordHash,
+            role: users.role,
+            status: users.status,
+            departmentId: users.departmentId,
+            departmentName: departments.name,
+            holidayAllowance: users.holidayAllowance,
+            createdAt: users.createdAt,
+            updatedAt: users.updatedAt
+          })
+          .from(users)
+          .leftJoin(departments, eq(users.departmentId, departments.id))
+          .where(eq(users.status, statusParam as UserStatus));
       } else {
         // Invalid status, return all users
-        usersQuery = db.select().from(users);
+        usersQuery = db
+          .select({
+            id: users.id,
+            email: users.email,
+            name: users.name,
+            passwordHash: users.passwordHash,
+            role: users.role,
+            status: users.status,
+            departmentId: users.departmentId,
+            departmentName: departments.name,
+            holidayAllowance: users.holidayAllowance,
+            createdAt: users.createdAt,
+            updatedAt: users.updatedAt
+          })
+          .from(users)
+          .leftJoin(departments, eq(users.departmentId, departments.id));
       }
     }
 

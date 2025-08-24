@@ -1,9 +1,9 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
-import { db } from '../../../lib/db/index';
-import { departments, users } from '../../../lib/db/schema';
+import { db } from '../../lib/db/index';
+import { departments, users } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../../lib/auth/jwt-utils';
+import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // Input validation schema
 const createDepartmentSchema = z.object({

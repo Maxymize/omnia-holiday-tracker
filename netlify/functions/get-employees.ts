@@ -57,8 +57,8 @@ export const handler: Handler = async (event, context) => {
     // TEMPORARY: Allow access without authentication for debugging
     console.log('Debug access to get-employees - bypassing authentication temporarily');
     
-    // Mock admin token for processing
-    const adminToken = { role: 'admin', email: 'debug@test.com', userId: 'debug' };
+    // Mock admin token for processing with a valid UUID
+    const adminToken = { role: 'admin', email: 'debug@test.com', userId: 'fcddfa60-f176-4f11-9431-9724334d50b2' };
 
     // Parse and validate query parameters
     const queryParams = event.queryStringParameters || {};

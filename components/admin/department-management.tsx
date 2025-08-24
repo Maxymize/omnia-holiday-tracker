@@ -89,11 +89,8 @@ export function DepartmentManagement({
     console.log('Employees:', employees);
     
     return employees.filter(emp => {
-      // Check multiple possible ways the department might be stored
-      const hasMatchingDepartment = 
-        emp.department === selectedDepartment.id || 
-        emp.department === selectedDepartment.name ||
-        (emp.departmentName && emp.departmentName === selectedDepartment.name);
+      // Check if employee is assigned to this department by departmentId
+      const hasMatchingDepartment = emp.departmentId === selectedDepartment.id;
       
       if (hasMatchingDepartment) {
         console.log('Matching employee:', emp);
@@ -238,7 +235,7 @@ export function DepartmentManagement({
   };
 
   const handleUnassignEmployee = async (employeeId: string, employeeName: string) => {
-    if (!confirm(`Sei sicuro di voler rimuovere "${employeeName}" dal dipartimento? L'dipendente rimarrà nel sistema ma non sarà assegnato a nessun dipartimento.`)) {
+    if (!confirm(`Sei sicuro di voler rimuovere "${employeeName}" dal dipartimento? Il dipendente rimarrà nel sistema ma non sarà assegnato a nessun dipartimento.`)) {
       return;
     }
 
@@ -248,7 +245,7 @@ export function DepartmentManagement({
         ? 'http://localhost:3000'
         : window.location.origin;
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/unassign-employee`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-to-department`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -256,7 +253,8 @@ export function DepartmentManagement({
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
         },
         body: JSON.stringify({
-          employeeId: employeeId
+          employeeId: employeeId,
+          departmentId: null // Unassign by setting department to null
         }),
       });
 

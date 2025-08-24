@@ -3,7 +3,123 @@
 ## 📚 Context Optimization
 **This file contains all COMPLETED tasks to keep TASK.md lightweight and preserve Claude Code context.**
 
-## 🆕 Latest Completed Tasks - August 23, 2025
+## 🆕 Latest Completed Tasks - August 24, 2025
+
+### Role Management & Admin Personal Requests System (v1.9.5) ✅
+**Completed**: 2025-08-24 | **Session**: Claude Code Direct  
+**Priority**: HIGH | **Context**: Complete role management system with admin personal dashboard
+
+#### User Requirements:
+> "Aggiungi nella modifica della scheda dipendente anche la possibilità di eleggere 'Amministratore' della piattaforma un dipendente (o farlo tornare dipendente)"
+> "anche un admin può richiedere ferie quindi deve esserci la possibilità anche per lui di inserire nuove richieste ferie"
+> "Il primo amministratore eletto in questo caso, max.giurastante@omniaservices.net, sarà super amministratore e non potrà essere spodestato"
+
+#### Features Implemented:
+
+**1. Role Management in Employee Edit Dialog ✅**
+- Added role selector dropdown in unified employee edit dialog
+- Visual indication of current role (Amministratore/Dipendente)
+- Super Admin protection UI with Shield icon and disabled state
+- Role changes integrated into modification summary
+- Updated dialog validation to enable save when role changes
+
+**2. Super Admin Protection System ✅**
+- UI protection: max.giurastante@omniaservices.net selector disabled
+- Visual indicator: "Super Amministratore - Non modificabile" message
+- Backend protection: Cannot demote Super Admin from admin role
+- Complete system safeguards against accidental role changes
+
+**3. Secure Role Update Endpoint ✅**
+- Created `/netlify/functions/update-employee-role.ts`
+- JWT authentication required (admin only)
+- Super Admin protection on server side
+- Input validation with Zod schemas
+- Comprehensive audit logging for role changes
+- Detailed error messages and security controls
+
+**4. "Le Mie Richieste" Admin Section ✅**
+- New menu item in admin sidebar: "Le Mie Richieste"
+- Updated AdminTabType to include 'my-requests'
+- Created comprehensive MyRequestsAdmin component
+- Integrated seamlessly into admin dashboard routing
+
+**5. Admin Personal Dashboard ✅**
+- Complete personal statistics (available days, used days, pending requests)
+- Custom stats cards showing admin's personal holiday data
+- Holiday balance visualization with progress bars
+- Upcoming holidays display for personal planning
+- Personal profile section with admin role badge
+
+**6. Admin Holiday Request Creation ✅**
+- Prominent "Nuova Richiesta" button in section header
+- Modal dialog with integrated calendar for date selection
+- Personal holiday request creation with admin privileges
+- Automatic data refresh after request creation
+
+**7. Multi-Tab Personal Interface ✅**
+- Dashboard tab: Personal statistics and balance
+- Calendar tab: Personal holiday calendar view
+- Requests tab: Personal holiday request history
+- Profile tab: Admin account information
+- Navigation with proper badge indicators for pending requests
+
+#### Technical Implementation:
+
+**Backend Security ✅**
+```typescript
+// Super Admin protection
+if (employee.email === 'max.giurastante@omniaservices.net' && validatedData.role !== 'admin') {
+  return { statusCode: 403, error: 'Impossibile modificare il ruolo del Super Amministratore' };
+}
+
+// Admin-only access control
+if (currentUser[0].role !== 'admin') {
+  return { statusCode: 403, error: 'Accesso negato: solo gli amministratori possono modificare i ruoli' };
+}
+```
+
+**Frontend Integration ✅**
+- TypeScript interfaces properly aligned
+- Hook integration with useAuth and useHolidays
+- Component data flow optimized
+- Error handling and loading states
+
+**Build Validation ✅**
+- All TypeScript errors resolved
+- ESLint compliance achieved
+- Production build successful
+- Component interfaces properly typed
+
+#### Files Created/Modified:
+- `netlify/functions/update-employee-role.ts` (NEW)
+- `components/admin/my-requests-admin.tsx` (NEW)
+- `components/admin/employee-management.tsx` (Role selector, Super Admin protection)
+- `components/dashboard/admin-sidebar.tsx` (New menu item, updated types)
+- `app/[locale]/(admin)/admin-dashboard/page.tsx` (New tab routing)
+
+#### Testing & Quality Assurance:
+- ✅ Role update endpoint validates authentication
+- ✅ Super Admin protection prevents unauthorized changes
+- ✅ Admin personal dashboard displays accurate data
+- ✅ Holiday request creation functional for admins
+- ✅ TypeScript build successful with zero errors
+- ✅ Production deployment ready
+
+#### Security Features:
+- JWT token validation for all role operations
+- Comprehensive audit logging for compliance
+- Role change restrictions with server-side validation
+- Super Admin protection at multiple system levels
+
+#### User Experience:
+- Intuitive role management in existing dialog
+- Clear visual feedback for protected accounts
+- Seamless admin personal holiday management
+- Professional UI with consistent design system
+
+---
+
+## 🆕 Previous Completed Tasks - August 23, 2025
 
 ### Vacation Days Calculation & getUserInitials Fix (v1.9.3) ✅
 **Completed**: 2025-08-23 | **Session**: Claude Code Direct  

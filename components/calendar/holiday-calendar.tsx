@@ -161,7 +161,10 @@ export function HolidayCalendar({
           </Button>
         </div>
 
-        <h2 className="text-lg font-semibold">{label}</h2>
+        {/* Show title only for non-agenda views to avoid redundancy */}
+        {currentView !== Views.AGENDA && (
+          <h2 className="text-lg font-semibold">{label}</h2>
+        )}
 
         <div className="flex items-center space-x-2">
           <div className="flex rounded-lg border">
@@ -187,7 +190,7 @@ export function HolidayCalendar({
               className="rounded-l-none"
               onClick={() => onView(Views.AGENDA)}
             >
-              Lista
+              Timeline
             </Button>
           </div>
           
@@ -209,9 +212,9 @@ export function HolidayCalendar({
     next: "Successivo",
     today: "Oggi",
     month: "Mese",
-    week: "Settimana",
+    week: "Settimana", 
     day: "Giorno",
-    agenda: "Lista",
+    agenda: "Timeline",
     date: "Data",
     time: "Ora",
     event: "Evento",

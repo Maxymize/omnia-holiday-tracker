@@ -3,7 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { getUserById } from '../../lib/db/helpers';
 import { db } from '../../lib/db/index';
-import { users } from '../../lib/db/schema';
+import { users, departments } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
 
@@ -27,9 +27,28 @@ const headers = {
 };
 
 
-// Get user profile
+// Get user profile with department information
 async function getProfile(userId: string) {
-  const user = await getUserById(userId);
+  // Get user with department information using a join
+  const userWithDepartment = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      status: users.status,
+      departmentId: users.departmentId,
+      departmentName: departments.name,
+      holidayAllowance: users.holidayAllowance,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt
+    })
+    .from(users)
+    .leftJoin(departments, eq(users.departmentId, departments.id))
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  const user = userWithDepartment[0];
   
   if (!user) {
     throw new Error('Utente non trovato');
@@ -43,6 +62,7 @@ async function getProfile(userId: string) {
     role: user.role,
     status: user.status,
     departmentId: user.departmentId,
+    departmentName: user.departmentName,
     holidayAllowance: user.holidayAllowance,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
@@ -168,6 +188,7 @@ export const handler: Handler = async (event, context) => {
             role: updatedUser.role,
             status: updatedUser.status,
             departmentId: updatedUser.departmentId,
+            departmentName: null, // Note: department name would need to be fetched separately after update
             holidayAllowance: updatedUser.holidayAllowance,
             updatedAt: updatedUser.updatedAt
           }

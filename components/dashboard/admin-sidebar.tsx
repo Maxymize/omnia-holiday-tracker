@@ -22,7 +22,8 @@ import {
   UserCheck,
   Clock,
   AlertTriangle,
-  Shield
+  Shield,
+  CalendarCheck
 } from 'lucide-react';
 
 export interface AdminStats {
@@ -33,7 +34,7 @@ export interface AdminStats {
   employeesOnHolidayToday?: number;
 }
 
-type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'departments' | 'reports' | 'settings';
+type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
 
 interface AdminSidebarProps {
   adminStats?: AdminStats;
@@ -89,6 +90,12 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
       icon: FileText,
       description: 'Approvazioni ferie',
       badge: adminStats?.pendingRequests && adminStats.pendingRequests > 0 ? adminStats.pendingRequests : undefined
+    },
+    {
+      id: 'my-requests',
+      label: 'Le Mie Richieste',
+      icon: CalendarCheck,
+      description: 'Le mie ferie e statistiche'
     },
     {
       id: 'departments',

@@ -28,7 +28,11 @@ import {
   AlertTriangle,
   UserPlus,
   RefreshCw,
-  Edit3
+  Edit3,
+  CalendarCheck,
+  ClockIcon,
+  CalendarDays,
+  Hourglass
 } from 'lucide-react';
 import { Employee, Department } from '@/lib/hooks/useAdminData';
 
@@ -74,6 +78,15 @@ export function EmployeeManagement({
   const [newAllowance, setNewAllowance] = useState<number>(0);
   const [allowanceReason, setAllowanceReason] = useState<string>('');
   const [allowanceLoading, setAllowanceLoading] = useState(false);
+
+  // Unified edit dialog state
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingEmployeeUnified, setEditingEmployeeUnified] = useState<Employee | null>(null);
+  const [editDepartment, setEditDepartment] = useState<string>('');
+  const [editAllowance, setEditAllowance] = useState<number>(0);
+  const [editRole, setEditRole] = useState<'admin' | 'employee'>('employee');
+  const [editReason, setEditReason] = useState<string>('');
+  const [editLoading, setEditLoading] = useState(false);
 
   // Filter and search employees
   const filteredEmployees = useMemo(() => {
@@ -165,7 +178,7 @@ export function EmployeeManagement({
         ? 'http://localhost:3000'
         : window.location.origin;
 
-      const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-department`, {
+      const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-to-department`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -201,7 +214,7 @@ export function EmployeeManagement({
 
   const openDepartmentDialog = (employee: Employee) => {
     setAssigningEmployee(employee);
-    setSelectedDepartment(employee.department || '');
+    setSelectedDepartment(employee.departmentId || '');
     setShowDepartmentDialog(true);
   };
 
@@ -266,6 +279,109 @@ export function EmployeeManagement({
     }
   };
 
+  // Unified edit dialog functions
+  const openEditDialog = (employee: Employee) => {
+    setEditingEmployeeUnified(employee);
+    setEditDepartment(employee.departmentId || '');
+    setEditAllowance(employee.holidayAllowance || 25);
+    setEditRole(employee.role);
+    setEditReason('');
+    setShowEditDialog(true);
+  };
+
+  const handleUnifiedEdit = async () => {
+    if (!editingEmployeeUnified) return;
+
+    setEditLoading(true);
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000'
+        : window.location.origin;
+
+      const accessToken = localStorage.getItem('accessToken');
+
+      // Update department assignment if changed
+      if (editDepartment !== (editingEmployeeUnified.departmentId || '')) {
+        const departmentResponse = await fetch(`${baseUrl}/.netlify/functions/assign-employee-to-department`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            employeeId: editingEmployeeUnified.id,
+            departmentId: editDepartment === 'none' ? null : editDepartment
+          }),
+        });
+
+        const departmentData = await departmentResponse.json();
+        if (!departmentResponse.ok) {
+          throw new Error(departmentData.error || 'Failed to update department assignment');
+        }
+      }
+
+      // Update allowance if changed
+      if (editAllowance !== editingEmployeeUnified.holidayAllowance) {
+        const allowanceResponse = await fetch(`${baseUrl}/.netlify/functions/update-employee-allowance`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            employeeId: editingEmployeeUnified.id,
+            holidayAllowance: editAllowance,
+            reason: editReason || 'Modifica da admin dashboard'
+          }),
+        });
+
+        const allowanceData = await allowanceResponse.json();
+        if (!allowanceResponse.ok) {
+          throw new Error(allowanceData.error || 'Failed to update vacation allowance');
+        }
+      }
+
+      // Update role if changed
+      if (editRole !== editingEmployeeUnified.role) {
+        const roleResponse = await fetch(`${baseUrl}/.netlify/functions/update-employee-role`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            employeeId: editingEmployeeUnified.id,
+            role: editRole,
+            reason: editReason || 'Cambio ruolo da admin dashboard'
+          }),
+        });
+
+        const roleData = await roleResponse.json();
+        if (!roleResponse.ok) {
+          throw new Error(roleData.error || 'Failed to update employee role');
+        }
+      }
+
+      // Reset form and close dialog
+      setEditingEmployeeUnified(null);
+      setEditDepartment('');
+      setEditAllowance(0);
+      setEditReason('');
+      setShowEditDialog(false);
+      
+      // Refresh data
+      onRefresh();
+    } catch (err) {
+      console.error('Error updating employee:', err);
+      // TODO: Show error toast
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: Employee['status']) => {
     switch (status) {
       case 'active':
@@ -299,7 +415,12 @@ export function EmployeeManagement({
 
   const pendingEmployees = employees.filter(emp => emp.status === 'pending');
   const activeEmployees = employees.filter(emp => emp.status === 'active');
-  const totalHolidaysUsed = employees.reduce((sum, emp) => sum + (emp.holidaysUsed || 0), 0);
+  
+  // Enhanced vacation metrics calculations
+  const totalAvailable = employees.reduce((sum, emp) => sum + (emp.availableDays || (emp.holidayAllowance - (emp.holidaysUsed || 0))), 0);
+  const totalTaken = employees.reduce((sum, emp) => sum + (emp.takenDays || 0), 0);
+  const totalBooked = employees.reduce((sum, emp) => sum + (emp.bookedDays || 0), 0);
+  const totalPending = employees.reduce((sum, emp) => sum + (emp.pendingDays || 0), 0);
 
   if (loading && employees.length === 0) {
     return (
@@ -343,8 +464,8 @@ export function EmployeeManagement({
         </Alert>
       )}
 
-      {/* Quick Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Quick Stats Cards with Enhanced Vacation Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
@@ -362,25 +483,11 @@ export function EmployeeManagement({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Dipendenti Attivi</p>
-                <p className="text-2xl font-bold text-green-600">{activeEmployees.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Clock className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">In Attesa Approvazione</p>
+                <p className="text-sm text-gray-600">In Attesa</p>
                 <p className="text-2xl font-bold text-amber-600">{pendingEmployees.length}</p>
               </div>
             </div>
@@ -390,12 +497,54 @@ export function EmployeeManagement({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CalendarCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Ferie Utilizzati</p>
-                <p className="text-2xl font-bold text-purple-600">{totalHolidaysUsed}</p>
+                <p className="text-sm text-gray-600">Giorni Disponibili</p>
+                <p className="text-2xl font-bold text-green-600">{totalAvailable}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Giorni Goduti</p>
+                <p className="text-2xl font-bold text-blue-600">{totalTaken}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <CalendarDays className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Giorni Prenotati</p>
+                <p className="text-2xl font-bold text-purple-600">{totalBooked}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Hourglass className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">In Approvazione</p>
+                <p className="text-2xl font-bold text-amber-600">{totalPending}</p>
               </div>
             </div>
           </CardContent>
@@ -498,12 +647,27 @@ export function EmployeeManagement({
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {employee.holidaysRemaining}/{employee.holidayAllowance} giorni
+                        {/* Enhanced vacation metrics with temporal categorization */}
+                        <div className="space-y-1 text-xs">
+                          <div className="flex items-center space-x-1">
+                            <CalendarCheck className="h-3 w-3 text-green-600" />
+                            <span className="font-medium text-green-700">{employee.availableDays || (employee.holidayAllowance - (employee.holidaysUsed || 0))}</span>
+                            <span className="text-gray-600">disponibili</span>
                           </div>
-                          <div className="text-gray-600">
-                            {employee.holidaysUsed} utilizzati
+                          <div className="flex items-center space-x-1">
+                            <CheckCircle className="h-3 w-3 text-blue-600" />
+                            <span className="font-medium text-blue-700">{employee.takenDays || 0}</span>
+                            <span className="text-gray-600">goduti</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <CalendarDays className="h-3 w-3 text-purple-600" />
+                            <span className="font-medium text-purple-700">{employee.bookedDays || 0}</span>
+                            <span className="text-gray-600">prenotati</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Hourglass className="h-3 w-3 text-amber-600" />
+                            <span className="font-medium text-amber-700">{employee.pendingDays || 0}</span>
+                            <span className="text-gray-600">in attesa</span>
                           </div>
                         </div>
                       </TableCell>
@@ -563,12 +727,12 @@ export function EmployeeManagement({
                             </Button>
                           )}
                           
-                          {/* Assegna Dipartimento Button */}
+                          {/* Modifica Dipendente Button */}
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => openDepartmentDialog(employee)}
-                            title="Assegna dipartimento"
+                            onClick={() => openEditDialog(employee)}
+                            title="Modifica dipendente"
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
@@ -627,26 +791,34 @@ export function EmployeeManagement({
                                     </div>
                                     <div>
                                       <label className="font-medium text-gray-700">Giorni di ferie</label>
-                                      <div className="flex items-center justify-between mt-1">
-                                        <span className="text-gray-900">
-                                          {selectedEmployee.holidayAllowance} all&apos;anno
-                                        </span>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => openAllowanceDialog(selectedEmployee)}
-                                          className="text-blue-600 hover:text-blue-700"
-                                        >
-                                          <Edit3 className="h-3 w-3 mr-1" />
-                                          Modifica
-                                        </Button>
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <label className="font-medium text-gray-700">Giorni utilizzati</label>
                                       <p className="mt-1 text-gray-900">
-                                        {selectedEmployee.holidaysUsed} / {selectedEmployee.holidayAllowance}
+                                        {selectedEmployee.holidayAllowance} all&apos;anno
                                       </p>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <label className="font-medium text-gray-700">Stato ferie</label>
+                                      <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
+                                        <div className="flex items-center space-x-2">
+                                          <CalendarCheck className="h-4 w-4 text-green-600" />
+                                          <span className="font-medium text-green-700">{selectedEmployee.availableDays || (selectedEmployee.holidayAllowance - (selectedEmployee.holidaysUsed || 0))}</span>
+                                          <span className="text-gray-600">disponibili</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <CheckCircle className="h-4 w-4 text-blue-600" />
+                                          <span className="font-medium text-blue-700">{selectedEmployee.takenDays || 0}</span>
+                                          <span className="text-gray-600">già goduti</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <CalendarDays className="h-4 w-4 text-purple-600" />
+                                          <span className="font-medium text-purple-700">{selectedEmployee.bookedDays || 0}</span>
+                                          <span className="text-gray-600">prenotati</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <Hourglass className="h-4 w-4 text-amber-600" />
+                                          <span className="font-medium text-amber-700">{selectedEmployee.pendingDays || 0}</span>
+                                          <span className="text-gray-600">in attesa</span>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
@@ -893,6 +1065,181 @@ export function EmployeeManagement({
               className="bg-blue-600 hover:bg-blue-700"
             >
               {allowanceLoading ? 'Aggiornando...' : 'Aggiorna Giorni di Ferie'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unified Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Modifica Dipendente</DialogTitle>
+          </DialogHeader>
+          {editingEmployeeUnified && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback>
+                    {getUserInitials(editingEmployeeUnified.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{editingEmployeeUnified.name}</h3>
+                  <p className="text-sm text-gray-600">{editingEmployeeUnified.email}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Department Assignment */}
+                <div>
+                  <Label htmlFor="edit-department-select">Dipartimento</Label>
+                  <Select 
+                    value={editDepartment} 
+                    onValueChange={setEditDepartment}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Seleziona un dipartimento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nessun dipartimento</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name} {dept.location && `(${dept.location})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Dipartimento attuale: {editingEmployeeUnified.departmentName || 'Nessuno'}
+                  </p>
+                </div>
+
+                {/* Role Management */}
+                <div>
+                  <Label htmlFor="edit-role">Ruolo</Label>
+                  <div className="mt-1 p-3 bg-gray-100 rounded-lg mb-2">
+                    <span className="font-medium">Ruolo attuale: {editingEmployeeUnified.role === 'admin' ? 'Amministratore' : 'Dipendente'}</span>
+                    {editingEmployeeUnified.email === 'max.giurastante@omniaservices.net' && (
+                      <div className="text-sm text-purple-600 mt-1 flex items-center">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Super Amministratore - Non modificabile
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Select 
+                    value={editRole} 
+                    onValueChange={(value: 'admin' | 'employee') => setEditRole(value)}
+                    disabled={editingEmployeeUnified.email === 'max.giurastante@omniaservices.net'}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Seleziona un ruolo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="employee">Dipendente</SelectItem>
+                      <SelectItem value="admin">Amministratore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {editingEmployeeUnified.email === 'max.giurastante@omniaservices.net' 
+                      ? 'Il Super Amministratore non può essere modificato' 
+                      : 'Gli amministratori hanno accesso completo al sistema'}
+                  </div>
+                </div>
+
+                {/* Vacation Allowance */}
+                <div>
+                  <Label htmlFor="edit-allowance">Giorni di ferie annuali</Label>
+                  <div className="mt-1 p-3 bg-gray-100 rounded-lg mb-2">
+                    <span className="font-medium">{editingEmployeeUnified.holidayAllowance} giorni attuali</span>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Utilizzati: {editingEmployeeUnified.holidaysUsed} • 
+                      Rimanenti: {(editingEmployeeUnified.holidayAllowance || 0) - (editingEmployeeUnified.holidaysUsed || 0)}
+                    </div>
+                  </div>
+                  
+                  <Input
+                    id="edit-allowance"
+                    type="number"
+                    min="0"
+                    max="365"
+                    value={editAllowance}
+                    onChange={(e) => setEditAllowance(parseInt(e.target.value) || 0)}
+                    placeholder="Inserisci il nuovo numero di giorni"
+                  />
+                  <div className="text-sm text-gray-500 mt-1">
+                    Inserisci un valore tra 0 e 365 giorni
+                  </div>
+                </div>
+
+                {/* Reason for changes */}
+                <div>
+                  <Label htmlFor="edit-reason">Motivo delle modifiche (opzionale)</Label>
+                  <Input
+                    id="edit-reason"
+                    value={editReason}
+                    onChange={(e) => setEditReason(e.target.value)}
+                    className="mt-1"
+                    placeholder="Es: Cambio di dipartimento, aumento contrattuale..."
+                  />
+                </div>
+
+                {/* Summary of changes */}
+                {(editDepartment !== (editingEmployeeUnified.departmentId || '') || 
+                  editAllowance !== editingEmployeeUnified.holidayAllowance ||
+                  editRole !== editingEmployeeUnified.role) && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center space-x-2">
+                      <Edit3 className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">
+                        Riepilogo modifiche
+                      </span>
+                    </div>
+                    <div className="text-sm text-blue-700 mt-1 space-y-1">
+                      {editDepartment !== (editingEmployeeUnified.departmentId || '') && (
+                        <div>
+                          Dipartimento: {editingEmployeeUnified.departmentName || 'Nessuno'} → {
+                            editDepartment === 'none' ? 'Nessuno' : 
+                            departments.find(d => d.id === editDepartment)?.name || 'Sconosciuto'
+                          }
+                        </div>
+                      )}
+                      {editRole !== editingEmployeeUnified.role && (
+                        <div>
+                          Ruolo: {editingEmployeeUnified.role === 'admin' ? 'Amministratore' : 'Dipendente'} → {editRole === 'admin' ? 'Amministratore' : 'Dipendente'}
+                        </div>
+                      )}
+                      {editAllowance !== editingEmployeeUnified.holidayAllowance && (
+                        <div>
+                          Giorni ferie: {editingEmployeeUnified.holidayAllowance} → {editAllowance} giorni
+                          ({editAllowance > (editingEmployeeUnified.holidayAllowance || 0) ? '+' : ''}{editAllowance - (editingEmployeeUnified.holidayAllowance || 0)})
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditDialog(false)}
+              disabled={editLoading}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleUnifiedEdit}
+              disabled={editLoading || (
+                editDepartment === (editingEmployeeUnified?.departmentId || '') && 
+                editAllowance === editingEmployeeUnified?.holidayAllowance &&
+                editRole === editingEmployeeUnified?.role
+              )}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {editLoading ? 'Salvando...' : 'Salva Modifiche'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -11,6 +11,7 @@ import { HolidayRequestsManagement } from '@/components/admin/holiday-requests-m
 import { SystemSettingsComponent } from '@/components/admin/system-settings';
 import { AdminReports } from '@/components/admin/admin-reports';
 import { DepartmentManagement } from '@/components/admin/department-management';
+import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -26,7 +27,7 @@ import {
   Building2
 } from 'lucide-react';
 
-type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'departments' | 'reports' | 'settings';
+type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
 
 export default function AdminDashboard() {
   const { user, loading: authLoading, isAuthenticated, isAdmin } = useAuth();
@@ -301,6 +302,12 @@ export default function AdminDashboard() {
               error={adminError}
               onApproveRequest={approveHolidayRequest}
               onRejectRequest={rejectHolidayRequest}
+              onRefresh={fetchAllAdminData}
+            />
+          )}
+
+          {activeTab === 'my-requests' && (
+            <MyRequestsAdmin
               onRefresh={fetchAllAdminData}
             />
           )}

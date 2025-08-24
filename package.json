@@ -1,6 +1,6 @@
 {
   "name": "omnia-holiday-tracker",
-  "version": "0.1.1",
+  "version": "1.9.5",
   "private": true,
   "scripts": {
     "dev": "next dev -p 8888",
@@ -52,7 +52,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.4",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^11.15.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.536.0",
     "moment": "^2.30.1",
