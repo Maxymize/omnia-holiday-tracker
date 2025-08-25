@@ -32,8 +32,9 @@ const getHolidaysSchema = z.object({
   sortBy: z.enum(['startDate', 'endDate', 'createdAt', 'status']).default('startDate'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
   
-  // View mode
-  view: z.enum(['own', 'team', 'all']).optional() // own=user's holidays, team=department, all=everyone (admin)
+  // View mode (accept both 'view' and 'viewMode' for compatibility)
+  view: z.enum(['own', 'team', 'all']).optional(), // own=user's holidays, team=department, all=everyone (admin)
+  viewMode: z.enum(['own', 'team', 'all']).optional() // Alternative parameter name for compatibility
 });
 
 // CORS headers
@@ -123,10 +124,14 @@ export const handler: Handler = async (event, context) => {
 
     // Apply access control based on user role and view parameter
     const conditions: any[] = [];
+    
+    // Use viewMode if provided, otherwise fall back to view parameter
+    const viewParameter = validatedParams.viewMode || validatedParams.view;
+    console.log(`🔍 View parameter debug: viewMode=${validatedParams.viewMode}, view=${validatedParams.view}, final=${viewParameter}`);
 
     if (!isAdmin) {
       // Non-admin users: apply role-based filtering
-      if (validatedParams.view === 'team' && user.departmentId) {
+      if (viewParameter === 'team' && user.departmentId) {
         // Show department colleagues
         conditions.push(eq(users.departmentId, user.departmentId));
         // Only show approved holidays for colleagues (privacy)
@@ -142,9 +147,9 @@ export const handler: Handler = async (event, context) => {
       }
     } else {
       // Admin users: can see based on view parameter
-      if (validatedParams.view === 'own') {
+      if (viewParameter === 'own') {
         conditions.push(eq(holidays.userId, user.id));
-      } else if (validatedParams.view === 'team' && user.departmentId) {
+      } else if (viewParameter === 'team' && user.departmentId) {
         conditions.push(eq(users.departmentId, user.departmentId));
       }
       // If view === 'all' or undefined, show all holidays (no additional conditions)
@@ -280,7 +285,7 @@ export const handler: Handler = async (event, context) => {
       userEmail: userToken.email,
       filters: validatedParams,
       resultCount: holidaysData.length,
-      view: validatedParams.view || (isAdmin ? 'all' : 'own')
+      view: viewParameter || (isAdmin ? 'all' : 'own')
     };
     console.log('Holidays accessed:', JSON.stringify(accessLog));
 
@@ -307,7 +312,7 @@ export const handler: Handler = async (event, context) => {
         },
         filters: {
           applied: validatedParams,
-          view: validatedParams.view || (isAdmin ? 'all' : 'own'),
+          view: viewParameter || (isAdmin ? 'all' : 'own'),
           userRole: user.role
         }
       })

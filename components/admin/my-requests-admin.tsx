@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useHolidays } from '@/lib/hooks/useHolidays';
-import { ResponsiveCalendar } from '@/components/calendar/responsive-calendar';
+import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-request';
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
 import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Holiday } from '@/lib/hooks/useHolidays';
+import { toast } from '@/lib/utils/toast';
 
 type AdminRequestsTabType = 'dashboard' | 'calendar' | 'requests' | 'profile';
 
@@ -58,11 +59,32 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
   const pendingHolidays = getHolidaysByStatus('pending');
   const upcomingHolidays = getUpcomingHolidays();
 
-  // Refresh data when component mounts
+  // Refresh data when component mounts - with strict control to prevent loops
   useEffect(() => {
-    refreshHolidays();
-    refreshUserData();
-  }, [refreshHolidays, refreshUserData]);
+    let mounted = true;
+    
+    // Only run if component is still mounted
+    const loadData = async () => {
+      if (!mounted) return;
+      
+      try {
+        await Promise.all([
+          refreshHolidays(),
+          refreshUserData()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    
+    // Only run once on mount
+    loadData();
+    
+    // Cleanup function
+    return () => {
+      mounted = false;
+    };
+  }, []); // Empty dependency array - only run on mount
 
   const handleHolidayCreated = async () => {
     await refreshHolidays();
@@ -265,6 +287,17 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             {/* Upcoming Holidays */}
             <UpcomingHolidays
               holidays={upcomingHolidays}
+              onHolidayClick={(holiday) => {
+                // Show holiday details in a toast or alert
+                toast.info(`📋 Dettaglio Ferie: ${holiday.employeeName || 'Tu'}`, 
+                  `📅 Dal ${holiday.startDate} al ${holiday.endDate}\n📝 Tipo: ${
+                    holiday.type === 'vacation' ? 'Ferie' : 
+                    holiday.type === 'sick' ? 'Malattia' : 'Permesso Personale'
+                  }\n⏰ Durata: ${holiday.workingDays} giorni lavorativi${
+                    holiday.notes ? `\n💬 Note: ${holiday.notes}` : ''
+                  }`
+                );
+              }}
             />
           </div>
         </div>
@@ -363,18 +396,27 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
       {/* Create Holiday Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Crea Nuova Richiesta di Ferie</DialogTitle>
           </DialogHeader>
-          <ResponsiveCalendar
-            showAddButton={true}
-            showTeamHolidays={false}
-            onHolidayCreated={() => {
-              handleHolidayCreated();
+          <MultiStepHolidayRequest
+            onSubmit={async (data) => {
+              // Show success message without auto-redirect
+              console.log('Holiday request completed successfully:', data);
+              
+              // Refresh data
+              await handleHolidayCreated();
+              
+              // Show success message
+              toast.success('✅ Richiesta ferie inviata con successo!', 
+                'La tua richiesta è stata inviata per approvazione.'
+              );
+              
+              // Close dialog only - no redirect
               setShowCreateDialog(false);
             }}
-            showLegend={false}
+            onCancel={() => setShowCreateDialog(false)}
           />
         </DialogContent>
       </Dialog>
