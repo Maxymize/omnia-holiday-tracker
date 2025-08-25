@@ -24,7 +24,10 @@ import {
   MoreHorizontal,
   RefreshCw,
   AlertTriangle,
-  Download
+  Download,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { PendingHolidayRequest } from '@/lib/hooks/useAdminData';
 
@@ -58,10 +61,38 @@ export function HolidayRequestsManagement({
     request: PendingHolidayRequest | null;
     action: 'approve' | 'reject';
   }>({ isOpen: false, request: null, action: 'approve' });
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta' | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
 
-  // Filter and search requests
-  const filteredRequests = useMemo(() => {
-    return requests.filter(request => {
+  // Sorting function
+  const handleSort = (column: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === column && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key: column, direction });
+  };
+
+  // Get sort icon
+  const getSortIcon = (column: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta') => {
+    if (sortConfig.key !== column) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="h-4 w-4 text-blue-600" />
+      : <ArrowDown className="h-4 w-4 text-blue-600" />;
+  };
+
+  // Filter, search and sort requests
+  const filteredAndSortedRequests = useMemo(() => {
+    // First apply filters
+    let filtered = requests.filter(request => {
       const matchesSearch = !searchTerm || 
         request.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.employeeEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,7 +103,54 @@ export function HolidayRequestsManagement({
       
       return matchesSearch && matchesStatus && matchesType;
     });
-  }, [requests, searchTerm, statusFilter, typeFilter]);
+
+    // Then apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'periodo':
+            aValue = new Date(a.startDate).getTime();
+            bValue = new Date(b.startDate).getTime();
+            break;
+          case 'tipo':
+            // Ordine alfabetico: Ferie, Malattia, Personale
+            const typeOrder = { vacation: 'Ferie', sick: 'Malattia', personal: 'Personale' };
+            aValue = typeOrder[a.type];
+            bValue = typeOrder[b.type];
+            break;
+          case 'stato':
+            // Ordine alfabetico: Approvata, In attesa, Rifiutata  
+            const statusOrder = { approved: 'Approvata', pending: 'In attesa', rejected: 'Rifiutata' };
+            aValue = statusOrder[a.status];
+            bValue = statusOrder[b.status];
+            break;
+          case 'giorni':
+            aValue = a.workingDays;
+            bValue = b.workingDays;
+            break;
+          case 'richiesta':
+            aValue = new Date(a.createdAt).getTime();
+            bValue = new Date(b.createdAt).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [requests, searchTerm, statusFilter, typeFilter, sortConfig]);
 
   const handleApprove = async (request: PendingHolidayRequest) => {
     // Se la richiesta non è pending, mostra dialog di conferma
@@ -360,23 +438,68 @@ export function HolidayRequestsManagement({
               <TableHeader>
                 <TableRow>
                   <TableHead>Dipendente</TableHead>
-                  <TableHead>Periodo</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead>Giorni</TableHead>
-                  <TableHead>Richiesta</TableHead>
+                  <TableHead>
+                    <button 
+                      className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleSort('richiesta')}
+                      title="Ordina per data richiesta"
+                    >
+                      <span>Richiesta</span>
+                      {getSortIcon('richiesta')}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button 
+                      className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleSort('periodo')}
+                      title="Ordina per periodo"
+                    >
+                      <span>Periodo</span>
+                      {getSortIcon('periodo')}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button 
+                      className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleSort('giorni')}
+                      title="Ordina per giorni"
+                    >
+                      <span>Giorni</span>
+                      {getSortIcon('giorni')}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button 
+                      className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleSort('tipo')}
+                      title="Ordina per tipo"
+                    >
+                      <span>Tipo</span>
+                      {getSortIcon('tipo')}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button 
+                      className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleSort('stato')}
+                      title="Ordina per stato"
+                    >
+                      <span>Stato</span>
+                      {getSortIcon('stato')}
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRequests.length === 0 ? (
+                {filteredAndSortedRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       {loading ? 'Caricamento richieste...' : 'Nessuna richiesta trovata'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredRequests.map((request) => (
+                  filteredAndSortedRequests.map((request) => (
                     <TableRow key={request.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
@@ -398,6 +521,11 @@ export function HolidayRequestsManagement({
                         </div>
                       </TableCell>
                       <TableCell>
+                        <div className="text-sm text-gray-600">
+                          {formatDate(request.createdAt)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="text-sm">
                           <div className="font-medium">
                             {formatDateRange(request.startDate, request.endDate)}
@@ -409,20 +537,15 @@ export function HolidayRequestsManagement({
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getTypeBadge(request.type)}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(request.status)}
-                      </TableCell>
-                      <TableCell>
                         <div className="text-sm font-medium">
                           {request.workingDays}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-gray-600">
-                          {formatDate(request.createdAt)}
-                        </div>
+                        {getTypeBadge(request.type)}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(request.status)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-1">

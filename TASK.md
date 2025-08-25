@@ -118,14 +118,14 @@
 
 ---
 
-**Latest Completed Work** (Version 1.9.7 - FLEXIBLE LEAVE TYPE SYSTEM + UI CONSOLIDATION):
-- ✅ **Phase 5 Complete**: Flexible leave type system with separate vacation, personal, and sick day tracking
-- ✅ **Dashboard Enhancement**: Updated components with color-coded cards and progress bars per leave type
-- ✅ **Backend API Updates**: Enhanced all holiday-related APIs with separate leave type calculations
-- ✅ **Admin Configuration**: Configurable allowances per leave type (vacation: 20, personal: 10, sick: unlimited)
-- ✅ **Smart Validation**: Request creation validates against flexible allowances with detailed error feedback
-- ✅ **UI Duplication Fix**: Consolidated leave type settings, removed conflicts between Sistema and Leave Type panels
-- ✅ **Apply to All Feature**: Added "Applica a Tutti i Dipendenti" functionality with new Netlify function
-- ✅ **Backward Compatibility**: Full compatibility with existing data and legacy system components
+**Latest Completed Work** (Version 1.9.8 - CRITICAL FIXES + UX IMPROVEMENTS):
+- ✅ **Auto-Refresh Bug Fix**: Eliminated infinite API call loops in useHolidays hook causing performance issues
+- ✅ **Dashboard Layout Recovery**: Restored complete dashboard layouts with all statistics cards and visual elements
+- ✅ **Rejection Reason Display**: Added clear rejection reason visibility in employee holiday history table
+- ✅ **Runtime Error Fixes**: Resolved "viewMode not defined" errors in useHolidays hook with proper parameter handling
+- ✅ **Performance Optimization**: Stabilized useCallback dependencies to prevent unnecessary re-renders
+- ✅ **Code Cleanup**: Removed debug components and cleaned up experimental features that caused issues
+- ✅ **System Stability**: Achieved stable, production-ready state with no automatic refresh interruptions
+- ✅ **User Experience**: Maintained all beautiful UI elements (cards, icons, colors, statistics) without performance impact
 
 **For detailed task history and completed work, see TASK-COMPLETED.md**

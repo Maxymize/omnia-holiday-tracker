@@ -287,10 +287,15 @@ function EmployeeDashboardContent() {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Enhanced Holiday Stats Cards */}
+              {/* Detailed Leave Type Breakdown - Moved from Holiday Balance */}
+              {stats && (
+                <HolidayBalance stats={stats} user={user} loading={holidaysLoading} />
+              )}
+
+              {/* Enhanced Holiday Stats Cards - Now Below Leave Type Cards */}
               {stats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Available Days */}
+                  {/* Enhanced Available Days with Breakdown */}
                   <Card>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
@@ -300,7 +305,13 @@ function EmployeeDashboardContent() {
                         <div>
                           <p className="text-sm text-gray-600">Giorni disponibili</p>
                           <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
-                          <p className="text-xs text-gray-500">per nuove richieste</p>
+                          {stats.leaveTypes && (
+                            <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                              <div>🏖️ {stats.leaveTypes.vacation.availableDays} ferie</div>
+                              <div>👤 {stats.leaveTypes.personal.availableDays} permessi</div>
+                              <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} malattia</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -356,49 +367,24 @@ function EmployeeDashboardContent() {
                 </div>
               )}
 
-              {/* Main Overview Grid - Holiday Balance and Statistics */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Holiday Balance & Usage */}
-                <div>
-                  <HolidayBalance stats={stats} user={user} loading={holidaysLoading} />
-                </div>
-
-                {/* Upcoming Holidays */}
-                <div>
-                  <UpcomingHolidays 
-                    holidays={getUpcomingHolidays()} 
-                    loading={holidaysLoading}
-                    onCreateRequest={handleCreateRequest}
-                    onHolidayClick={handleHolidayClick}
-                  />
-                </div>
-              </div>
-
-              {/* Recent Requests */}
-              <div>
-                <HolidayHistoryTable 
-                  holidays={getRecentHolidays(5)}
+              {/* Main Overview - Only Upcoming Holidays */}
+              <div className="w-full">
+                <UpcomingHolidays 
+                  holidays={getUpcomingHolidays()} 
                   loading={holidaysLoading}
-                  onRefresh={refreshHolidays}
-                  compact={true}
+                  onCreateRequest={handleCreateRequest}
+                  onHolidayClick={handleHolidayClick}
                 />
               </div>
+
             </div>
           )}
 
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-              {/* Legend and Balance Above Calendar - Compact Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {/* Calendar Legend */}
-                <div>
-                  <CalendarLegend />
-                </div>
-                
-                {/* Holiday Balance */}
-                <div>
-                  <HolidayBalance stats={stats} user={user} loading={holidaysLoading} />
-                </div>
+              {/* Calendar Legend */}
+              <div>
+                <CalendarLegend />
               </div>
 
               {/* Main Calendar - Full Width */}

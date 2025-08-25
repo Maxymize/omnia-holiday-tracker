@@ -14,6 +14,7 @@ export interface Holiday {
   type: 'vacation' | 'sick' | 'personal';
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   notes?: string;
+  rejectionReason?: string;
   workingDays: number;
   createdAt: string;
   updatedAt?: string;
@@ -106,12 +107,23 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
       : window.location.origin;
   };
 
-  // Stabilize options to prevent infinite loops
-  const viewMode = options.viewMode;
-  const status = options.status;
-  const year = options.year;
-  const limit = options.limit;
-  const offset = options.offset;
+  // Use refs to stabilize options and prevent infinite loops
+  const paramsRef = useRef({
+    viewMode: options.viewMode,
+    status: options.status,
+    year: options.year,
+    limit: options.limit,
+    offset: options.offset
+  });
+  
+  // Update refs when options change
+  paramsRef.current = {
+    viewMode: options.viewMode,
+    status: options.status,
+    year: options.year,
+    limit: options.limit,
+    offset: options.offset
+  };
 
   // Create a debounced fetch function that prevents rapid-fire requests
   const debouncedFetchHolidays = useCallback(async () => {
@@ -142,7 +154,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         
         // Increment request counter
         requestCountRef.current++;
-        console.log(`🔄 API Request #${requestCountRef.current} for holidays (viewMode: ${viewMode})`);
+        console.log(`🔄 API Request #${requestCountRef.current} for holidays (viewMode: ${paramsRef.current.viewMode})`);
         
         // Reset counter after circuit breaker time
         if (resetTimeoutRef.current) {
@@ -172,13 +184,14 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
             throw new Error('No authentication token found');
           }
 
-          // Build query parameters
+          // Build query parameters using current refs
           const params = new URLSearchParams();
-          if (viewMode) params.append('viewMode', viewMode);
-          if (status) params.append('status', status);
-          if (year) params.append('year', year.toString());
-          if (limit) params.append('limit', limit.toString());
-          if (offset) params.append('offset', offset.toString());
+          const currentParams = paramsRef.current;
+          if (currentParams.viewMode) params.append('viewMode', currentParams.viewMode);
+          if (currentParams.status) params.append('status', currentParams.status);
+          if (currentParams.year) params.append('year', currentParams.year.toString());
+          if (currentParams.limit) params.append('limit', currentParams.limit.toString());
+          if (currentParams.offset) params.append('offset', currentParams.offset.toString());
 
           const response = await fetch(
             `${getBaseUrl()}/.netlify/functions/get-holidays?${params}`,
@@ -204,7 +217,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
             // Fetch flexible leave type statistics from new endpoint
             try {
               const statsParams = new URLSearchParams();
-              if (year) statsParams.append('year', year.toString());
+              if (currentParams.year) statsParams.append('year', currentParams.year.toString());
               
               const statsResponse = await fetch(
                 `${getBaseUrl()}/.netlify/functions/get-leave-stats?${statsParams}`,
@@ -289,7 +302,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         }
       }, DEBOUNCE_DELAY);
     });
-  }, [user, viewMode, status, year, limit, offset]);
+  }, [user?.id]); // Only depend on user ID to prevent excessive re-creation
 
   // Simple wrapper that calls the debounced function
   const fetchHolidays = useCallback(async () => {

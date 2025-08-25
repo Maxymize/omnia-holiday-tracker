@@ -134,12 +134,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Admin Statistics */}
+              {/* Admin Statistics - Clickable Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
+                {/* Dipendenti Totali -> Dipendenti */}
+                <Card 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 hover:bg-gradient-to-br hover:from-blue-50 hover:to-blue-100 hover:border-blue-200"
+                  onClick={() => handleTabChange('employees')}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Dipendenti Totali</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <Users className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-blue-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.totalEmployees || 0}</div>
@@ -149,10 +153,14 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                {/* Richieste Pendenti -> Richieste */}
+                <Card 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 hover:bg-gradient-to-br hover:from-amber-50 hover:to-amber-100 hover:border-amber-200"
+                  onClick={() => handleTabChange('requests')}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Clock className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-amber-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.pendingHolidayRequests || 0}</div>
@@ -162,10 +170,14 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                {/* Ferie Questo Mese -> Calendario */}
+                <Card 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 hover:bg-gradient-to-br hover:from-green-50 hover:to-green-100 hover:border-green-200"
+                  onClick={() => handleTabChange('calendar')}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Ferie Questo Mese</CardTitle>
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-green-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.holidaysThisMonth || 0}</div>
@@ -175,10 +187,14 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                {/* Nuovi Registrati -> Dipendenti */}
+                <Card 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 hover:bg-gradient-to-br hover:from-purple-50 hover:to-purple-100 hover:border-purple-200"
+                  onClick={() => handleTabChange('employees')}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Nuovi Registrati</CardTitle>
-                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                    <UserCheck className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-purple-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.pendingEmployees || 0}</div>

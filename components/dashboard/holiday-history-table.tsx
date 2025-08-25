@@ -355,6 +355,16 @@ export function HolidayHistoryTable({
                         <span>{holiday.notes}</span>
                       </div>
                     )}
+                    {holiday.status === 'rejected' && holiday.rejectionReason && (
+                      <div className="bg-red-50 border border-red-200 rounded p-2 mt-2">
+                        <span className="text-red-700 font-medium text-xs">
+                          {locale === 'it' ? 'Motivo del rifiuto:' : locale === 'es' ? 'Motivo del rechazo:' : 'Rejection reason:'}
+                        </span>
+                        <div className="text-red-800 text-sm mt-1">
+                          {holiday.rejectionReason}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-600">
                         {locale === 'it' ? 'Richiesta' : locale === 'es' ? 'Solicitud' : 'Request'}: 
@@ -416,7 +426,9 @@ export function HolidayHistoryTable({
                       {locale === 'it' ? 'Giorni' : locale === 'es' ? 'Días' : 'Days'}
                     </TableHead>
                     <TableHead className="w-[120px]">{t('dashboard.holidays.status')}</TableHead>
-                    <TableHead>{t('dashboard.holidays.notes')}</TableHead>
+                    <TableHead>
+                      {locale === 'it' ? 'Note/Motivo' : locale === 'es' ? 'Notas/Motivo' : 'Notes/Reason'}
+                    </TableHead>
                     <TableHead className="w-[100px]">
                       {locale === 'it' ? 'Richiesta' : locale === 'es' ? 'Solicitud' : 'Request'}
                     </TableHead>
@@ -446,8 +458,21 @@ export function HolidayHistoryTable({
                         <StatusBadge status={holiday.status} />
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-gray-600 max-w-[150px] truncate">
-                          {holiday.notes || '-'}
+                        <div className="text-sm text-gray-600 max-w-[150px]">
+                          {holiday.notes && (
+                            <div className="truncate mb-1">{holiday.notes}</div>
+                          )}
+                          {holiday.status === 'rejected' && holiday.rejectionReason && (
+                            <div className="bg-red-50 border border-red-200 rounded px-2 py-1 text-xs">
+                              <div className="text-red-700 font-medium mb-1">
+                                {locale === 'it' ? 'Motivo rifiuto:' : locale === 'es' ? 'Motivo rechazo:' : 'Rejection:'}
+                              </div>
+                              <div className="text-red-800 text-xs leading-tight">
+                                {holiday.rejectionReason}
+                              </div>
+                            </div>
+                          )}
+                          {!holiday.notes && holiday.status !== 'rejected' && '-'}
                         </div>
                       </TableCell>
                       <TableCell>

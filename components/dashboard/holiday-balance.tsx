@@ -36,6 +36,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
     vacation: {
       label: 'Ferie',
       icon: Plane,
+      emoji: '🏖️',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
       iconColor: 'text-emerald-600',
@@ -45,6 +46,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
     personal: {
       label: 'Permessi',
       icon: Heart,
+      emoji: '👤',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       iconColor: 'text-blue-600',
@@ -54,6 +56,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
     sick: {
       label: 'Malattia',
       icon: Stethoscope,
+      emoji: '🏥',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
       iconColor: 'text-red-600',
@@ -96,7 +99,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Icon className={cn("h-4 w-4", theme.iconColor)} />
+          <span className="text-lg">{theme.emoji}</span>
           <span className={cn("font-medium text-sm", theme.textColor)}>{theme.label}</span>
         </div>
         {getStatusBadge()}
@@ -219,27 +222,29 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {/* Separate cards for each leave type */}
-          {stats.leaveTypes?.vacation && (
-            <LeaveTypeCard
-              type="vacation"
-              stats={stats.leaveTypes.vacation}
-            />
-          )}
-          
-          {stats.leaveTypes?.personal && (
-            <LeaveTypeCard
-              type="personal"
-              stats={stats.leaveTypes.personal}
-            />
-          )}
-          
-          {stats.leaveTypes?.sick && (
-            <LeaveTypeCard
-              type="sick"
-              stats={stats.leaveTypes.sick}
-            />
-          )}
+          {/* Horizontal layout for leave type cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {stats.leaveTypes?.vacation && (
+              <LeaveTypeCard
+                type="vacation"
+                stats={stats.leaveTypes.vacation}
+              />
+            )}
+            
+            {stats.leaveTypes?.personal && (
+              <LeaveTypeCard
+                type="personal"
+                stats={stats.leaveTypes.personal}
+              />
+            )}
+            
+            {stats.leaveTypes?.sick && (
+              <LeaveTypeCard
+                type="sick"
+                stats={stats.leaveTypes.sick}
+              />
+            )}
+          </div>
 
           {/* Summary Overview */}
           <div className="border-t pt-3 mt-4">

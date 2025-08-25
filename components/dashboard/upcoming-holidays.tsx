@@ -41,23 +41,32 @@ export function UpcomingHolidays({
     }
   };
 
-  // Filter and sort upcoming holidays
+  // Filter and sort upcoming holidays (including pending requests)
   const now = new Date();
   const upcomingHolidays = holidays
     .filter(holiday => {
       const startDate = new Date(holiday.startDate);
-      const isUpcoming = holiday.status === 'approved' && startDate >= now;
+      // Include both approved future holidays AND pending requests
+      const isRelevant = (
+        (holiday.status === 'approved' && startDate >= now) ||
+        holiday.status === 'pending'
+      );
       
-      if (!showTeam) return isUpcoming;
+      if (!showTeam) return isRelevant;
       
       // If showing team, filter based on view mode
       if (viewMode === 'own') {
-        return isUpcoming && holiday.employeeId === 'current_user'; // Should be replaced with actual user ID
+        return isRelevant && holiday.employeeId === 'current_user'; // Should be replaced with actual user ID
       }
-      return isUpcoming;
+      return isRelevant;
     })
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    .slice(0, 10); // Show max 10 upcoming holidays
+    .sort((a, b) => {
+      // Sort: pending first, then by start date
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (b.status === 'pending' && a.status !== 'pending') return 1;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    })
+    .slice(0, 15); // Show max 15 items (more room for pending + approved)
 
   const getTypeIcon = (type: Holiday['type']) => {
     switch (type) {
@@ -138,7 +147,7 @@ export function UpcomingHolidays({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>{t('dashboard.stats.upcomingHolidays')}</span>
+            <span>Prossime ferie</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -164,7 +173,7 @@ export function UpcomingHolidays({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>{t('dashboard.stats.upcomingHolidays')}</span>
+            <span>Prossime ferie</span>
           </CardTitle>
           
           {showTeam && (
@@ -236,7 +245,9 @@ export function UpcomingHolidays({
                   key={holiday.id}
                   className={cn(
                     "flex items-center space-x-3 p-3 rounded-lg border transition-colors",
-                    dateInfo.urgent 
+                    holiday.status === 'pending'
+                      ? "bg-amber-50 border-amber-200"
+                      : dateInfo.urgent 
                       ? "bg-blue-50 border-blue-200" 
                       : "bg-gray-50 border-gray-200 hover:bg-gray-100",
                     onHolidayClick && "cursor-pointer hover:shadow-sm"
@@ -273,6 +284,11 @@ export function UpcomingHolidays({
                       <Badge variant="outline" className="text-xs">
                         {duration}
                       </Badge>
+                      {holiday.status === 'pending' && (
+                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800">
+                          In attesa
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex items-center space-x-2 text-xs text-gray-600">
@@ -284,6 +300,15 @@ export function UpcomingHolidays({
                       </span>
                       <span>•</span>
                       <span>{dateInfo.secondary}</span>
+                      <span>•</span>
+                      <span className={cn(
+                        "font-medium",
+                        holiday.status === 'approved' ? "text-green-600" : "text-amber-600"
+                      )}>
+                        {holiday.status === 'approved' ? 'Approvato' : 
+                         holiday.status === 'pending' ? 'In attesa' : 
+                         holiday.status === 'rejected' ? 'Rifiutato' : holiday.status}
+                      </span>
                       {showTeam && (
                         <>
                           <span>•</span>
@@ -308,12 +333,14 @@ export function UpcomingHolidays({
             })}
 
             {/* Show more link if there are more holidays */}
-            {holidays.filter(h => new Date(h.startDate) >= now && h.status === 'approved').length > 10 && (
+            {holidays.filter(h => 
+              (new Date(h.startDate) >= now && h.status === 'approved') || h.status === 'pending'
+            ).length > 15 && (
               <div className="text-center pt-2 border-t">
                 <Button variant="ghost" size="sm" className="text-xs">
-                  {locale === 'it' ? `Vedi altre (${holidays.length - 10})` :
-                   locale === 'es' ? `Ver más (${holidays.length - 10})` :
-                   `Show more (${holidays.length - 10})`}
+                  {locale === 'it' ? `Vedi altre (${holidays.length - 15})` :
+                   locale === 'es' ? `Ver más (${holidays.length - 15})` :
+                   `Show more (${holidays.length - 15})`}
                   <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>

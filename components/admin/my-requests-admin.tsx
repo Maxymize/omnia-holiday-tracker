@@ -12,23 +12,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 import { 
   Calendar, 
-  BarChart3, 
   User, 
   CheckCircle, 
   Clock, 
   TrendingUp,
   Plus,
   RefreshCw,
-  Bell,
   AlertTriangle,
   FileText,
   Download,
   CalendarDays,
   CalendarCheck,
   CalendarClock,
-  Shield
+  Shield,
+  Building2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Holiday } from '@/lib/hooks/useHolidays';
@@ -44,6 +45,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
   const { user, refreshUserData } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminRequestsTabType>('dashboard');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   
   // Use employee hooks to get personal data
   const {
@@ -104,31 +106,67 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const getTypeIcon = (type: Holiday['type']) => {
+    switch (type) {
+      case 'vacation': return '🏖️';
+      case 'sick': return '🏥';
+      case 'personal': return '👤';
+      default: return '📅';
+    }
+  };
+
+  const getTypeLabel = (type: Holiday['type']) => {
+    switch (type) {
+      case 'vacation': return 'Ferie';
+      case 'sick': return 'Malattia';
+      case 'personal': return 'Permesso Personale';
+      default: return 'Ferie';
+    }
+  };
+
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start.toDateString() === end.toDateString()) {
+      return start.toLocaleDateString('it-IT');
+    }
+    
+    return `${start.toLocaleDateString('it-IT')} - ${end.toLocaleDateString('it-IT')}`;
+  };
+
+  const formatWorkingDays = (days: number) => {
+    if (days === 1) {
+      return '1 giorno';
+    }
+    return `${days} giorni`;
+  };
+
   const tabItems = [
     {
       id: 'dashboard' as AdminRequestsTabType,
       label: 'Dashboard',
       icon: TrendingUp,
-      description: 'Le mie statistiche'
+      description: 'Panoramica generale'
     },
     {
       id: 'calendar' as AdminRequestsTabType,
       label: 'Calendario',
       icon: Calendar,
-      description: 'Le mie ferie'
+      description: 'Visualizza calendario ferie'
     },
     {
       id: 'requests' as AdminRequestsTabType,
-      label: 'Richieste',
+      label: 'Le Mie Richieste',
       icon: FileText,
-      description: 'Le mie richieste',
+      description: 'Storico richieste ferie',
       badge: pendingHolidays.length > 0 ? pendingHolidays.length : undefined
     },
     {
       id: 'profile' as AdminRequestsTabType,
       label: 'Profilo',
       icon: User,
-      description: 'I miei dati'
+      description: 'Informazioni personali'
     }
   ];
 
@@ -188,9 +226,9 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
         </Alert>
       )}
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Employee Dashboard Style */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+        <nav className="flex space-x-1 p-1">
           {tabItems.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -199,18 +237,25 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`
-                  flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors
-                  ${isActive 
-                    ? 'border-blue-500 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
+                className={cn(
+                  "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors group flex-1 min-w-0",
+                  isActive
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
               >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                <Icon className={cn(
+                  "h-4 w-4 flex-shrink-0",
+                  isActive ? "text-blue-700" : "text-gray-500 group-hover:text-gray-700"
+                )} />
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="font-medium truncate">{tab.label}</div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {tab.description}
+                  </div>
+                </div>
+                {tab.badge && tab.badge > 0 && (
+                  <Badge variant="secondary" className="text-xs">
                     {tab.badge}
                   </Badge>
                 )}
@@ -223,244 +268,94 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
       {/* Tab Content */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* Enhanced Stats Cards with Flexible Leave Type Support */}
-          {stats?.leaveTypes ? (
-            <div className="space-y-6">
-              {/* Summary Overview Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Giorni Disponibili</CardTitle>
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.availableDays || 0}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Totali (tutti i tipi)
-                    </p>
-                  </CardContent>
-                </Card>
+          {/* Detailed Leave Type Breakdown - Moved from Holiday Balance */}
+          {stats && (
+            <HolidayBalance stats={stats} user={user} loading={loading} />
+          )}
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Giorni Utilizzati</CardTitle>
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.usedDays || 0}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Quest&apos;anno
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.pendingRequests}</div>
-                    <p className="text-xs text-muted-foreground">
-                      In attesa
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Prossime Ferie</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{upcomingHolidays.length}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Programmate
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Detailed Leave Type Breakdown */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Vacation Card */}
-                {stats.leaveTypes.vacation && (
-                  <Card className="border-emerald-200 bg-emerald-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <div className="w-2 h-2 bg-emerald-600 rounded-full mr-2"></div>
-                        Ferie
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Disponibili</span>
-                        <span className="font-bold text-emerald-700">{stats.leaveTypes.vacation.availableDays}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Utilizzati</span>
-                        <span className="font-bold text-emerald-700">{stats.leaveTypes.vacation.usedDays}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">In attesa</span>
-                        <span className="font-bold text-amber-600">{stats.leaveTypes.vacation.pendingDays}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                        <div 
-                          className="bg-emerald-600 h-1.5 rounded-full transition-all duration-300" 
-                          style={{ width: `${stats.leaveTypes.vacation.allowance > 0 ? (stats.leaveTypes.vacation.usedDays / stats.leaveTypes.vacation.allowance) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Personal Card */}
-                {stats.leaveTypes.personal && (
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
-                        Permessi
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Disponibili</span>
-                        <span className="font-bold text-blue-700">{stats.leaveTypes.personal.availableDays}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Utilizzati</span>
-                        <span className="font-bold text-blue-700">{stats.leaveTypes.personal.usedDays}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">In attesa</span>
-                        <span className="font-bold text-amber-600">{stats.leaveTypes.personal.pendingDays}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                        <div 
-                          className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
-                          style={{ width: `${stats.leaveTypes.personal.allowance > 0 ? (stats.leaveTypes.personal.usedDays / stats.leaveTypes.personal.allowance) * 100 : 0}%` }}
-                        ></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Sick Leave Card */}
-                {stats.leaveTypes.sick && (
-                  <Card className="border-red-200 bg-red-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <div className="w-2 h-2 bg-red-600 rounded-full mr-2"></div>
-                        Malattia
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Disponibili</span>
-                        <span className="font-bold text-red-700">
-                          {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">Utilizzati</span>
-                        <span className="font-bold text-red-700">{stats.leaveTypes.sick.usedDays}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-600">In attesa</span>
-                        <span className="font-bold text-amber-600">{stats.leaveTypes.sick.pendingDays}</span>
-                      </div>
-                      {stats.leaveTypes.sick.allowance !== -1 && (
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                          <div 
-                            className="bg-red-600 h-1.5 rounded-full transition-all duration-300" 
-                            style={{ width: `${stats.leaveTypes.sick.allowance > 0 ? (stats.leaveTypes.sick.usedDays / stats.leaveTypes.sick.allowance) * 100 : 0}%` }}
-                          ></div>
+          {/* Enhanced Holiday Stats Cards - Now Below Leave Type Cards */}
+          {stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Enhanced Available Days with Breakdown */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Calendar className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Giorni disponibili</p>
+                      <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
+                      {stats.leaveTypes && (
+                        <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                          <div>🏖️ {stats.leaveTypes.vacation.availableDays} ferie</div>
+                          <div>👤 {stats.leaveTypes.personal.availableDays} permessi</div>
+                          <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} malattia</div>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-          ) : (
-            // Fallback to legacy stats display
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Giorni Disponibili</CardTitle>
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats?.availableDays || 0}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Su {stats?.totalAllowance || 0} totali
-                  </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-
+              
+              {/* Days Already Taken */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Giorni Utilizzati</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats?.usedDays || 0}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Goduti quest&apos;anno
-                  </p>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <CalendarCheck className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Giorni già goduti</p>
+                      <p className="text-2xl font-bold text-blue-600">{stats.takenDays || 0}</p>
+                      <p className="text-xs text-gray-500">ferie passate</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-
+              
+              {/* Days Booked Future */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pendingHolidays.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    In attesa di approvazione
-                  </p>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <CalendarDays className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Giorni prenotati</p>
+                      <p className="text-2xl font-bold text-amber-600">{stats.bookedDays || 0}</p>
+                      <p className="text-xs text-gray-500">ferie future</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-
+              
+              {/* Pending Days */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Prossime Ferie</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{upcomingHolidays.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Ferie programmate
-                  </p>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <CalendarClock className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Giorni in attesa</p>
+                      <p className="text-2xl font-bold text-purple-600">{stats.pendingDays || 0}</p>
+                      <p className="text-xs text-gray-500">da approvare</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
           )}
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Holiday Balance */}
-            <HolidayBalance
-              stats={stats}
-              user={user}
-            />
-            
-            {/* Upcoming Holidays */}
-            <UpcomingHolidays
-              holidays={upcomingHolidays}
+
+          {/* Main Overview - Only Upcoming Holidays */}
+          <div className="w-full">
+            <UpcomingHolidays 
+              holidays={upcomingHolidays} 
+              loading={loading}
+              onCreateRequest={() => setShowCreateDialog(true)}
               onHolidayClick={(holiday) => {
-                // Show holiday details in a toast or alert
-                toast.info(`📋 Dettaglio Ferie: ${holiday.employeeName || 'Tu'}`, 
-                  `📅 Dal ${holiday.startDate} al ${holiday.endDate}\n📝 Tipo: ${
-                    holiday.type === 'vacation' ? 'Ferie' : 
-                    holiday.type === 'sick' ? 'Malattia' : 'Permesso Personale'
-                  }\n⏰ Durata: ${holiday.workingDays} giorni lavorativi${
-                    holiday.notes ? `\n💬 Note: ${holiday.notes}` : ''
-                  }`
-                );
+                setSelectedHoliday(holiday);
               }}
             />
           </div>
@@ -480,78 +375,114 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
       {activeTab === 'requests' && (
         <div className="space-y-6">
-          {/* Action Button */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold">Le Mie Richieste di Ferie</h2>
-              <p className="text-gray-600">Gestisci le tue richieste di ferie personali</p>
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                onClick={refreshHolidays}
-                variant="outline"
-                size="sm"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Aggiorna
-              </Button>
-              <Button
-                onClick={() => setShowCreateDialog(true)}
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuova Richiesta
-              </Button>
-            </div>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900">Le Mie Richieste</h2>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuova Richiesta
+            </Button>
           </div>
-
-          {/* Holiday History */}
-          <HolidayHistoryTable
+          
+          <HolidayHistoryTable 
             holidays={holidays}
             loading={loading}
             onRefresh={refreshHolidays}
+            showActions={true}
           />
         </div>
       )}
 
       {activeTab === 'profile' && (
         <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900">Profilo Dipendente</h2>
+          
+          {/* Profile Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Profilo Amministratore</span>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5" />
+                  <span>Informazioni Personali</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={async () => {
+                    await refreshHolidays();
+                    await refreshUserData();
+                  }}
+                  className="text-xs"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Aggiorna
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <Avatar className="h-16 w-16">
+                  <AvatarFallback className="text-xl font-medium bg-blue-100 text-blue-700">
+                    {getUserInitials(user?.name)}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Nome</label>
-                  <p className="text-gray-900">{user?.name || 'Non specificato'}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{user?.name}</h3>
+                  <p className="text-gray-600">{user?.email}</p>
+                  <Badge variant={user?.status === 'active' ? 'default' : 'secondary'}>
+                    {user?.status === 'active' ? 'Attivo' : 'In attesa'}
+                  </Badge>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <p className="text-gray-900">{user?.email}</p>
-                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Ruolo</label>
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-purple-100 text-purple-800">Amministratore</Badge>
-                    <Shield className="h-4 w-4 text-purple-600" />
+                  <p className="text-sm text-gray-900 mt-1">
+                    {user?.role === 'admin' ? 'Amministratore' : 'Dipendente'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Stato Account</label>
+                  <div className="flex items-center space-x-2 mt-1">
+                    {user?.status === 'active' ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-700 font-medium">Attivo</span>
+                      </>
+                    ) : user?.status === 'pending' ? (
+                      <>
+                        <Clock className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm text-amber-700 font-medium">In attesa di approvazione</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm text-red-700 font-medium">Inattivo</span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Giorni di ferie annuali</label>
-                  <p className="text-gray-900">{stats?.totalAllowance || 0} giorni</p>
-                </div>
-                <div>
                   <label className="text-sm font-medium text-gray-700">Dipartimento</label>
-                  <p className="text-gray-900">{user?.departmentName || 'Nessuno'}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Building2 className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm text-gray-900">
+                      {user?.departmentName || 'Non assegnato'}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Stato account</label>
-                  <Badge variant="outline" className="bg-green-100 text-green-800">Attivo</Badge>
-                </div>
+                {stats && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Giorni Ferie Annuali</label>
+                      <p className="text-sm text-gray-900 mt-1">{user?.holidayAllowance || 25} giorni</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Giorni Rimanenti</label>
+                      <p className="text-sm text-gray-900 mt-1">{(user?.holidayAllowance || 25) - stats.usedDays} giorni</p>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -582,6 +513,175 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             }}
             onCancel={() => setShowCreateDialog(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Holiday Details Modal */}
+      <Dialog open={!!selectedHoliday} onOpenChange={(open) => !open && setSelectedHoliday(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Dettagli Ferie</DialogTitle>
+          </DialogHeader>
+          {selectedHoliday && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-lg">
+                  {getTypeIcon(selectedHoliday.type)}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{getTypeLabel(selectedHoliday.type)}</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedHoliday.status === 'approved' ? 'Approvata' : 
+                     selectedHoliday.status === 'pending' ? 'In attesa di approvazione' : 
+                     selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <label className="font-medium text-gray-700">Periodo</label>
+                  <p className="mt-1 text-gray-900">
+                    {formatDateRange(selectedHoliday.startDate, selectedHoliday.endDate)}
+                  </p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Giorni lavorativi</label>
+                  <p className="mt-1 text-gray-900">{formatWorkingDays(selectedHoliday.workingDays)}</p>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Tipo</label>
+                  <div className="mt-1">
+                    <Badge variant="outline" className={
+                      selectedHoliday.type === 'vacation' ? 'bg-blue-100 text-blue-800' :
+                      selectedHoliday.type === 'sick' ? 'bg-red-100 text-red-800' :
+                      'bg-purple-100 text-purple-800'
+                    }>
+                      {getTypeIcon(selectedHoliday.type)} {getTypeLabel(selectedHoliday.type)}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-700">Stato</label>
+                  <div className="mt-1">
+                    <Badge className={
+                      selectedHoliday.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      selectedHoliday.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                      'bg-red-100 text-red-800'
+                    }>
+                      {selectedHoliday.status === 'approved' ? 'Approvata' : 
+                       selectedHoliday.status === 'pending' ? 'In attesa' : 
+                       selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {selectedHoliday.notes && (
+                <div>
+                  <label className="font-medium text-gray-700">Note</label>
+                  <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
+                    {selectedHoliday.notes}
+                  </div>
+                </div>
+              )}
+
+              {/* Medical Certificate Section for Sick Leave */}
+              {selectedHoliday.type === 'sick' && (
+                <div className="border-t pt-4">
+                  <label className="font-medium text-gray-700">Certificato Medico</label>
+                  <div className="mt-2">
+                    {selectedHoliday.medicalCertificateOption === 'upload' && selectedHoliday.medicalCertificateFileName ? (
+                      <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
+                        <div className="flex items-start space-x-3 min-w-0 flex-1">
+                          <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-green-800">
+                              Certificato caricato
+                            </p>
+                            <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
+                              {selectedHoliday.medicalCertificateFileName}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-green-700 border-green-300"
+                          onClick={async () => {
+                            if (selectedHoliday.medicalCertificateFileId) {
+                              try {
+                                const token = localStorage.getItem('accessToken');
+                                const baseUrl = process.env.NODE_ENV === 'development' 
+                                  ? 'http://localhost:3000' 
+                                  : window.location.origin;
+                                
+                                const response = await fetch(
+                                  `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${selectedHoliday.medicalCertificateFileId}`,
+                                  {
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`
+                                    }
+                                  }
+                                );
+
+                                if (response.ok) {
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = selectedHoliday.medicalCertificateFileName || 'certificato-medico';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  
+                                  window.URL.revokeObjectURL(url);
+                                } else {
+                                  alert('Errore durante il download del certificato');
+                                }
+                              } catch (error) {
+                                console.error('Download error:', error);
+                                alert('Errore durante il download del certificato');
+                              }
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Scarica
+                        </Button>
+                      </div>
+                    ) : selectedHoliday.medicalCertificateOption === 'send_later' ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-800">
+                              Invio previsto via email
+                            </p>
+                            <p className="text-xs text-blue-600">
+                              Certificato da inviare entro 3 giorni lavorativi
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <AlertTriangle className="h-5 w-5 text-gray-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              Certificato non specificato
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
