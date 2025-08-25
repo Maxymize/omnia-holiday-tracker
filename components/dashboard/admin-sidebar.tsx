@@ -293,7 +293,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
           />
           
           {/* Sidebar */}
-          <div className="relative flex flex-col w-80 bg-white shadow-xl">
+          <div className="relative flex flex-col w-80 bg-white shadow-xl h-full max-h-screen overflow-y-auto overscroll-contain">
             <SidebarContent />
           </div>
         </div>
