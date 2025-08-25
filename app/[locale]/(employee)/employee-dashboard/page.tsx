@@ -205,20 +205,20 @@ function EmployeeDashboardContent() {
         <div className="px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-lg p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-lg p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl sm:text-2xl font-bold truncate">
                     {t('dashboard.welcome.title', { name: user.name || 'Dipendente' })}
                   </h1>
                   <div className="mt-2 space-y-1">
-                    <p className="text-blue-100">
+                    <p className="text-blue-100 text-sm sm:text-base">
                       {t('dashboard.welcome.subtitle')}
                     </p>
                     {user.departmentName && (
                       <div className="flex items-center space-x-2">
-                        <Building2 className="h-4 w-4 text-blue-200" />
-                        <span className="text-sm text-blue-200">
+                        <Building2 className="h-4 w-4 text-blue-200 flex-shrink-0" />
+                        <span className="text-sm text-blue-200 truncate">
                           Dipartimento: <span className="font-medium text-white">{user.departmentName}</span>
                         </span>
                       </div>

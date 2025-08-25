@@ -180,32 +180,34 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header with admin badge */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
+      {/* Header with admin badge - Mobile Responsive */}
+      <div className="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3">
-              <h1 className="text-2xl font-bold">Le Mie Richieste</h1>
-              <Shield className="h-6 w-6" />
+              <h1 className="text-xl sm:text-2xl font-bold">Le Mie Richieste</h1>
+              <Shield className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
             </div>
-            <p className="mt-1 text-green-100">
-              Dashboard personale per amministratori - Gestisci le tue ferie come dipendente
+            <p className="mt-1 text-green-100 text-sm sm:text-base">
+              Dashboard personale amministratori
             </p>
-            <div className="mt-3 flex items-center text-sm text-green-100">
-              <span>Account: {user?.name}</span>
-              <span className="mx-2">•</span>
-              <span>Ruolo: Amministratore</span>
-              <span className="mx-2">•</span>
-              <span>Email: {user?.email}</span>
+            <div className="mt-3 space-y-1 text-xs sm:text-sm text-green-100">
+              <div className="truncate">Account: {user?.name}</div>
+              <div className="flex items-center space-x-2">
+                <span>Ruolo: Amministratore</span>
+                <span>•</span>
+                <span className="truncate">{user?.email}</span>
+              </div>
             </div>
           </div>
           <Button
             onClick={() => setShowCreateDialog(true)}
-            className="bg-white text-green-600 hover:bg-green-50"
-            size="lg"
+            className="bg-white text-green-600 hover:bg-green-50 flex-shrink-0"
+            size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Nuova Richiesta
+            <span className="hidden sm:inline">Nuova Richiesta</span>
+            <span className="sm:hidden">Nuova</span>
           </Button>
         </div>
       </div>
@@ -491,7 +493,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
       {/* Create Holiday Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Crea Nuova Richiesta di Ferie</DialogTitle>
           </DialogHeader>
@@ -518,7 +520,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
       {/* Holiday Details Modal */}
       <Dialog open={!!selectedHoliday} onOpenChange={(open) => !open && setSelectedHoliday(null)}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Dettagli Ferie</DialogTitle>
           </DialogHeader>
