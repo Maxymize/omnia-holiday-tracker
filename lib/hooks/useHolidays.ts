@@ -31,7 +31,24 @@ export interface Holiday {
   };
 }
 
+// Separate leave type statistics
+export interface LeaveTypeStats {
+  type: 'vacation' | 'personal' | 'sick';
+  allowance: number; // -1 = unlimited (sick days)
+  usedDays: number; // Total approved days (past + future)
+  takenDays: number; // Days already taken (past dates)  
+  bookedDays: number; // Days booked for future (future dates)
+  pendingDays: number; // Days in pending requests
+  availableDays: number; // Days available for new requests (-1 = unlimited)
+  totalRequests: number;
+  approvedRequests: number;
+  pendingRequests: number;
+  rejectedRequests: number;
+  upcomingRequests: number;
+}
+
 export interface HolidayStats {
+  // Legacy fields for backward compatibility
   totalAllowance: number;
   usedDays: number; // Total approved days (past + future)
   takenDays: number; // Days already taken (past dates)
@@ -44,6 +61,14 @@ export interface HolidayStats {
   approvedRequests: number;
   pendingRequests: number;
   rejectedRequests: number;
+  
+  // New flexible leave type system
+  leaveTypes?: {
+    vacation: LeaveTypeStats;
+    personal: LeaveTypeStats;
+    sick: LeaveTypeStats;
+  };
+  year?: number;
 }
 
 export interface UseHolidaysOptions {
@@ -176,70 +201,74 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
           if (data.success) {
             setHolidays(data.data.holidays || []);
             
-            // Calculate stats from the fetched data
-            const holidayData = data.data.holidays || [];
-            const currentYear = new Date().getFullYear();
-            
-            // Filter holidays for current year
-            const currentYearHolidays = holidayData.filter((holiday: Holiday) => {
-              const startDate = new Date(holiday.startDate);
-              return startDate.getFullYear() === currentYear;
-            });
+            // Fetch flexible leave type statistics from new endpoint
+            try {
+              const statsParams = new URLSearchParams();
+              if (year) statsParams.append('year', year.toString());
+              
+              const statsResponse = await fetch(
+                `${getBaseUrl()}/.netlify/functions/get-leave-stats?${statsParams}`,
+                {
+                  method: 'GET',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  signal: abortControllerRef.current.signal
+                }
+              );
 
-            // Calculate statistics with date-based distinction
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Normalize to start of day
+              if (statsResponse.ok) {
+                const statsData = await statsResponse.json();
+                if (statsData.success) {
+                  const leaveTypesData = statsData.data.leaveTypes;
+                  const summaryData = statsData.data.summary;
+                  
+                  // Build flexible stats with backward compatibility
+                  const flexibleStats: HolidayStats = {
+                    // Legacy fields for backward compatibility (combined vacation + personal)
+                    totalAllowance: summaryData.totalAllowance,
+                    usedDays: summaryData.totalUsedDays,
+                    takenDays: leaveTypesData.vacation.takenDays + leaveTypesData.personal.takenDays,
+                    bookedDays: leaveTypesData.vacation.bookedDays + leaveTypesData.personal.bookedDays,
+                    pendingDays: summaryData.totalPendingDays,
+                    availableDays: summaryData.totalAvailableDays,
+                    remainingDays: summaryData.totalAvailableDays, // For backward compatibility
+                    upcomingHolidays: leaveTypesData.vacation.upcomingRequests + leaveTypesData.personal.upcomingRequests,
+                    totalRequests: leaveTypesData.vacation.totalRequests + leaveTypesData.personal.totalRequests + leaveTypesData.sick.totalRequests,
+                    approvedRequests: leaveTypesData.vacation.approvedRequests + leaveTypesData.personal.approvedRequests + leaveTypesData.sick.approvedRequests,
+                    pendingRequests: leaveTypesData.vacation.pendingRequests + leaveTypesData.personal.pendingRequests + leaveTypesData.sick.pendingRequests,
+                    rejectedRequests: leaveTypesData.vacation.rejectedRequests + leaveTypesData.personal.rejectedRequests + leaveTypesData.sick.rejectedRequests,
+                    
+                    // New flexible leave type system
+                    leaveTypes: leaveTypesData,
+                    year: statsData.data.year
+                  };
 
-            const approvedVacations = currentYearHolidays.filter((h: Holiday) => h.status === 'approved' && h.type === 'vacation');
-            
-            // Days already taken (end date is in the past)
-            const takenDays = approvedVacations
-              .filter((h: Holiday) => new Date(h.endDate) < today)
-              .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
-
-            // Days booked for future (start date is today or in the future)
-            const bookedDays = approvedVacations
-              .filter((h: Holiday) => new Date(h.startDate) >= today)
-              .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
-
-            // Total approved days (for backward compatibility)
-            const usedDays = takenDays + bookedDays;
-
-            const pendingDays = currentYearHolidays
-              .filter((h: Holiday) => h.status === 'pending' && h.type === 'vacation')
-              .reduce((sum: number, h: Holiday) => sum + h.workingDays, 0);
-
-            const totalAllowance = user?.holidayAllowance || 25; // Get from user profile or system default
-            const availableDays = totalAllowance - usedDays - pendingDays;
-            const remainingDays = totalAllowance - usedDays; // For backward compatibility
-
-            const upcomingHolidays = currentYearHolidays.filter((h: Holiday) => {
-              const startDate = new Date(h.startDate);
-              const today = new Date();
-              return h.status === 'approved' && startDate > today;
-            }).length;
-
-            const totalRequests = currentYearHolidays.length;
-            const approvedRequests = currentYearHolidays.filter((h: Holiday) => h.status === 'approved').length;
-            const pendingRequests = currentYearHolidays.filter((h: Holiday) => h.status === 'pending').length;
-            const rejectedRequests = currentYearHolidays.filter((h: Holiday) => h.status === 'rejected').length;
-
-            const calculatedStats: HolidayStats = {
-              totalAllowance,
-              usedDays,
-              takenDays,
-              bookedDays,
-              pendingDays,
-              availableDays,
-              remainingDays,
-              upcomingHolidays,
-              totalRequests,
-              approvedRequests,
-              pendingRequests,
-              rejectedRequests,
-            };
-
-            setStats(calculatedStats);
+                  setStats(flexibleStats);
+                } else {
+                  console.warn('Failed to fetch leave stats, using legacy calculation');
+                  // Fallback to basic stats calculation if needed
+                  setStats({
+                    totalAllowance: 25,
+                    usedDays: 0,
+                    takenDays: 0,
+                    bookedDays: 0,
+                    pendingDays: 0,
+                    availableDays: 25,
+                    remainingDays: 25,
+                    upcomingHolidays: 0,
+                    totalRequests: 0,
+                    approvedRequests: 0,
+                    pendingRequests: 0,
+                    rejectedRequests: 0,
+                  });
+                }
+              }
+            } catch (statsError) {
+              console.warn('Error fetching flexible leave stats:', statsError);
+              // Continue with basic functionality even if stats fail
+            }
           }
           
           resolve();

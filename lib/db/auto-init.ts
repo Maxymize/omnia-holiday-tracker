@@ -98,7 +98,29 @@ export async function autoInitializeDatabase(): Promise<void> {
         adminUser.id
       );
       
-      console.log('✅ Default system settings created');
+      // Add flexible leave type allowance settings (multi-country support)
+      await upsertSetting(
+        'leave_types.vacation_allowance',
+        '20',
+        'Annual vacation/ferie days allowance (configurable per company/country)',
+        adminUser.id
+      );
+      
+      await upsertSetting(
+        'leave_types.personal_allowance', 
+        '10',
+        'Annual personal/permessi days allowance (configurable per company/country)',
+        adminUser.id
+      );
+      
+      await upsertSetting(
+        'leave_types.sick_allowance',
+        '-1',
+        'Annual sick/malattie days allowance (-1 = unlimited with documentation)',
+        adminUser.id
+      );
+      
+      console.log('✅ Default system settings created (including flexible leave type allowances)');
     }
     
     // Log the initialization

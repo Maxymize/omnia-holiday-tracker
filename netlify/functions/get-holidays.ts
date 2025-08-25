@@ -300,7 +300,31 @@ export const handler: Handler = async (event, context) => {
           total: holidaysData.length,
           pending: holidaysData.filter((h: any) => h.status === 'pending').length,
           approved: holidaysData.filter((h: any) => h.status === 'approved').length,
-          rejected: holidaysData.filter((h: any) => h.status === 'rejected').length
+          rejected: holidaysData.filter((h: any) => h.status === 'rejected').length,
+          // Enhanced statistics by leave type for flexible system
+          byLeaveType: {
+            vacation: {
+              total: holidaysData.filter((h: any) => h.type === 'vacation').length,
+              pending: holidaysData.filter((h: any) => h.type === 'vacation' && h.status === 'pending').length,
+              approved: holidaysData.filter((h: any) => h.type === 'vacation' && h.status === 'approved').length,
+              rejected: holidaysData.filter((h: any) => h.type === 'vacation' && h.status === 'rejected').length,
+              totalDays: holidaysData.filter((h: any) => h.type === 'vacation').reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0)
+            },
+            personal: {
+              total: holidaysData.filter((h: any) => h.type === 'personal').length,
+              pending: holidaysData.filter((h: any) => h.type === 'personal' && h.status === 'pending').length,
+              approved: holidaysData.filter((h: any) => h.type === 'personal' && h.status === 'approved').length,
+              rejected: holidaysData.filter((h: any) => h.type === 'personal' && h.status === 'rejected').length,
+              totalDays: holidaysData.filter((h: any) => h.type === 'personal').reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0)
+            },
+            sick: {
+              total: holidaysData.filter((h: any) => h.type === 'sick').length,
+              pending: holidaysData.filter((h: any) => h.type === 'sick' && h.status === 'pending').length,
+              approved: holidaysData.filter((h: any) => h.type === 'sick' && h.status === 'approved').length,
+              rejected: holidaysData.filter((h: any) => h.type === 'sick' && h.status === 'rejected').length,
+              totalDays: holidaysData.filter((h: any) => h.type === 'sick').reduce((sum: number, h: any) => sum + (h.workingDays || 0), 0)
+            }
+          }
         },
         pagination: {
           currentPage: validatedParams.page,

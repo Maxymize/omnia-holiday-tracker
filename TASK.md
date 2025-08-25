@@ -34,227 +34,98 @@
 
 ---
 
-## 🚀 PHASE 4: Integration & Production Readiness (ACTIVE)
+## 🚀 PHASE 5: Flexible Leave Type System (ACTIVE - Multi-Country Support)
 
-### 4.1 Authentication Integration ✅
-**Priority**: High | **Est**: 4 hours | **Status**: Completed
-- [x] Frontend auth components connected to backend
-- [x] JWT token management implemented  
-- [x] Role-based route protection (completed with dev bypass)
-- [x] Session persistence with localStorage (dev) + cookies (production ready)
-- [x] Login/logout flow fully functional
+### 5.1 Database Schema Update for Flexible Leave Allowances ✅
+**Priority**: High | **Est**: 2 hours | **Status**: COMPLETED
+- [x] ~~Update users table with separate allowance fields~~ **REVISED - Used system settings instead**
+- [x] Add system-wide settings for default allowances per leave type
+- [x] Keep users.holidayAllowance for backward compatibility
+- [x] Create migration for new system settings
+- [x] Test schema changes with existing data
 
-### 4.2 Holiday Workflow Integration ✅  
-**Priority**: High | **Est**: 5 hours | **Status**: Completed
-- [x] Holiday forms connected to APIs
-- [x] Calendar integration with live data
-- [x] Real-time status updates (completed)
-- [x] Approval/rejection workflow (completed with flexible status change)
+### 5.2 Admin Settings for Leave Type Configuration ✅
+**Priority**: High | **Est**: 3 hours | **Status**: COMPLETED
+- [x] Add admin settings interface for configurable allowances:
+  - [x] Vacation/Ferie days (default: 20/year)
+  - [x] Personal/Permessi days (default: 10/year)  
+  - [x] Sick/Malattie days (default: unlimited with documentation)
+- [x] Create comprehensive React component with form validation
+- [x] Add validation for reasonable allowance values
+- [x] Integrate with existing get-settings and update-settings API endpoints
+- [x] Added Italian language support and intuitive UI/UX
+- [x] Integrated into admin dashboard settings tab
 
-### 4.3 Admin Panel Integration ✅
-**Priority**: High | **Est**: 4 hours | **Status**: Completed
-- [x] Connect admin dashboard to backend functions
-- [x] Real-time employee/request management
-- [x] Settings configuration functionality
-- [x] Flexible status change for employees (approve/reject anytime)
-- [x] Flexible status change for holiday requests (approve/reject anytime)
+### 5.3 Backend API Updates for Separate Leave Type Tracking ✅
+**Priority**: High | **Est**: 3 hours | **Status**: COMPLETED
+- [x] Update get-holidays function for separate calculations per type
+- [x] Modify useHolidays hook for separate tracking and statistics
+- [x] Implement flexible calculations based on admin-configured allowances
+- [x] Update all holiday-related APIs to support separate leave types
 
-### 4.4 Multi-language Finalization ✅
-**Priority**: Medium | **Est**: 3 hours | **Status**: Completed
-- [x] Translation system structure complete
-- [x] Complete IT/EN/ES translations for all UI
-- [x] Language switching validation
-- [x] Added missing translation keys:
-  - [x] `common.tomorrow` and additional common words
-  - [x] Complete multiStep form translations for EN/ES
-  - [x] Medical certificate handling translations
-  - [x] Error messages and status translations
-  - [x] Dashboard tabs and admin overview
-- [x] Consistent professional corporate tone across all languages
-- [x] Build validation successful
-
-### 4.5 Mobile Optimization ✅
-**Priority**: Medium | **Est**: 4 hours | **Status**: Completed
-- [x] Touch-friendly interface improvements (44px minimum touch targets)
-- [x] Mobile-first responsive design optimization
-- [x] Progressive Web App (PWA) implementation
-- [x] Mobile performance optimizations
-- [x] Touch gestures and swipe interactions
-- [x] Offline capability for viewing holidays
-- [x] Mobile-optimized calendar interactions
-- [x] Enhanced mobile form validation and keyboard handling
-
-### 4.6 Secure Medical Certificate Storage with Netlify Blobs ✅
-**Priority**: Critical | **Est**: 6 hours | **Status**: Completed
-**Context**: Implementing secure storage for medical certificates using Netlify Blobs with encryption
-
-#### Implementation Tasks:
-- [x] 1. Install and configure Netlify Blobs dependencies ✅
-  - [x] Add @netlify/blobs package
-  - [x] Configure environment variables for blob storage (mock for dev)
-- [x] 2. Create encryption utilities for medical documents ✅
-  - [x] lib/utils/crypto.ts - AES-256 encryption/decryption functions
-  - [x] Generate secure keys for encryption
-- [x] 3. Create upload function for medical certificates ✅
-  - [x] netlify/functions/upload-medical-certificate.ts
-  - [x] Validate file type and size (max 10MB)
-  - [x] Encrypt file before storage
-  - [x] Store encrypted blob with unique ID
-  - [x] Return secure reference ID
-- [x] 4. Create download function for admin access ✅
-  - [x] netlify/functions/download-medical-certificate.ts
-  - [x] Verify admin JWT token
-  - [x] Retrieve encrypted blob
-  - [x] Decrypt and return file
-  - [x] Log access for audit trail
-- [x] 5. Update holiday request creation flow ✅
-  - [x] Modify form to convert files to base64
-  - [x] Prepare data for upload API
-  - [x] Create mock blob storage for development
-- [x] 6. Update admin dashboard download functionality ✅
-  - [x] Connect download button to new API
-  - [x] Integrate file upload in holiday request flow
-  - [x] Handle errors gracefully
-- [x] 7. Testing and validation ✅
-  - [x] Test upload with various file types (PDF, images validated)
-  - [x] Test download with admin role (admin dashboard integration complete)
-  - [x] Verify encryption/decryption (AES-256 implementation tested)
-  - [x] Test error scenarios (error handling in functions validated)
-- [x] 8. Add environment variable for production ✅
-  - [x] Add MEDICAL_CERT_ENCRYPTION_KEY to .env.example
-  - [x] Add MEDICAL_CERT_RETENTION_DAYS for GDPR compliance
-- [x] 9. Implement GDPR compliance cleanup ✅
-  - [x] netlify/functions/cleanup-old-certificates.ts (scheduled)
-  - [x] Delete certificates older than retention period (configurable)
-  - [x] Audit log for deletions
-
-#### Security Requirements:
-- ✅ AES-256 encryption for all stored files
-- ✅ JWT verification for all access
-- ✅ Audit logging for compliance
-- ✅ Secure key management
-- ✅ GDPR compliance with retention policies
-
-### 4.7 Mock to Database Transition ✅
-**Priority**: Critical for Production | **Est**: 6 hours | **Status**: COMPLETED (Version 1.7.0)
-**Achievement**: Zero breaking changes, 100% API compatibility maintained
-
-#### Backend Function Updates COMPLETED:
-- [x] Created comprehensive `lib/db/operations.ts` replacing mock storage system
-- [x] Updated all Netlify Functions with database operations:
-  - [x] All functions now use real PostgreSQL database through Drizzle ORM
-  - [x] Maintained exact same API interfaces for zero breaking changes
-  - [x] Enhanced error handling and performance optimization
-- [x] Complete database schema with audit logging:
-  - [x] Full PostgreSQL schema with users, departments, holidays, settings tables
-  - [x] Audit logs table for GDPR compliance and admin action tracking
-  - [x] Proper relationships and foreign keys with Drizzle ORM
-- [x] Migration framework with CLI tools:
-  - [x] Complete migration system (up/down operations)
-  - [x] Initial schema migration (001_initial_schema.ts)
-  - [x] Audit logs migration (002_audit_logs.ts)
-  - [x] Database initialization with seed data
-
-#### Production Features ACHIEVED:
-- [x] ✅ Zero breaking changes - all APIs work identically
-- [x] ✅ Real PostgreSQL database with Neon integration
-- [x] ✅ Sub-100ms database operations with serverless optimization
-- [x] ✅ Comprehensive audit logging for GDPR compliance
-- [x] ✅ Production-ready connection pooling and error handling
-- [x] ✅ Complete migration and testing framework
-
-#### GDPR Compliance Features:
-- [x] ✅ Full audit trail for all admin actions (IP, timestamp, user agent)
-- [x] ✅ Data retention policies and right to deletion support
-- [x] ✅ Structured data export capabilities
-- [x] ✅ Comprehensive logging of user status changes and holiday approvals
-
-**🎉 PRODUCTION IMPACT**: Application now has scalable PostgreSQL database system, replacing file-based mock storage. All existing functionality works identically with enhanced performance, audit compliance, and production readiness.
+### 5.4 Frontend Dashboard Updates for Multi-Type Display ✅
+**Priority**: High | **Est**: 4 hours | **Status**: COMPLETED  
+- [x] Create separate widgets for Vacation, Personal, and Sick leave
+- [x] Update HolidayBalance component with configurable counters
+- [x] Update admin personal dashboard with separate stats
+- [x] Add multi-language support for leave type labels (IT/EN/ES)
+- [x] Display admin-configured allowances in UI
 
 ---
 
-## 🧪 PHASE 5: Testing & Quality Assurance (NEXT)
+## 🧪 PHASE 6: Testing & Quality Assurance (FUTURE)
 
-### 5.1 Testing Suite Setup ⏳
-**Priority**: High | **Est**: 6 hours
+### 6.1 Testing Suite Setup ⏳
+**Priority**: High | **Est**: 6 hours | **Status**: Pending
 - [ ] Vitest unit testing setup
 - [ ] Component testing with React Testing Library
 - [ ] E2E testing with Playwright
 
-### 5.2 Security & Performance ⏳
-**Priority**: High | **Est**: 4 hours
+### 6.2 Security & Performance ⏳
+**Priority**: High | **Est**: 4 hours | **Status**: Pending
 - [ ] Security audit of API endpoints
 - [ ] Performance optimization
 - [ ] Accessibility compliance testing
 
 ---
 
-## 🚀 PHASE 6: Deployment (FUTURE)
+## 🚀 PHASE 7: Deployment (FUTURE)
 
-### 6.1 Production Environment ⏳
+### 7.1 Production Environment ⏳
+**Priority**: High | **Est**: 2 hours | **Status**: Pending
 - [ ] Final production deployment
 - [ ] Environment variables configuration  
 - [ ] **CRITICAL**: Enable cookie authentication by removing dev bypass in middleware
 - [ ] Monitoring setup
 
-### 6.2 Cookie Authentication Production Switch 🍪
+### 7.2 Cookie Authentication Production Switch 🍪
 **Priority**: CRITICAL for Production | **Status**: Ready to Enable
 **File**: `middleware.ts:110-113`
 - [x] Cookie system fully implemented (login-test.ts sets HTTP-only cookies)
 - [x] JWT validation ready (getUserFromToken function complete)
 - [x] Security headers configured
-- [ ] **ACTION REQUIRED**: Remove dev bypass when deploying:
-  ```typescript
-  // REMOVE these lines in production:
-  if (process.env.NODE_ENV === 'development' || process.env.NETLIFY_DEV) {
-    console.log('🚧 Development mode: skipping auth middleware (cookies work in production)');
-    return NextResponse.next();
-  }
-  ```
+- [ ] **ACTION REQUIRED**: Remove dev bypass when deploying
 - [ ] Test cookie authentication in production environment
 - [ ] Verify middleware reads cookies correctly on live server
-
-**Note**: Cookie auth is production-ready, only disabled for Netlify dev compatibility
 
 ---
 
 ## 📊 Current Progress Summary
-**Total Active Tasks**: 14
-**Completed**: 4 ✅ (Database System + Admin Panel Fully Operational 🎉)
-**In Progress**: 0 🔄
-**Pending**: 10 ⏳
-
-**Current Focus**: 🚀 Phase 5 Advanced Features (Admin panel working perfectly)
-**Critical Next**: Testing Suite Setup & Performance Optimization
-**Production Ready**: ✅ Database + Admin Panel + Cookie Authentication - Fully deployed
+**Total Active Tasks**: 6 active tasks in Phase 6-7 (Phase 5 COMPLETED)
+**Current Focus**: 🧪 Phase 6 - Testing & Quality Assurance
+**Next Phase**: Production Deployment
+**Production Ready**: ✅ Database + Admin Panel + Authentication + Flexible Leave System - Core system operational
 
 ---
 
-## 📝 Recent Activity Log
-**Last Updated**: 2025-08-23
-**Last Session**: Claude Code - Vacation Days Management System Implementation
-**Current State**: Phase 4 integration COMPLETE - Full admin panel operational with zero errors
-
-**Latest Completed Work** (Version 1.9.5 - ROLE MANAGEMENT & ADMIN PERSONAL REQUESTS SYSTEM 🔐):
-- ✅ **Role Management System**: Complete role promotion/demotion system in employee edit dialog
-- ✅ **Super Admin Protection**: Implemented undemotable Super Admin (max.giurastante@omniaservices.net) with UI/backend protection
-- ✅ **Secure Role Update Endpoint**: Created `/update-employee-role` with full security validation and audit logging
-- ✅ **"Le Mie Richieste" Admin Section**: New admin menu section combining personal dashboard + holiday management
-- ✅ **Admin Personal Dashboard**: Complete personal stats, calendar, requests history for administrators
-- ✅ **Admin Holiday Request Creation**: Integrated "Nuova Richiesta" button allowing admins to request their own holidays
-- ✅ **Multi-Tab Admin Personal Panel**: Dashboard, Calendar, Requests, Profile tabs for comprehensive admin self-management
-- ✅ **Production Build Validation**: All TypeScript interfaces corrected, build successful, system fully operational
-
-**Quick Status Check** - 🚀 PRODUCTION OPERATIONAL:
-- ✅ Authentication system fully functional with database integration
-- ✅ Cookie auth implemented and production-ready (dev bypass active)
-- ✅ Holiday workflow complete with database persistence and audit trails
-- ✅ **Admin panel FULLY WORKING** with real-time user management (approve/reject)
-- ✅ Department management with PostgreSQL backend and audit compliance
-- ✅ Employee profiles with database-backed status and department information
-- ✅ **AUDIT LOGS ACTIVE**: Full GDPR compliance with admin action tracking
-- 🍪 Cookie production switch documented for deploy
-
----
+**Latest Completed Work** (Version 1.9.7 - FLEXIBLE LEAVE TYPE SYSTEM + UI CONSOLIDATION):
+- ✅ **Phase 5 Complete**: Flexible leave type system with separate vacation, personal, and sick day tracking
+- ✅ **Dashboard Enhancement**: Updated components with color-coded cards and progress bars per leave type
+- ✅ **Backend API Updates**: Enhanced all holiday-related APIs with separate leave type calculations
+- ✅ **Admin Configuration**: Configurable allowances per leave type (vacation: 20, personal: 10, sick: unlimited)
+- ✅ **Smart Validation**: Request creation validates against flexible allowances with detailed error feedback
+- ✅ **UI Duplication Fix**: Consolidated leave type settings, removed conflicts between Sistema and Leave Type panels
+- ✅ **Apply to All Feature**: Added "Applica a Tutti i Dipendenti" functionality with new Netlify function
+- ✅ **Backward Compatibility**: Full compatibility with existing data and legacy system components
 
 **For detailed task history and completed work, see TASK-COMPLETED.md**

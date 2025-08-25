@@ -22,6 +22,7 @@ import {
   Info
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/hooks/useAdminData';
+import { LeaveTypeSettings } from './leave-type-settings';
 
 // Status Button Component
 interface StatusButtonProps {
@@ -386,67 +387,7 @@ export function SystemSettingsComponent({
               />
             </div>
 
-            <div>
-              <Label htmlFor="default-allowance">Giorni Ferie Predefiniti</Label>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  id="default-allowance"
-                  type="number"
-                  min="0"
-                  max="365"
-                  value={localSettings['system.default_holiday_allowance'] || 20}
-                  onChange={(e) => handleSettingChange('system.default_holiday_allowance', parseInt(e.target.value) || 20)}
-                  className="flex-1"
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={async () => {
-                    console.log('🔧 Apply to all button clicked');
-                    const currentAllowance = localSettings['system.default_holiday_allowance'] || 20;
-                    
-                    // First save the current setting to make sure database is updated
-                    console.log('🔧 Saving setting first to ensure database sync');
-                    await handleSaveSetting('system.default_holiday_allowance');
-                    
-                    if (confirm(`Vuoi applicare ${currentAllowance} giorni di ferie a TUTTI i dipendenti esistenti? Questa azione non può essere annullata.`)) {
-                      try {
-                        const token = localStorage.getItem('accessToken');
-                        const baseUrl = process.env.NODE_ENV === 'development' 
-                          ? 'http://localhost:3000' 
-                          : window.location.origin;
-                        
-                        const response = await fetch(`${baseUrl}/.netlify/functions/apply-default-allowance`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`,
-                          }
-                        });
-                        
-                        const result = await response.json();
-                        
-                        if (result.success) {
-                          alert(`✅ Successo! Applicati ${result.data.defaultAllowance} giorni a ${result.data.updatedCount} dipendenti.`);
-                          if (onRefresh) onRefresh(); // Refresh the page data
-                        } else {
-                          alert(`❌ Errore: ${result.error}`);
-                        }
-                      } catch (error) {
-                        console.error('Apply default allowance error:', error);
-                        alert('❌ Errore durante l\'applicazione dei giorni predefiniti');
-                      }
-                    }
-                  }}
-                  className="text-blue-600 hover:text-blue-700 border-blue-300"
-                >
-                  Applica a Tutti
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Giorni di ferie assegnati ai nuovi dipendenti. Usa &quot;Applica a Tutti&quot; per aggiornare anche i dipendenti esistenti.
-              </p>
-            </div>
+            {/* Removed default holiday allowance - now managed in Leave Types Settings */}
 
             <Button
               size="sm"
@@ -456,8 +397,7 @@ export function SystemSettingsComponent({
                 try {
                   const systemKeys = [
                     'system.registration_enabled',
-                    'system.domain_restriction_enabled', 
-                    'system.default_holiday_allowance'
+                    'system.domain_restriction_enabled'
                   ];
                   
                   const promises = systemKeys
@@ -473,8 +413,7 @@ export function SystemSettingsComponent({
               disabled={Boolean(
                 saveLoading === 'all' ||
                 (localSettings['system.registration_enabled'] === settings['system.registration_enabled'] &&
-                 localSettings['system.domain_restriction_enabled'] === settings['system.domain_restriction_enabled'] &&
-                 localSettings['system.default_holiday_allowance'] === settings['system.default_holiday_allowance'])
+                 localSettings['system.domain_restriction_enabled'] === settings['system.domain_restriction_enabled'])
               )}
               className="w-full"
             >
@@ -599,6 +538,11 @@ export function SystemSettingsComponent({
               </div>
             </div>
           </SettingCard>
+        </div>
+
+        {/* Leave Type Settings - NEW SECTION */}
+        <div className="lg:col-span-2">
+          <LeaveTypeSettings />
         </div>
       </div>
     </div>

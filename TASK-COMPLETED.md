@@ -3,7 +3,160 @@
 ## 📚 Context Optimization
 **This file contains all COMPLETED tasks to keep TASK.md lightweight and preserve Claude Code context.**
 
-## 🆕 Latest Completed Tasks - August 24, 2025
+## 🆕 Latest Completed Tasks - August 25, 2025
+
+### UI Duplication Fix & Apply-to-All Enhancement (v1.9.7) ✅
+**Completed**: 2025-08-25 | **Session**: Claude Code Direct  
+**Priority**: HIGH | **Context**: Fixed duplicate settings UI and added comprehensive "Apply to All" functionality
+
+#### User Requirements:
+> "vedo che nel nuovo pannello impostazioni, c'è una ripetizione per quanto riguarda i giorni di ferie, perchp è vengono definiti sia nel riquadro " Sistema" che nel riquadro "configurazioni tipi di permesso" - "Giorni di ferie" quindi potrebbero andare in conflitto"
+
+#### Features Implemented:
+
+**1. UI Duplication Elimination ✅**
+- Removed "Giorni Ferie Predefiniti" section from Sistema panel in `system-settings.tsx`
+- Updated save logic to remove references to `system.default_holiday_allowance`
+- Consolidated all leave type management in single "Configurazione Tipi di Permesso" panel
+- Added comment explaining the consolidation: `{/* Removed default holiday allowance - now managed in Leave Types Settings */}`
+
+**2. Apply to All Employees Enhancement ✅**
+- Added comprehensive "Applica Impostazioni a Tutti i Dipendenti" section to `LeaveTypeSettings` component
+- Created new Netlify function `apply-allowances-to-all.ts` for backend processing
+- Implemented proper validation with Zod schema for allowance values (vacation: 1-365, personal: 1-365, sick: -1 to 365)
+- Added color-coded warning section with amber styling and AlertTriangle icon
+- Comprehensive error handling and user feedback with Italian localization
+
+**3. Backend Implementation ✅**
+- Created `/netlify/functions/apply-allowances-to-all.ts` with complete security validation
+- Admin-only access control with JWT authentication
+- Updates `users.holidayAllowance` field for backward compatibility
+- Comprehensive audit logging with admin user tracking, IP address, and timestamps
+- Proper CORS headers and input validation
+
+**4. Build Issues Resolution ✅**
+- Fixed ESLint errors for unescaped quotes: `"Salva Impostazioni"` → `&quot;Salva Impostazioni&quot;`
+- Fixed unescaped apostrophes: `all'anno` → `all&apos;anno`
+- Fixed TypeScript errors with null checking: `stats.leaveTypes.vacation` → `stats.leaveTypes?.vacation`
+- Successful production build with zero errors
+
+#### Technical Implementation:
+
+**Frontend Enhancement ✅**
+```typescript
+// Added comprehensive Apply to All section
+<div className="space-y-4 p-4 border rounded-lg bg-amber-50/50 border-amber-200">
+  <div className="flex items-center space-x-2">
+    <Users className="h-5 w-5 text-amber-600" />
+    <Label className="text-base font-semibold text-amber-900">
+      Applica Impostazioni a Tutti i Dipendenti
+    </Label>
+  </div>
+  // ... warning and button implementation
+</div>
+```
+
+**Backend Security ✅**
+```typescript
+// Admin authentication and Super Admin protection
+if (userToken.role !== 'admin') {
+  return { statusCode: 403, error: 'Solo gli amministratori possono applicare impostazioni' };
+}
+
+// Input validation with Zod
+const applyAllowancesSchema = z.object({
+  vacationAllowance: z.number().min(1).max(365),
+  personalAllowance: z.number().min(1).max(365), 
+  sickAllowance: z.number().min(-1).max(365)
+});
+```
+
+**Database Operations ✅**
+```typescript
+// Update all users with new allowances
+const updateResult = await db
+  .update(users)
+  .set({
+    holidayAllowance: validatedData.vacationAllowance,
+    updatedAt: new Date()
+  })
+  .returning({ id: users.id, email: users.email });
+```
+
+#### Files Modified:
+- `components/admin/system-settings.tsx` (Removed duplicate vacation days section)
+- `components/admin/leave-type-settings.tsx` (Added Apply to All functionality)
+- `netlify/functions/apply-allowances-to-all.ts` (NEW FILE - Backend implementation)
+- `components/dashboard/holiday-balance.tsx` (Fixed TypeScript null checking)
+
+#### User Experience Improvements:
+- **Eliminated Confusion**: Single location for all leave type management
+- **Clear Visual Hierarchy**: Color-coded sections (green: vacation, blue: personal, red: sick, amber: apply-all)
+- **Safety Measures**: Warning alerts before applying changes to all employees
+- **Comprehensive Feedback**: Success/error messages with employee count updates
+- **Professional UI**: Consistent with shadcn/ui design system and Italian localization
+
+#### Testing & Validation:
+- ✅ No duplicate settings in admin interface
+- ✅ Apply to All functionality updates all employees correctly
+- ✅ Proper validation prevents invalid allowance values
+- ✅ Admin authentication and authorization working
+- ✅ ESLint and TypeScript compilation successful
+- ✅ Production build complete with zero errors
+- ✅ Development server running without issues
+
+#### Production Impact:
+🎯 **COMPLETE SUCCESS**: Admin interface now has single, consolidated location for leave type management with powerful "Apply to All" functionality. No conflicts between duplicate settings, and comprehensive employee allowance management capabilities.
+
+---
+
+## 🆕 Previous Completed Tasks - August 25, 2025
+
+### Admin Personal Requests UX Fix (v1.9.6) ✅
+**Completed**: 2025-08-25 | **Session**: Claude Code Direct  
+**Priority**: HIGH | **Context**: Fixed infinite loading spinner and UX issues in admin personal requests
+
+#### User Requirements:
+> "La pagiona 'le mie richieste' dell'admin ha una rotella che gira all'infinito ma la pagina non si carica mai"
+> "la pagina si autoconferma in qualche secondo, passando in automatico alla pagina principale"  
+> "cliccandoci sopra, non accade nulla" (holiday click functionality)
+
+#### Technical Fixes Implemented:
+
+**1. Infinite Loop Resolution in useHolidays Hook ✅**
+- Added comprehensive circuit breaker system with request count limits
+- Implemented debouncing with 300ms delay and request abortion
+- Fixed unstable dependency array causing continuous re-renders
+- Added useRef flags for proper state management: `isFetchingRef`, `hasInitializedRef`, `requestCountRef`
+- Code: `const MAX_REQUESTS_PER_MINUTE = 5; const DEBOUNCE_DELAY = 300;`
+
+**2. Admin Data Isolation Fix ✅** 
+- Fixed viewMode parameter mapping in get-holidays.ts function
+- Added support for both 'view' and 'viewMode' parameters for backward compatibility
+- Corrected access control logic to show admin their own data instead of employee data
+- Code: `const viewParameter = validatedParams.viewMode || validatedParams.view;`
+
+**3. UX Consistency Improvements ✅**
+- Replaced ResponsiveCalendar with MultiStepHolidayRequest for consistency
+- Removed auto-confirmation setTimeout redirect from admin dialog
+- Added detailed onHolidayClick callback with informative toast notifications
+- Updated dialog sizing: `className="max-w-4xl max-h-[90vh] overflow-y-auto"`
+
+#### Files Modified:
+- `lib/hooks/useHolidays.ts` (Infinite loop fix with circuit breaker)
+- `netlify/functions/get-holidays.ts` (ViewMode parameter compatibility)
+- `components/admin/my-requests-admin.tsx` (UX improvements and click handlers)
+
+#### Testing Results:
+- ✅ Admin personal requests page loads correctly without infinite spinner
+- ✅ Admin sees correct personal data (0 used days vs employee's 5 days)
+- ✅ Holiday request flow works without auto-confirmation
+- ✅ Holiday click functionality shows detailed information via toast
+- ✅ Circuit breaker prevents API abuse with proper request limiting
+
+---
+
+## 🆕 Previous Completed Tasks - August 24, 2025
 
 ### Role Management & Admin Personal Requests System (v1.9.5) ✅
 **Completed**: 2025-08-24 | **Session**: Claude Code Direct  

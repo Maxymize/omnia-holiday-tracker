@@ -564,6 +564,35 @@ export async function getSettingByKey(key: string): Promise<Setting | null> {
   }
 }
 
+// Helper function to get flexible leave type allowances
+export async function getLeaveTypeAllowances(): Promise<{
+  vacation: number;
+  personal: number;  
+  sick: number; // -1 means unlimited
+}> {
+  try {
+    const [vacationSetting, personalSetting, sickSetting] = await Promise.all([
+      getSettingByKey('leave_types.vacation_allowance'),
+      getSettingByKey('leave_types.personal_allowance'),
+      getSettingByKey('leave_types.sick_allowance')
+    ]);
+
+    return {
+      vacation: parseInt(vacationSetting?.value || '20', 10),
+      personal: parseInt(personalSetting?.value || '10', 10),
+      sick: parseInt(sickSetting?.value || '-1', 10)
+    };
+  } catch (error) {
+    console.error('Failed to get leave type allowances:', error);
+    // Return default values for multi-country flexibility
+    return {
+      vacation: 20,
+      personal: 10,
+      sick: -1 // unlimited
+    };
+  }
+}
+
 // ============================================
 // AUDIT LOGGING FOR GDPR COMPLIANCE
 // ============================================

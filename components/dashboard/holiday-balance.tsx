@@ -1,11 +1,11 @@
 'use client';
 
 import { useTranslation } from '@/lib/i18n/provider';
-import { HolidayStats } from '@/lib/hooks/useHolidays';
+import { HolidayStats, LeaveTypeStats } from '@/lib/hooks/useHolidays';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Calendar, TrendingUp, Clock, CheckCircle, AlertTriangle, Plane, Heart, Stethoscope, Infinity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HolidayBalanceUser {
@@ -23,6 +23,139 @@ interface HolidayBalanceProps {
   className?: string;
 }
 
+// Helper function to render individual leave type card
+interface LeaveTypeCardProps {
+  type: 'vacation' | 'personal' | 'sick';
+  stats: LeaveTypeStats;
+  className?: string;
+}
+
+function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
+  // Theme configuration for each leave type
+  const themeConfig = {
+    vacation: {
+      label: 'Ferie',
+      icon: Plane,
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-200',
+      iconColor: 'text-emerald-600',
+      progressColor: 'bg-emerald-500',
+      textColor: 'text-emerald-800'
+    },
+    personal: {
+      label: 'Permessi',
+      icon: Heart,
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      iconColor: 'text-blue-600',
+      progressColor: 'bg-blue-500',
+      textColor: 'text-blue-800'
+    },
+    sick: {
+      label: 'Malattia',
+      icon: Stethoscope,
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      iconColor: 'text-red-600',
+      progressColor: 'bg-red-500',
+      textColor: 'text-red-800'
+    }
+  };
+
+  const theme = themeConfig[type];
+  const Icon = theme.icon;
+  const isUnlimited = stats.allowance === -1;
+  
+  // Calculate progress for limited allowances
+  const usagePercentage = !isUnlimited && stats.allowance > 0 
+    ? (stats.usedDays / stats.allowance) * 100 
+    : 0;
+
+  // Determine status badge
+  const getStatusBadge = () => {
+    if (isUnlimited) {
+      return <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">Illimitati</Badge>;
+    }
+    
+    if (stats.availableDays <= 2) {
+      return <Badge variant="destructive" className="text-xs">Attenzione</Badge>;
+    } else if (stats.availableDays <= 5) {
+      return <Badge variant="secondary" className="text-xs">Limitati</Badge>;
+    } else {
+      return <Badge variant="default" className="text-xs">Disponibili</Badge>;
+    }
+  };
+
+  return (
+    <div className={cn(
+      "border rounded-lg p-3 space-y-3",
+      theme.bgColor,
+      theme.borderColor,
+      className
+    )}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Icon className={cn("h-4 w-4", theme.iconColor)} />
+          <span className={cn("font-medium text-sm", theme.textColor)}>{theme.label}</span>
+        </div>
+        {getStatusBadge()}
+      </div>
+
+      {/* Main Numbers */}
+      <div className="flex items-center justify-between">
+        <div className="text-center">
+          <div className={cn("text-lg font-bold", theme.textColor)}>
+            {isUnlimited ? <Infinity className="h-5 w-5 mx-auto" /> : stats.availableDays}
+          </div>
+          <div className="text-xs text-gray-600">
+            {isUnlimited ? 'giorni disponibili' : `disponibili su ${stats.allowance}`}
+          </div>
+        </div>
+        
+        {!isUnlimited && (
+          <div className="flex-1 mx-3">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-gray-600">Uso: {usagePercentage.toFixed(0)}%</span>
+              {stats.pendingDays > 0 && (
+                <span className="text-amber-600">{stats.pendingDays} attesa</span>
+              )}
+            </div>
+            <Progress 
+              value={usagePercentage} 
+              className="h-1.5"
+              style={{
+                backgroundColor: 'rgb(229 231 235)', // gray-200
+              }}
+            />
+          </div>
+        )}
+        
+        <div className="text-center">
+          <div className={cn("text-lg font-bold", theme.textColor)}>{stats.usedDays}</div>
+          <div className="text-xs text-gray-600">utilizzati</div>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="text-center">
+          <div className={cn("font-medium", theme.textColor)}>{stats.approvedRequests}</div>
+          <div className="text-gray-600">Approvate</div>
+        </div>
+        <div className="text-center">
+          <div className={cn("font-medium", theme.textColor)}>{stats.pendingRequests}</div>
+          <div className="text-gray-600">In attesa</div>
+        </div>
+        <div className="text-center">
+          <div className={cn("font-medium", theme.textColor)}>{stats.upcomingRequests}</div>
+          <div className="text-gray-600">Prossime</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HolidayBalance({ stats, user, loading = false, className }: HolidayBalanceProps) {
   const { t } = useTranslation();
 
@@ -32,7 +165,7 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Saldo Ferie</span>
+            <span>Saldo Permessi</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -54,7 +187,7 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Saldo Ferie</span>
+            <span>Saldo Permessi</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,12 +199,75 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
     );
   }
 
-  // Use user.holidayAllowance for real-time updates, fallback to stats.totalAllowance
+  // Check if flexible leave type system is available
+  const hasFlexibleSystem = stats.leaveTypes && Object.keys(stats.leaveTypes).length > 0;
+  
+  if (hasFlexibleSystem) {
+    // NEW: Flexible leave type system with separate cards
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5" />
+              <span>Saldo Permessi {stats.year || new Date().getFullYear()}</span>
+            </div>
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              Sistema Flessibile
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Separate cards for each leave type */}
+          {stats.leaveTypes?.vacation && (
+            <LeaveTypeCard
+              type="vacation"
+              stats={stats.leaveTypes.vacation}
+            />
+          )}
+          
+          {stats.leaveTypes?.personal && (
+            <LeaveTypeCard
+              type="personal"
+              stats={stats.leaveTypes.personal}
+            />
+          )}
+          
+          {stats.leaveTypes?.sick && (
+            <LeaveTypeCard
+              type="sick"
+              stats={stats.leaveTypes.sick}
+            />
+          )}
+
+          {/* Summary Overview */}
+          <div className="border-t pt-3 mt-4">
+            <div className="grid grid-cols-3 gap-4 text-center text-sm">
+              <div>
+                <div className="font-bold text-gray-900">{stats.totalRequests}</div>
+                <div className="text-gray-600">Richieste Totali</div>
+              </div>
+              <div>
+                <div className="font-bold text-green-600">{stats.approvedRequests}</div>
+                <div className="text-gray-600">Approvate</div>
+              </div>
+              <div>
+                <div className="font-bold text-amber-600">{stats.pendingRequests}</div>
+                <div className="text-gray-600">In Attesa</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // FALLBACK: Legacy system display for backward compatibility
   const totalAllowance = user?.holidayAllowance || stats.totalAllowance;
   const remainingDays = totalAllowance - stats.usedDays;
   
   const usagePercentage = (stats.usedDays / totalAllowance) * 100;
-  const pendingPercentage = (stats.pendingDays / totalAllowance) * 100;
   
   // Determine color based on remaining days
   const getRemainingDaysColor = () => {
@@ -80,18 +276,17 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
     return 'text-green-600';
   };
 
-  const getUsageColor = () => {
-    if (usagePercentage >= 90) return 'bg-red-500';
-    if (usagePercentage >= 70) return 'bg-amber-500';
-    return 'bg-blue-500';
-  };
-
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5" />
-          <span>Saldo Ferie {new Date().getFullYear()}</span>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Saldo Ferie {new Date().getFullYear()}</span>
+          </div>
+          <Badge variant="outline" className="bg-gray-50 text-gray-600">
+            Sistema Tradizionale
+          </Badge>
         </CardTitle>
       </CardHeader>
       
@@ -99,7 +294,7 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         {/* Compact Balance Display */}
         <div className="flex items-center justify-between mb-2">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">{remainingDays}</div>
+            <div className={cn("text-2xl font-bold", getRemainingDaysColor())}>{remainingDays}</div>
             <div className="text-xs text-gray-600">giorni disponibili su {totalAllowance}</div>
           </div>
           

@@ -7,6 +7,7 @@ import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-r
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
 import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
+import { ResponsiveCalendar } from '@/components/calendar/responsive-calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -222,60 +223,223 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
       {/* Tab Content */}
       {activeTab === 'dashboard' && (
         <div className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Giorni Disponibili</CardTitle>
-                <CalendarDays className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.availableDays || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Su {stats?.totalAllowance || 0} totali
-                </p>
-              </CardContent>
-            </Card>
+          {/* Enhanced Stats Cards with Flexible Leave Type Support */}
+          {stats?.leaveTypes ? (
+            <div className="space-y-6">
+              {/* Summary Overview Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Giorni Disponibili</CardTitle>
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.availableDays || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Totali (tutti i tipi)
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Giorni Utilizzati</CardTitle>
-                <CheckCircle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.usedDays || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Goduti quest&apos;anno
-                </p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Giorni Utilizzati</CardTitle>
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.usedDays || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Quest&apos;anno
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pendingHolidays.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  In attesa di approvazione
-                </p>
-              </CardContent>
-            </Card>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.pendingRequests}</div>
+                    <p className="text-xs text-muted-foreground">
+                      In attesa
+                    </p>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Prossime Ferie</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{upcomingHolidays.length}</div>
-                <p className="text-xs text-muted-foreground">
-                  Ferie programmate
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Prossime Ferie</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{upcomingHolidays.length}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Programmate
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Detailed Leave Type Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Vacation Card */}
+                {stats.leaveTypes.vacation && (
+                  <Card className="border-emerald-200 bg-emerald-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <div className="w-2 h-2 bg-emerald-600 rounded-full mr-2"></div>
+                        Ferie
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Disponibili</span>
+                        <span className="font-bold text-emerald-700">{stats.leaveTypes.vacation.availableDays}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Utilizzati</span>
+                        <span className="font-bold text-emerald-700">{stats.leaveTypes.vacation.usedDays}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">In attesa</span>
+                        <span className="font-bold text-amber-600">{stats.leaveTypes.vacation.pendingDays}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                        <div 
+                          className="bg-emerald-600 h-1.5 rounded-full transition-all duration-300" 
+                          style={{ width: `${stats.leaveTypes.vacation.allowance > 0 ? (stats.leaveTypes.vacation.usedDays / stats.leaveTypes.vacation.allowance) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Personal Card */}
+                {stats.leaveTypes.personal && (
+                  <Card className="border-blue-200 bg-blue-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mr-2"></div>
+                        Permessi
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Disponibili</span>
+                        <span className="font-bold text-blue-700">{stats.leaveTypes.personal.availableDays}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Utilizzati</span>
+                        <span className="font-bold text-blue-700">{stats.leaveTypes.personal.usedDays}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">In attesa</span>
+                        <span className="font-bold text-amber-600">{stats.leaveTypes.personal.pendingDays}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                        <div 
+                          className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                          style={{ width: `${stats.leaveTypes.personal.allowance > 0 ? (stats.leaveTypes.personal.usedDays / stats.leaveTypes.personal.allowance) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Sick Leave Card */}
+                {stats.leaveTypes.sick && (
+                  <Card className="border-red-200 bg-red-50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <div className="w-2 h-2 bg-red-600 rounded-full mr-2"></div>
+                        Malattia
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Disponibili</span>
+                        <span className="font-bold text-red-700">
+                          {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">Utilizzati</span>
+                        <span className="font-bold text-red-700">{stats.leaveTypes.sick.usedDays}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">In attesa</span>
+                        <span className="font-bold text-amber-600">{stats.leaveTypes.sick.pendingDays}</span>
+                      </div>
+                      {stats.leaveTypes.sick.allowance !== -1 && (
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                          <div 
+                            className="bg-red-600 h-1.5 rounded-full transition-all duration-300" 
+                            style={{ width: `${stats.leaveTypes.sick.allowance > 0 ? (stats.leaveTypes.sick.usedDays / stats.leaveTypes.sick.allowance) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Fallback to legacy stats display
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Giorni Disponibili</CardTitle>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.availableDays || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Su {stats?.totalAllowance || 0} totali
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Giorni Utilizzati</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.usedDays || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Goduti quest&apos;anno
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{pendingHolidays.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    In attesa di approvazione
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Prossime Ferie</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{upcomingHolidays.length}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Ferie programmate
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Holiday Balance */}

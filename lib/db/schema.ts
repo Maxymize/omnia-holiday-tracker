@@ -63,6 +63,9 @@ export const settings = pgTable('settings', {
 // allowed_domains: ["omniaservices.net", "partnerdomain.com"] - configurable domains
 // visibility_mode: "admin_only" or "all_see_all"
 // approval_mode: "manual" or "auto"
+// vacation_allowance: "20" - annual vacation days (configurable per company/country)
+// personal_allowance: "10" - annual personal days (configurable per company/country)
+// sick_allowance: "-1" - sick days (-1 = unlimited with documentation, or specific number)
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
