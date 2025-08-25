@@ -118,14 +118,15 @@
 
 ---
 
-**Latest Completed Work** (Version 1.9.8 - CRITICAL FIXES + UX IMPROVEMENTS):
-- ✅ **Auto-Refresh Bug Fix**: Eliminated infinite API call loops in useHolidays hook causing performance issues
-- ✅ **Dashboard Layout Recovery**: Restored complete dashboard layouts with all statistics cards and visual elements
-- ✅ **Rejection Reason Display**: Added clear rejection reason visibility in employee holiday history table
-- ✅ **Runtime Error Fixes**: Resolved "viewMode not defined" errors in useHolidays hook with proper parameter handling
-- ✅ **Performance Optimization**: Stabilized useCallback dependencies to prevent unnecessary re-renders
-- ✅ **Code Cleanup**: Removed debug components and cleaned up experimental features that caused issues
-- ✅ **System Stability**: Achieved stable, production-ready state with no automatic refresh interruptions
-- ✅ **User Experience**: Maintained all beautiful UI elements (cards, icons, colors, statistics) without performance impact
+**Latest Completed Work** (Version 1.9.9 - MOBILE UX + CRITICAL BUG FIXES):
+- ✅ **Mobile Sidebar Scrolling**: Fixed mobile sidebar scroll functionality, users can now reach all navigation items including logout
+- ✅ **Mobile Text Overflow**: Resolved text overflow issues in admin "Le Mie Richieste" header and mobile dialog responsiveness  
+- ✅ **Dialog Close Button**: Redesigned dialog X button from boxed to clean modern style without background shapes
+- ✅ **Mobile Tab Navigation**: Implemented scrollable horizontal tabs for mobile admin interface with improved readability
+- ✅ **Infinite Loop Critical Fix**: Eliminated infinite "Verifica conflitti..." messages in holiday request creation
+- ✅ **Medical Certificate Bug**: Fixed "Dati non validi" error when selecting "send certificate later" option for sick leave
+- ✅ **Zod Validation**: Updated backend schema to accept null values for medicalCertificateFileName properly
+- ✅ **Admin Sidebar Cleanup**: Removed unnecessary "Statistiche Rapide" section for cleaner navigation experience
+- ✅ **Mobile Responsive Design**: Complete mobile optimization across all dialog boxes, headers, and navigation elements
 
 **For detailed task history and completed work, see TASK-COMPLETED.md**

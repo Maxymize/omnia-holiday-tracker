@@ -180,6 +180,12 @@ export function MultiStepHolidayRequest({
   }
 
   const checkForConflicts = useCallback(async (start: Date, end: Date) => {
+    // Prevent multiple simultaneous checks
+    if (isCheckingConflicts) {
+      console.log('Conflict check already in progress, skipping...')
+      return
+    }
+    
     setIsCheckingConflicts(true)
     setConflictWarning(null)
 
@@ -240,18 +246,19 @@ export function MultiStepHolidayRequest({
     } finally {
       setIsCheckingConflicts(false)
     }
-  }, [existingHolidays, user?.id])
+  }, [existingHolidays, user?.id, isCheckingConflicts])
 
   // Debounced conflict checking to prevent infinite loops
   React.useEffect(() => {
     if (startDate && endDate) {
+      setConflictWarning(null) // Reset warning when dates change
       const timeoutId = setTimeout(() => {
         checkForConflicts(startDate, endDate)
-      }, 300) // 300ms debounce
+      }, 500) // Increased debounce to 500ms for better performance
       
       return () => clearTimeout(timeoutId)
     }
-  }, [startDate, endDate, checkForConflicts]) // Include checkForConflicts in dependencies
+  }, [startDate, endDate]) // Removed checkForConflicts to prevent infinite loop
 
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {
@@ -345,20 +352,21 @@ export function MultiStepHolidayRequest({
         notes: data.notes || '',
         // Include medical certificate info for sick leave
         ...(data.type === 'sick' && {
-          medicalCertificateOption: data.medicalCertificateOption,
-          medicalCertificateFileName: selectedFile?.name || null
+          medicalCertificateOption: medicalCertOption || data.medicalCertificateOption,
+          ...(selectedFile?.name && { medicalCertificateFileName: selectedFile.name })
         })
       }
 
       // Debug logging in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('Frontend sending data:', JSON.stringify(formattedData, null, 2));
-        console.log('Form data before formatting:', {
+        console.log('🔍 Frontend sending data:', JSON.stringify(formattedData, null, 2));
+        console.log('🔍 Form states before formatting:', {
           type: data.type,
-          medicalCertificateOption: data.medicalCertificateOption,
-          selectedFileState: !!selectedFile,
+          formMedicalCertOption: data.medicalCertificateOption,
+          localMedicalCertState: medicalCertOption,
+          selectedFileExists: !!selectedFile,
           selectedFileName: selectedFile?.name,
-          medicalCertState: medicalCertOption
+          finalMedicalCertOption: medicalCertOption || data.medicalCertificateOption
         });
       }
 

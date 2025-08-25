@@ -19,8 +19,6 @@ import {
   LogOut,
   Menu,
   X,
-  UserCheck,
-  Clock,
   AlertTriangle,
   Shield,
   CalendarCheck
@@ -142,51 +140,6 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
         </div>
       </div>
 
-      {/* Quick Stats */}
-      {adminStats && (
-        <div className="p-4 border-b border-gray-200">
-          <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
-            Statistiche Rapide
-          </h4>
-          <div className="space-y-2">
-            {adminStats.pendingRequests && adminStats.pendingRequests > 0 && (
-              <div className="flex items-center justify-between p-2 bg-amber-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-amber-600" />
-                  <span className="text-xs text-amber-800">Richieste pendenti</span>
-                </div>
-                <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">
-                  {adminStats.pendingRequests}
-                </Badge>
-              </div>
-            )}
-            
-            {adminStats.pendingEmployees && adminStats.pendingEmployees > 0 && (
-              <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <UserCheck className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs text-blue-800">Nuovi dipendenti</span>
-                </div>
-                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                  {adminStats.pendingEmployees}
-                </Badge>
-              </div>
-            )}
-
-            {adminStats.totalEmployees && (
-              <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Users className="h-4 w-4 text-green-600" />
-                  <span className="text-xs text-green-800">Dipendenti totali</span>
-                </div>
-                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
-                  {adminStats.totalEmployees}
-                </Badge>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-4">

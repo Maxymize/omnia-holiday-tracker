@@ -14,23 +14,21 @@ const createHolidaySchema = z.object({
   type: z.enum(['vacation', 'sick', 'personal']),
   notes: z.string().optional(),
   medicalCertificateOption: z.string().optional(), // 'upload' or 'send_later'
-  medicalCertificateFileName: z.string().optional(), // Nome del file se caricato
+  medicalCertificateFileName: z.string().optional().nullable(), // Nome del file se caricato
   medicalCertificateFileId: z.string().optional(), // ID del file nel blob storage
 }).refine((data) => {
   if (data.type === 'sick') {
-    // Per malattia, deve avere un'opzione per il certificato medico o un nome file
-    const hasOption = data.medicalCertificateOption === 'upload' || data.medicalCertificateOption === 'send_later';
-    const hasFile = data.medicalCertificateFileName && data.medicalCertificateFileName.trim() !== '';
+    // Per malattia, deve avere un'opzione per il certificato medico
+    const hasValidOption = data.medicalCertificateOption === 'upload' || data.medicalCertificateOption === 'send_later';
     
     console.log('Medical certificate validation:', {
       type: data.type,
       option: data.medicalCertificateOption,
       fileName: data.medicalCertificateFileName,
-      hasOption,
-      hasFile
+      hasValidOption
     });
     
-    return hasOption || hasFile;
+    return hasValidOption;
   }
   return true
 }, {

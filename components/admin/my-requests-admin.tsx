@@ -228,42 +228,79 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
         </Alert>
       )}
 
-      {/* Tab Navigation - Employee Dashboard Style */}
+      {/* Tab Navigation - Mobile Responsive */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-1 p-1">
-          {tabItems.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors group flex-1 min-w-0",
-                  isActive
-                    ? "bg-blue-100 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-100"
-                )}
-              >
-                <Icon className={cn(
-                  "h-4 w-4 flex-shrink-0",
-                  isActive ? "text-blue-700" : "text-gray-500 group-hover:text-gray-700"
-                )} />
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="font-medium truncate">{tab.label}</div>
-                  <div className="text-xs text-gray-500 truncate">
-                    {tab.description}
+        <nav className="p-1">
+          {/* Mobile: Scrollable horizontal tabs */}
+          <div className="md:hidden">
+            <div className="flex space-x-1 overflow-x-auto scrollbar-hide pb-1">
+              {tabItems.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm transition-colors whitespace-nowrap flex-shrink-0",
+                      isActive
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "h-4 w-4 flex-shrink-0",
+                      isActive ? "text-blue-700" : "text-gray-500"
+                    )} />
+                    <span className="font-medium">{tab.label}</span>
+                    {tab.badge && tab.badge > 0 && (
+                      <Badge variant="secondary" className="text-xs ml-1">
+                        {tab.badge}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop: Full layout with descriptions */}
+          <div className="hidden md:flex space-x-1">
+            {tabItems.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors group flex-1 min-w-0",
+                    isActive
+                      ? "bg-blue-100 text-blue-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-4 w-4 flex-shrink-0",
+                    isActive ? "text-blue-700" : "text-gray-500 group-hover:text-gray-700"
+                  )} />
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="font-medium truncate">{tab.label}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {tab.description}
+                    </div>
                   </div>
-                </div>
-                {tab.badge && tab.badge > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {tab.badge}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
+                  {tab.badge && tab.badge > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      {tab.badge}
+                    </Badge>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </nav>
       </div>
 

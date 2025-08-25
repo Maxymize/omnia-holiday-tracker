@@ -43,8 +43,8 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-2 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 disabled:pointer-events-none">
-        <Cross2Icon className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+      <DialogPrimitive.Close className="absolute right-4 top-4 opacity-70 hover:opacity-100 focus:outline-none disabled:pointer-events-none">
+        <Cross2Icon className="h-6 w-6 text-gray-400 hover:text-gray-700 transition-colors duration-200" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
