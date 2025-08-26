@@ -122,8 +122,8 @@ export function HolidayRequestsManagement({
             bValue = typeOrder[b.type];
             break;
           case 'stato':
-            // Ordine alfabetico: Approvata, In attesa, Rifiutata  
-            const statusOrder = { approved: 'Approvata', pending: 'In attesa', rejected: 'Rifiutata' };
+            // Ordine alfabetico: Approvata, In attesa, Rifiutata, Cancellata
+            const statusOrder = { approved: 'Approvata', pending: 'In attesa', rejected: 'Rifiutata', cancelled: 'Cancellata' };
             aValue = statusOrder[a.status];
             bValue = statusOrder[b.status];
             break;
