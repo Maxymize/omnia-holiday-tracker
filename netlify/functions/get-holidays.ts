@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { db } from '../../lib/db/index';
-import { holidays, users, departments } from '../../lib/db/schema';
+import { holidays, users, departments, settings } from '../../lib/db/schema';
 import { eq, and, or, gte, lte, desc, asc } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
@@ -93,6 +93,46 @@ export const handler: Handler = async (event, context) => {
     const user = currentUser[0];
     const isAdmin = user.role === 'admin';
 
+    // Use viewMode if provided, otherwise fall back to view parameter
+    let viewParameter = validatedParams.viewMode || validatedParams.view;
+    console.log(`🔍 Initial view parameter: viewMode=${validatedParams.viewMode}, view=${validatedParams.view}, final=${viewParameter}`);
+
+    // If no view parameter is specified and user is not admin, consult system settings
+    if (!viewParameter && !isAdmin) {
+      try {
+        const visibilitySettings = await db
+          .select()
+          .from(settings)
+          .where(eq(settings.key, 'holidays.visibility_mode'))
+          .limit(1);
+
+        if (visibilitySettings.length > 0) {
+          const visibilityMode = JSON.parse(visibilitySettings[0].value);
+          console.log(`🔍 System visibility mode: ${visibilityMode}`);
+          
+          // Apply system settings logic for employees
+          if (visibilityMode === 'all_see_all') {
+            viewParameter = 'all';
+            console.log(`🔍 System setting: all_see_all -> using view=all`);
+          } else if (visibilityMode === 'department_only' && user.departmentId) {
+            viewParameter = 'team';
+            console.log(`🔍 System setting: department_only -> using view=team`);
+          } else {
+            viewParameter = 'own';
+            console.log(`🔍 System setting: admin_only or no department -> using view=own`);
+          }
+        } else {
+          viewParameter = 'own'; // Default fallback
+          console.log(`🔍 No system settings found -> using view=own`);
+        }
+      } catch (error) {
+        console.error('Error reading system settings, defaulting to own view:', error);
+        viewParameter = 'own';
+      }
+    }
+
+    console.log(`🔍 Final view parameter after system settings: ${viewParameter}`);
+
     // Create alias for approver user
     const approverUser = alias(users, 'approverUser');
 
@@ -124,15 +164,20 @@ export const handler: Handler = async (event, context) => {
 
     // Apply access control based on user role and view parameter
     const conditions: any[] = [];
-    
-    // Use viewMode if provided, otherwise fall back to view parameter
-    const viewParameter = validatedParams.viewMode || validatedParams.view;
-    console.log(`🔍 View parameter debug: viewMode=${validatedParams.viewMode}, view=${validatedParams.view}, final=${viewParameter}`);
 
     if (!isAdmin) {
-      // Non-admin users: apply role-based filtering
-      if (viewParameter === 'team' && user.departmentId) {
-        // Show department colleagues
+      // Non-admin users: apply role-based filtering based on system settings
+      if (viewParameter === 'all') {
+        // Show all employees (system setting: all_see_all)
+        // Only show approved holidays for others (privacy)
+        conditions.push(
+          or(
+            eq(holidays.userId, user.id), // Own holidays (any status)
+            eq(holidays.status, 'approved') // Others' approved holidays only
+          )
+        );
+      } else if (viewParameter === 'team' && user.departmentId) {
+        // Show department colleagues (system setting: department_only)
         conditions.push(eq(users.departmentId, user.departmentId));
         // Only show approved holidays for colleagues (privacy)
         conditions.push(
@@ -142,7 +187,7 @@ export const handler: Handler = async (event, context) => {
           )
         );
       } else {
-        // Default: show only own holidays
+        // Default: show only own holidays (system setting: admin_only or fallback)
         conditions.push(eq(holidays.userId, user.id));
       }
     } else {

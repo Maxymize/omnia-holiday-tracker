@@ -54,7 +54,7 @@ function EmployeeDashboardContent() {
   // Holiday details modal state
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
   
-  // Fetch holiday data
+  // Fetch holiday data - let the calendar handle visibility filtering
   const { 
     holidays, 
     stats, 
@@ -63,7 +63,7 @@ function EmployeeDashboardContent() {
     refreshHolidays,
     getUpcomingHolidays,
     getRecentHolidays 
-  } = useHolidays({ viewMode: 'own' });
+  } = useHolidays();
 
   // Handle tab changes from URL params
   useEffect(() => {
