@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n/provider';
 import { LanguageSelector } from '@/components/layout/language-selector';
+import { LoginLogoDisplay } from '@/components/login/login-logo-display';
+import { AnimatedBackground } from '@/components/login/animated-background';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -75,32 +77,37 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+        {/* Animated Background */}
+        <AnimatedBackground />
+        
         {/* Language Selector in top-right corner */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <LanguageSelector />
         </div>
         
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              {t('auth.register.registrationSuccess')}
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              La tua richiesta è stata inviata. Attendi l&apos;approvazione dell&apos;amministratore.
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/it/login"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Vai al Login
-              </Link>
+        <div className="max-w-md w-full space-y-4 relative z-20">
+          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
+            <div className="text-center">
+              <div className="mx-auto h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+                {t('auth.register.registrationSuccess')}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                La tua richiesta è stata inviata. Attendi l&apos;approvazione dell&apos;amministratore.
+              </p>
+              <div className="mt-6">
+                <Link
+                  href="/it/login"
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Vai al Login
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -109,30 +116,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen flex justify-center pt-8 pb-4 px-4 sm:px-6 lg:px-8 relative">
+      {/* Animated Background */}
+      <AnimatedBackground />
+      
       {/* Language Selector in top-right corner */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         <LanguageSelector />
       </div>
       
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-auto flex justify-center">
-            <div className="bg-blue-600 text-white rounded-lg p-3">
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-2-5v5m6 0v-5" />
-              </svg>
-            </div>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {t('auth.register.title')} - Omnia Holiday Tracker
+      <div className="max-w-md w-full space-y-4 relative z-10">
+        {/* Login Logo Display */}
+        <LoginLogoDisplay />
+        
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            {t('auth.register.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             {t('auth.register.subtitle')}
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="name" className="sr-only">

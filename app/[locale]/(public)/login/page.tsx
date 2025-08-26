@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { LanguageSelector } from '@/components/layout/language-selector';
+import { LoginLogoDisplay } from '@/components/login/login-logo-display';
+import { AnimatedBackground } from '@/components/login/animated-background';
 
 function LoginPageContent() {
   const { t } = useTranslation();
@@ -62,15 +64,21 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen flex justify-center pt-8 pb-4 px-4 sm:px-6 lg:px-8 relative">
+      {/* Animated Background */}
+      <AnimatedBackground />
+      
       {/* Language Selector in top-right corner */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-20">
         <LanguageSelector />
       </div>
       
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+      <div className="max-w-md w-full space-y-4 relative z-20">
+        {/* Login Logo Display */}
+        <LoginLogoDisplay />
+        
+        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg">
+          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
             {t('auth.login.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -84,7 +92,7 @@ function LoginPageContent() {
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">

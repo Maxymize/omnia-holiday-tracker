@@ -10,6 +10,7 @@ import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
 import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
 import { EmployeeSidebar } from '@/components/dashboard/employee-sidebar';
+import { CustomizableHeader } from '@/components/layout/customizable-header';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -202,6 +203,13 @@ function EmployeeDashboardContent() {
       
       {/* Main Content */}
       <div className="lg:pl-80">
+        {/* Header con Logo Personalizzabile */}
+        <CustomizableHeader style={{ minHeight: '92px' }}>
+          <span className="text-sm text-gray-500">
+            Benvenuto, {user?.name}
+          </span>
+        </CustomizableHeader>
+
         <div className="px-4 py-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">

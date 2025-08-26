@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { SystemSettings } from '@/lib/hooks/useAdminData';
 import { LeaveTypeSettings } from './leave-type-settings';
+import { LogoCustomization } from './logo-customization';
+import { LoginLogoCustomization } from './login-logo-customization';
 
 // Status Button Component
 interface StatusButtonProps {
@@ -538,6 +540,14 @@ export function SystemSettingsComponent({
               </div>
             </div>
           </SettingCard>
+        </div>
+
+        {/* Logo Customization Section - Side by Side */}
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LogoCustomization />
+            <LoginLogoCustomization />
+          </div>
         </div>
 
         {/* Leave Type Settings - NEW SECTION */}

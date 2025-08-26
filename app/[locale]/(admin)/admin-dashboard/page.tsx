@@ -14,6 +14,7 @@ import { DepartmentManagement } from '@/components/admin/department-management';
 import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
 import { RecentActivities } from '@/components/admin/recent-activities';
 import { NotificationHeader } from '@/components/ui/notification-header';
+import { CustomizableHeader } from '@/components/layout/customizable-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Image from 'next/image';
@@ -182,38 +183,27 @@ export default function AdminDashboard() {
       
       {/* Main Content */}
       <div className="lg:pl-80">
-        {/* Header con Notifiche */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-          <div className="px-4 lg:px-8" style={{ minHeight: '112px', paddingTop: '1px', paddingBottom: '1px' }}>
-            <div className="flex items-center justify-between h-full">
-              <div className="flex items-center">
-                <Image
-                  src="/images/ OMNIA HOLIDAY TRACKER Logo 2.png"
-                  alt="Omnia Holiday Tracker"
-                  width={687}
-                  height={165}
-                  className="w-auto"
-                  style={{ height: '110px' }}
-                  priority
-                />
-              </div>
-              <div className="flex items-center space-x-4">
-                <NotificationHeader
-                  activities={activities}
-                  loading={activitiesLoading}
-                  onMarkAsRead={() => {
-                    // Le notifiche vengono marcate come lette automaticamente
-                    console.log('Notifiche marcate come lette');
-                  }}
-                  onDeleteNotification={async (id: string) => {
-                    // Elimina singola notifica
-                    await handleDeleteActivities([id]);
-                  }}
-                />
-              </div>
-            </div>
+        {/* Header con Notifiche Personalizzabile */}
+        <CustomizableHeader style={{ minHeight: '112px' }}>
+          <NotificationHeader
+            activities={activities}
+            loading={activitiesLoading}
+            onMarkAsRead={() => {
+              // Le notifiche vengono marcate come lette automaticamente
+              console.log('Notifiche marcate come lette');
+            }}
+            onDeleteNotification={async (id: string) => {
+              // Elimina singola notifica
+              await handleDeleteActivities([id]);
+            }}
+          />
+          
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+            <p className="text-xs text-gray-600">{user?.email}</p>
+            <p className="text-xs text-blue-600 font-medium">Amministratore</p>
           </div>
-        </div>
+        </CustomizableHeader>
 
         <div className="px-4 py-6 lg:px-8">
           {/* Global Error Alert */}
