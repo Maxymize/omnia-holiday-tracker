@@ -190,16 +190,6 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-start text-gray-700 hover:text-gray-900"
-            onClick={() => {/* TODO: Handle notifications */}}
-          >
-            <Bell className="h-4 w-4 mr-2" />
-            Notifiche
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
             className="w-full justify-start text-red-700 hover:text-red-900 hover:bg-red-50"
             onClick={logout}
           >

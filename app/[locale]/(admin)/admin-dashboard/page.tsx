@@ -12,8 +12,11 @@ import { SystemSettingsComponent } from '@/components/admin/system-settings';
 import { AdminReports } from '@/components/admin/admin-reports';
 import { DepartmentManagement } from '@/components/admin/department-management';
 import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
+import { RecentActivities } from '@/components/admin/recent-activities';
+import { NotificationHeader } from '@/components/ui/notification-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Image from 'next/image';
 import { 
   Calendar, 
   BarChart3, 
@@ -28,6 +31,19 @@ import {
 } from 'lucide-react';
 
 type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
+
+interface Activity {
+  id: string;
+  type: 'holiday_request' | 'employee_registration' | 'holiday_approved' | 'holiday_rejected';
+  title: string;
+  description: string;
+  date: string;
+  user: {
+    name: string;
+    email: string;
+  };
+  status?: string;
+}
 
 export default function AdminDashboard() {
   const { user, loading: authLoading, isAuthenticated, isAdmin } = useAuth();
@@ -74,6 +90,75 @@ export default function AdminDashboard() {
     }
   };
 
+  // State for activities
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  // Fetch activities from API
+  const fetchActivities = async () => {
+    setActivitiesLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-activities`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivities(data.data.activities || []);
+      } else {
+        console.error('Failed to fetch activities:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  // Handle activity deletion
+  const handleDeleteActivities = async (activityIds: string[]) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/delete-activities`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ activityIds })
+      });
+
+      if (response.ok) {
+        // Refresh activities after deletion
+        fetchActivities();
+      } else {
+        throw new Error('Failed to delete activities');
+      }
+    } catch (error) {
+      console.error('Error deleting activities:', error);
+      throw error;
+    }
+  };
+
+  // Load activities when component mounts or admin data changes
+  useEffect(() => {
+    if (isAdmin && !adminLoading) {
+      fetchActivities();
+    }
+  }, [isAdmin, adminLoading]);
+
   if (authLoading || (authLoading && adminLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -97,6 +182,39 @@ export default function AdminDashboard() {
       
       {/* Main Content */}
       <div className="lg:pl-80">
+        {/* Header con Notifiche */}
+        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+          <div className="px-4 lg:px-8" style={{ minHeight: '112px', paddingTop: '1px', paddingBottom: '1px' }}>
+            <div className="flex items-center justify-between h-full">
+              <div className="flex items-center">
+                <Image
+                  src="/images/ OMNIA HOLIDAY TRACKER Logo 2.png"
+                  alt="Omnia Holiday Tracker"
+                  width={687}
+                  height={165}
+                  className="w-auto"
+                  style={{ height: '110px' }}
+                  priority
+                />
+              </div>
+              <div className="flex items-center space-x-4">
+                <NotificationHeader
+                  activities={activities}
+                  loading={activitiesLoading}
+                  onMarkAsRead={() => {
+                    // Le notifiche vengono marcate come lette automaticamente
+                    console.log('Notifiche marcate come lette');
+                  }}
+                  onDeleteNotification={async (id: string) => {
+                    // Elimina singola notifica
+                    await handleDeleteActivities([id]);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="px-4 py-6 lg:px-8">
           {/* Global Error Alert */}
           {adminError && (
@@ -119,19 +237,14 @@ export default function AdminDashboard() {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Admin Header */}
+              {/* Admin Overview Header */}
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-6 text-white">
-                <h1 className="text-2xl font-bold">
-                  Pannello Amministratore - Omnia Holiday Tracker
-                </h1>
+                <h2 className="text-xl font-bold">
+                  Pannello di Controllo
+                </h2>
                 <p className="mt-1 text-purple-100">
-                  Gestisci dipendenti, richieste di ferie e impostazioni del sistema
+                  Panoramica delle attività e statistiche del sistema
                 </p>
-                <div className="mt-3 flex items-center text-sm text-purple-100">
-                  <span>Benvenuto, {user?.name}</span>
-                  <span className="mx-2">•</span>
-                  <span>Ruolo: Amministratore</span>
-                </div>
               </div>
 
               {/* Admin Statistics - Clickable Cards */}
@@ -205,52 +318,13 @@ export default function AdminDashboard() {
                 </Card>
               </div>
 
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Attività Recente</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {pendingRequests.slice(0, 3).map((request) => (
-                      <div key={request.id} className="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <FileText className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">Nuova richiesta di ferie</p>
-                          <p className="text-xs text-gray-600">
-                            {request.employeeName} ha richiesto {request.workingDays} giorni 
-                            dal {new Date(request.startDate).toLocaleDateString('it-IT')}
-                          </p>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {new Date(request.createdAt).toLocaleDateString('it-IT')}
-                        </span>
-                      </div>
-                    ))}
-                    
-                    {employees.filter(emp => emp.status === 'pending').slice(0, 2).map((employee) => (
-                      <div key={employee.id} className="flex items-center space-x-4 p-3 bg-green-50 rounded-lg">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <UserCheck className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">Nuovo dipendente da approvare</p>
-                          <p className="text-xs text-gray-600">{employee.name} ({employee.email})</p>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {new Date(employee.createdAt).toLocaleDateString('it-IT')}
-                        </span>
-                      </div>
-                    ))}
-
-                    {(pendingRequests.length === 0 && employees.filter(emp => emp.status === 'pending').length === 0) && (
-                      <p className="text-center text-gray-500 py-4">Nessuna attività recente</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Advanced Recent Activities with full functionality */}
+              <RecentActivities
+                activities={activities}
+                loading={activitiesLoading}
+                onDeleteActivities={handleDeleteActivities}
+                onRefresh={fetchActivities}
+              />
             </div>
           )}
 
