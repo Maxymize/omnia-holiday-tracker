@@ -248,7 +248,7 @@ export const translations = {
     auth: {
       login: {
         title: 'Sign In',
-        subtitle: 'OmniaGroup Holiday Management System',
+        subtitle: '{{companyName}} Holiday Management System',
         email: 'Email',
         password: 'Password',
         submit: 'Sign In',
@@ -260,7 +260,7 @@ export const translations = {
       },
       register: {
         title: 'Register',
-        subtitle: 'Create your OmniaGroup account',
+        subtitle: 'Create your {{companyName}} account',
         name: 'Full name',
         email: 'Company email',
         password: 'Password',
@@ -467,7 +467,7 @@ export const translations = {
     auth: {
       login: {
         title: 'Iniciar sesión',
-        subtitle: 'Sistema de gestión de vacaciones OmniaGroup',
+        subtitle: 'Sistema de gestión de vacaciones {{companyName}}',
         email: 'Correo electrónico',
         password: 'Contraseña',
         submit: 'Iniciar sesión',
@@ -479,7 +479,7 @@ export const translations = {
       },
       register: {
         title: 'Registro',
-        subtitle: 'Crea tu cuenta OmniaGroup',
+        subtitle: 'Crea tu cuenta {{companyName}}',
         name: 'Nombre completo',
         email: 'Correo corporativo',
         password: 'Contraseña',
