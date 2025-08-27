@@ -272,7 +272,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
           <span>Personalizzazione Logo</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Personalizza il logo nell'header della piattaforma caricando un'immagine o usando un testo
+          Personalizza il logo nell&apos;header della piattaforma caricando un&apos;immagine o usando un testo
         </p>
       </CardHeader>
       
@@ -381,7 +381,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Massimo 100 caratteri. Apparirà come testo grande e in grassetto nell'header.
+                Massimo 100 caratteri. Apparirà come testo grande e in grassetto nell&apos;header.
               </p>
             </div>
             

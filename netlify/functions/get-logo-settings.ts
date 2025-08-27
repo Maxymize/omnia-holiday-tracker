@@ -61,7 +61,14 @@ export const handler: Handler = async (event, context) => {
       ));
 
     // Parse settings into response object
-    const logoSettings = {
+    const logoSettings: {
+      logo_type: string;
+      logo_url: string | null;
+      brand_text: string;
+      login_logo_type: string;
+      login_logo_url: string | null;
+      login_brand_text: string;
+    } = {
       // Header logo settings
       logo_type: 'text', // default to text
       logo_url: null,

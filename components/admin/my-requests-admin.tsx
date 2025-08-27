@@ -87,7 +87,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
     return () => {
       mounted = false;
     };
-  }, []); // Empty dependency array - only run on mount
+  }, [refreshHolidays, refreshUserData]); // Fixed: Added missing dependencies
 
   const handleHolidayCreated = async () => {
     await refreshHolidays();

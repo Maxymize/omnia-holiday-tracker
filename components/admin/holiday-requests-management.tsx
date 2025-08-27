@@ -92,7 +92,7 @@ export function HolidayRequestsManagement({
   // Filter, search and sort requests
   const filteredAndSortedRequests = useMemo(() => {
     // First apply filters
-    let filtered = requests.filter(request => {
+    const filtered = requests.filter(request => {
       const matchesSearch = !searchTerm || 
         request.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.employeeEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||

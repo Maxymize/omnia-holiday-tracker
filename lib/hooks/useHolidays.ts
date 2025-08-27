@@ -302,7 +302,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         }
       }, DEBOUNCE_DELAY);
     });
-  }, [user?.id]); // Only depend on user ID to prevent excessive re-creation
+  }, [user]); // Fixed: Added complete user dependency
 
   // Simple wrapper that calls the debounced function
   const fetchHolidays = useCallback(async () => {
@@ -341,7 +341,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         abortControllerRef.current.abort();
       }
     };
-  }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
+  }, [fetchHolidays, user]); // Fixed: Added missing dependencies
 
   const refreshHolidays = useCallback(() => {
     // Force refresh by resetting initialization flag

@@ -24,7 +24,7 @@ export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingP
       setValue(initialValue);
       setHasChanges(false);
     }
-  }, [initialValue]); // Note: Not including 'value' to prevent loops
+  }, [initialValue, value]); // Fixed: Added 'value' dependency
 
   // Stable change handler
   const handleChange = useCallback((newValue: string) => {
@@ -55,7 +55,7 @@ export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingP
           <span>Nome Azienda</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Configura il nome dell'azienda che apparirà in tutta la piattaforma
+          Configura il nome dell&apos;azienda che apparirà in tutta la piattaforma
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

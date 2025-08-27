@@ -269,7 +269,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
           <span>Personalizzazione Logo Pagina di Login</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Personalizza il logo che apparirà nella pagina di login caricando un'immagine o usando un testo
+          Personalizza il logo che apparirà nella pagina di login caricando un&apos;immagine o usando un testo
         </p>
       </CardHeader>
       

@@ -218,7 +218,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Hai modifiche non salvate. Clicca "Salva Tutte" per applicare tutte le modifiche.
+            Hai modifiche non salvate. Clicca &quot;Salva Tutte&quot; per applicare tutte le modifiche.
           </AlertDescription>
         </Alert>
       )}

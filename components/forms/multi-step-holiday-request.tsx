@@ -258,7 +258,7 @@ export function MultiStepHolidayRequest({
       
       return () => clearTimeout(timeoutId)
     }
-  }, [startDate, endDate]) // Removed checkForConflicts to prevent infinite loop
+  }, [startDate, endDate, checkForConflicts]) // Fixed: Added checkForConflicts dependency
 
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {

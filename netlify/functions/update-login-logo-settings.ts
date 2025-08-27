@@ -83,12 +83,12 @@ export const handler: Handler = async (event, context) => {
     });
 
     // Update or create login logo settings in database
-    const settingsToUpdate = [
+    const settingsToUpdate: Array<{ key: string; value: string }> = [
       { key: 'login_logo_type', value: validatedData.login_logo_type },
     ];
 
     if (validatedData.login_logo_type === 'image' && validatedData.login_logo_url) {
-      settingsToUpdate.push({ key: 'login_logo_url', value: validatedData.login_logo_url });
+      settingsToUpdate.push({ key: 'login_logo_url', value: validatedData.login_logo_url as string });
       settingsToUpdate.push({ key: 'login_brand_text', value: '' }); // Clear brand text when using image
     } else if (validatedData.login_logo_type === 'text' && validatedData.login_brand_text) {
       settingsToUpdate.push({ key: 'login_brand_text', value: validatedData.login_brand_text });
