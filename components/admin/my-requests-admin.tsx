@@ -7,6 +7,7 @@ import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-r
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
 import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
+import { CompletedHolidays } from '@/components/dashboard/completed-holidays';
 import { ResponsiveCalendar } from '@/components/calendar/responsive-calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,13 +55,11 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
     loading,
     error,
     refreshHolidays,
-    getHolidaysByStatus,
-    getUpcomingHolidays
+    getHolidaysByStatus
   } = useHolidays({ viewMode: 'own' });
 
   // Derive data from hooks
   const pendingHolidays = getHolidaysByStatus('pending');
-  const upcomingHolidays = getUpcomingHolidays();
 
   // Refresh data when component mounts - with strict control to prevent loops
   useEffect(() => {
@@ -387,12 +386,19 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             </div>
           )}
 
-          {/* Main Overview - Only Upcoming Holidays */}
-          <div className="w-full">
+          {/* Main Overview - Upcoming and Completed Holidays */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <UpcomingHolidays 
-              holidays={upcomingHolidays} 
+              holidays={holidays} 
               loading={loading}
               onCreateRequest={() => setShowCreateDialog(true)}
+              onHolidayClick={(holiday) => {
+                setSelectedHoliday(holiday);
+              }}
+            />
+            <CompletedHolidays 
+              holidays={holidays} 
+              loading={loading}
               onHolidayClick={(holiday) => {
                 setSelectedHoliday(holiday);
               }}

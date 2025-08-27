@@ -9,6 +9,7 @@ import { ResponsiveCalendar, CalendarLegend } from '@/components/calendar/respon
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
 import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
+import { CompletedHolidays } from '@/components/dashboard/completed-holidays';
 import { EmployeeSidebar } from '@/components/dashboard/employee-sidebar';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
 import { StatsCards } from '@/components/dashboard/stats-cards';
@@ -373,12 +374,17 @@ function EmployeeDashboardContent() {
                 </div>
               )}
 
-              {/* Main Overview - Only Upcoming Holidays */}
-              <div className="w-full">
+              {/* Main Overview - Upcoming and Completed Holidays */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <UpcomingHolidays 
-                  holidays={getUpcomingHolidays()} 
+                  holidays={holidays} 
                   loading={holidaysLoading}
                   onCreateRequest={handleCreateRequest}
+                  onHolidayClick={handleHolidayClick}
+                />
+                <CompletedHolidays 
+                  holidays={holidays} 
+                  loading={holidaysLoading}
                   onHolidayClick={handleHolidayClick}
                 />
               </div>
