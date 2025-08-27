@@ -43,7 +43,6 @@ export function LoginLogoDisplay({ className = "" }: LoginLogoDisplayProps) {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          console.log('Login logo settings loaded:', result.data);
           setLogoSettings({
             login_logo_type: result.data.login_logo_type || 'text',
             login_logo_url: result.data.login_logo_url || null,
@@ -51,10 +50,10 @@ export function LoginLogoDisplay({ className = "" }: LoginLogoDisplayProps) {
           });
         }
       } else {
-        console.log('Failed to fetch login logo settings, using defaults');
+        // Failed to fetch, use defaults silently
       }
     } catch (error) {
-      console.log('Could not fetch login logo settings, using defaults:', error);
+      // Could not fetch, use defaults silently
     } finally {
       setLoading(false);
     }
@@ -72,8 +71,6 @@ export function LoginLogoDisplay({ className = "" }: LoginLogoDisplayProps) {
         </div>
       );
     }
-
-    console.log('Rendering login logo with settings:', logoSettings);
 
     // Check for image mode with valid URL
     if (logoSettings.login_logo_type === 'image' && logoSettings.login_logo_url && logoSettings.login_logo_url.trim() !== '') {

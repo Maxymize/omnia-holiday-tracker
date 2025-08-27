@@ -111,9 +111,6 @@ export default function RootLayout({
         <meta name="msapplication-square150x150logo" content="/images/icon-152x152.png" />
         <meta name="msapplication-wide310x150logo" content="/images/icon-384x384.png" />
         <meta name="msapplication-square310x310logo" content="/images/icon-512x512.png" />
-        
-        {/* Preload critical resources */}
-        <link rel="preload" as="style" href="/globals.css" />
       </head>
       <body className="antialiased" suppressHydrationWarning={true}>
         {children}

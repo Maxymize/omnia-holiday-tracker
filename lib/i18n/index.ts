@@ -23,7 +23,7 @@ export const translations = {
     auth: {
       login: {
         title: 'Accedi',
-        subtitle: 'Sistema di gestione ferie OmniaGroup',
+        subtitle: 'Sistema di gestione ferie {{companyName}}',
         email: 'Email',
         password: 'Password',
         submit: 'Accedi',
@@ -35,7 +35,7 @@ export const translations = {
       },
       register: {
         title: 'Registrazione',
-        subtitle: 'Crea il tuo account OmniaGroup',
+        subtitle: 'Crea il tuo account {{companyName}}',
         name: 'Nome completo',
         email: 'Email aziendale',
         password: 'Password',

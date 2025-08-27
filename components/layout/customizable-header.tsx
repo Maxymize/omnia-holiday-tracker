@@ -1,13 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
-
-interface LogoSettings {
-  logo_type: 'image' | 'text';
-  logo_url: string | null;
-  brand_text: string;
-}
+import { useLogoSettings } from '@/lib/contexts/LogoContext';
 
 interface CustomizableHeaderProps {
   children?: React.ReactNode;
@@ -16,59 +10,7 @@ interface CustomizableHeaderProps {
 }
 
 export function CustomizableHeader({ children, className = "", style }: CustomizableHeaderProps) {
-  const [logoSettings, setLogoSettings] = useState<LogoSettings>({
-    logo_type: 'image',
-    logo_url: '/images/ OMNIA HOLIDAY TRACKER Logo 2.png', // default logo
-    brand_text: 'Omnia Holiday Tracker'
-  });
-  
-  const [loading, setLoading] = useState(true);
-
-  // Fetch logo settings on component mount and when page focus returns
-  useEffect(() => {
-    fetchLogoSettings();
-    
-    // Ricarica le impostazioni quando la finestra torna in focus
-    // (utile dopo il reload automatico del salvataggio)
-    const handleFocus = () => {
-      fetchLogoSettings();
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  const fetchLogoSettings = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      
-      // Prova sempre a fare la richiesta (anche senza token per il debug)
-      const response = await fetch('/.netlify/functions/get-logo-settings', {
-        method: 'GET',
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          console.log('Logo settings loaded:', result.data);
-          setLogoSettings(result.data);
-        }
-      } else {
-        console.log('Failed to fetch logo settings, status:', response.status);
-      }
-    } catch (error) {
-      console.log('Could not fetch logo settings, using defaults:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { logoSettings, loading } = useLogoSettings();
 
   const renderLogo = () => {
     if (loading) {
@@ -78,7 +20,7 @@ export function CustomizableHeader({ children, className = "", style }: Customiz
       );
     }
 
-    console.log('Rendering logo with settings:', logoSettings);
+    // Removed excessive console logging - only log when needed for debugging
 
     // Controllo per modalità immagine con URL valido
     if (logoSettings.logo_type === 'image' && logoSettings.logo_url && logoSettings.logo_url.trim() !== '') {

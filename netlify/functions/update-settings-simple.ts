@@ -68,6 +68,7 @@ export const handler: Handler = async (event, context) => {
 
     // Valid keys
     const validKeys = [
+      'company.name',
       'holidays.visibility_mode',
       'holidays.approval_mode', 
       'holidays.show_names',

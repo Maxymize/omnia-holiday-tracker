@@ -57,6 +57,7 @@ export interface PendingHolidayRequest {
 }
 
 export interface SystemSettings {
+  'company.name': string;
   'holidays.visibility_mode': 'all_see_all' | 'admin_only' | 'department_only';
   'holidays.approval_mode': 'manual' | 'auto';
   'holidays.show_names': boolean;

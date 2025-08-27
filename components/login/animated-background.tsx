@@ -1,7 +1,6 @@
 'use client';
 
 export function AnimatedBackground({ className = "" }: { className?: string }) {
-  console.log('🎨 AnimatedBackground rendering - ELEGANT GEOMETRIC VERSION');
 
   return (
     <>

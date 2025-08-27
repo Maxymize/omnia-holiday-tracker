@@ -33,12 +33,12 @@ export function useAuth() {
     const token = localStorage.getItem('accessToken');
     const userData = localStorage.getItem('userData');
     
-    console.log('🔍 Auth check on mount:', { token: !!token, userData: !!userData });
+    // Silent auth check - only log errors or important events
     
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
-        console.log('✅ Restoring user session:', user);
+        // Only log once when session is actually restored
         setAuthState({
           user,
           loading: false,
@@ -51,7 +51,7 @@ export function useAuth() {
         setAuthState(prev => ({ ...prev, loading: false }));
       }
     } else {
-      console.log('⚠️ No valid session found');
+      // Silent - no session found
       setAuthState(prev => ({ ...prev, loading: false }));
     }
   }, []);

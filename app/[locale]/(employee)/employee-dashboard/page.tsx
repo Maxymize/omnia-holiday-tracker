@@ -80,7 +80,6 @@ function EmployeeDashboardContent() {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (!document.hidden && user) {
-        console.log('🔄 Page visible - refreshing user data...');
         // Simply refresh user data - display uses user.holidayAllowance directly
         await refreshUserData();
         refreshHolidays();
@@ -92,7 +91,6 @@ function EmployeeDashboardContent() {
     // Also refresh on page focus (when switching tabs/windows)
     const handleFocus = async () => {
       if (user) {
-        console.log('🔄 Page focused - refreshing user data...');
         // Simply refresh user data - display uses user.holidayAllowance directly
         await refreshUserData();
         refreshHolidays();
@@ -251,12 +249,12 @@ function EmployeeDashboardContent() {
                     variant="outline" 
                     size="sm" 
                     onClick={async () => {
-                      console.log('🔄 Header refresh triggered - using direct user.holidayAllowance');
+                      // Header refresh triggered - using direct user.holidayAllowance
                       // Simply refresh user data - the display now uses user.holidayAllowance directly
                       await refreshUserData();
                       // Also refresh holidays for completeness (stats, sidebar, etc.)
                       refreshHolidays();
-                      console.log('✅ Refresh completed - user.holidayAllowance:', user?.holidayAllowance);
+                      // Refresh completed
                     }}
                     className="text-blue-700 border-white hover:bg-white/20"
                   >
@@ -443,12 +441,12 @@ function EmployeeDashboardContent() {
                       variant="outline" 
                       size="sm" 
                       onClick={async () => {
-                        console.log('🔄 Profile refresh triggered - using direct user.holidayAllowance');
+                        // Profile refresh triggered - using direct user.holidayAllowance
                         // Simply refresh user data - the display now uses user.holidayAllowance directly
                         await refreshUserData();
                         // Also refresh holidays for completeness
                         refreshHolidays();
-                        console.log('✅ Profile refresh completed - user.holidayAllowance:', user?.holidayAllowance);
+                        // Profile refresh completed
                       }}
                       className="text-xs"
                     >

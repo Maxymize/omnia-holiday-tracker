@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 // Removed MagicToggle - using status buttons instead
@@ -25,6 +25,7 @@ import { SystemSettings } from '@/lib/hooks/useAdminData';
 import { LeaveTypeSettings } from './leave-type-settings';
 import { LogoCustomization } from './logo-customization';
 import { LoginLogoCustomization } from './login-logo-customization';
+import { CompanyNameSetting } from './company-name-setting';
 
 // Status Button Component
 interface StatusButtonProps {
@@ -32,6 +33,32 @@ interface StatusButtonProps {
   onToggle: (enabled: boolean) => void;
   disabled?: boolean;
 }
+
+// Define SettingCard outside to prevent re-creation on each render
+const SettingCard = ({ 
+  title, 
+  description, 
+  icon: Icon, 
+  children 
+}: { 
+  title: string; 
+  description: string; 
+  icon: any; 
+  children: React.ReactNode;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center space-x-2 text-lg">
+        <Icon className="h-5 w-5" />
+        <span>{title}</span>
+      </CardTitle>
+      <p className="text-sm text-gray-600">{description}</p>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      {children}
+    </CardContent>
+  </Card>
+);
 
 const StatusButton = ({ enabled, onToggle, disabled }: StatusButtonProps) => (
   <div className="flex items-center space-x-2">
@@ -72,7 +99,7 @@ interface SystemSettingsProps {
   onRefresh: () => void;
 }
 
-export function SystemSettingsComponent({ 
+const SystemSettingsComponent = memo(function SystemSettingsComponent({ 
   settings, 
   loading, 
   error, 
@@ -97,6 +124,11 @@ export function SystemSettingsComponent({
     setHasChanges(true);
   };
 
+  // Create a stable company name save handler
+  const handleCompanyNameSave = useCallback(async (newValue: string): Promise<boolean> => {
+    return await onUpdateSetting('company.name', newValue);
+  }, [onUpdateSetting]);
+
   const handleSaveSetting = async (key: keyof SystemSettings) => {
     const value = localSettings[key];
     if (value === settings[key]) return; // No change
@@ -112,6 +144,7 @@ export function SystemSettingsComponent({
     }
   };
 
+
   const handleSaveAll = async () => {
     setSaveLoading('all');
     try {
@@ -126,30 +159,6 @@ export function SystemSettingsComponent({
     }
   };
 
-  const SettingCard = ({ 
-    title, 
-    description, 
-    icon: Icon, 
-    children 
-  }: { 
-    title: string; 
-    description: string; 
-    icon: any; 
-    children: React.ReactNode;
-  }) => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2 text-lg">
-          <Icon className="h-5 w-5" />
-          <span>{title}</span>
-        </CardTitle>
-        <p className="text-sm text-gray-600">{description}</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {children}
-      </CardContent>
-    </Card>
-  );
 
   if (loading && Object.keys(settings).length === 0) {
     return (
@@ -209,12 +218,22 @@ export function SystemSettingsComponent({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Hai modifiche non salvate. Clicca &quot;Salva Tutte&quot; per applicare tutte le modifiche.
+            Hai modifiche non salvate. Clicca "Salva Tutte" per applicare tutte le modifiche.
           </AlertDescription>
         </Alert>
       )}
 
+      {/* Company Name Settings - Full Width - Isolated Component */}
+      <div className="mb-6">
+        <CompanyNameSetting
+          initialValue={settings['company.name']}
+          onSave={handleCompanyNameSave}
+        />
+      </div>
+
+      {/* Main Settings Grid - Two Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
         {/* Holiday Visibility Settings */}
         <SettingCard
           title="Visibilità Ferie"
@@ -472,89 +491,91 @@ export function SystemSettingsComponent({
             </Button>
           </div>
         </SettingCard>
+      </div>
 
-        {/* Notification Settings */}
-        <div className="lg:col-span-2">
-          <SettingCard
-            title="Notifiche"
-            description="Configura come vengono inviate le notifiche agli utenti"
-            icon={Bell}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="email-notifications">Email</Label>
-                    <p className="text-xs text-gray-500">
-                      Invia notifiche via email per approvazioni e aggiornamenti
-                    </p>
-                  </div>
-                  <StatusButton
-                    enabled={localSettings['notifications.email_enabled'] ?? false}
-                    onToggle={(enabled) => handleSettingChange('notifications.email_enabled', enabled)}
-                  />
+      {/* Notification Settings */}
+      <div className="mt-6">
+        <SettingCard
+          title="Notifiche"
+          description="Configura come vengono inviate le notifiche agli utenti"
+          icon={Bell}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="email-notifications">Email</Label>
+                  <p className="text-xs text-gray-500">
+                    Invia notifiche via email per approvazioni e aggiornamenti
+                  </p>
                 </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="browser-notifications">Notifiche Browser</Label>
-                    <p className="text-xs text-gray-500">
-                      Mostra notifiche nel browser per eventi importanti
-                    </p>
-                  </div>
-                  <StatusButton
-                    enabled={localSettings['notifications.browser_enabled'] ?? true}
-                    onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
-                  />
-                </div>
+                <StatusButton
+                  enabled={localSettings['notifications.email_enabled'] ?? false}
+                  onToggle={(enabled) => handleSettingChange('notifications.email_enabled', enabled)}
+                />
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="manager-reminders">Promemoria Manager</Label>
-                    <p className="text-xs text-gray-500">
-                      Invia promemoria ai manager per richieste pendenti
-                    </p>
-                  </div>
-                  <StatusButton
-                    enabled={localSettings['notifications.remind_managers'] ?? true}
-                    onToggle={(enabled) => handleSettingChange('notifications.remind_managers', enabled)}
-                  />
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="browser-notifications">Notifiche Browser</Label>
+                  <p className="text-xs text-gray-500">
+                    Mostra notifiche nel browser per eventi importanti
+                  </p>
                 </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleSaveSetting('notifications.email_enabled')}
-                  disabled={Boolean(
-                    saveLoading === 'notifications.email_enabled' ||
-                    (localSettings['notifications.email_enabled'] === settings['notifications.email_enabled'] &&
-                     localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'] &&
-                     localSettings['notifications.remind_managers'] === settings['notifications.remind_managers'])
-                  )}
-                  className="w-full"
-                >
-                  {saveLoading === 'notifications.email_enabled' ? 'Salvando...' : 'Salva Notifiche'}
-                </Button>
+                <StatusButton
+                  enabled={localSettings['notifications.browser_enabled'] ?? true}
+                  onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
+                />
               </div>
             </div>
-          </SettingCard>
-        </div>
 
-        {/* Logo Customization Section - Side by Side */}
-        <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <LogoCustomization />
-            <LoginLogoCustomization />
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="manager-reminders">Promemoria Manager</Label>
+                  <p className="text-xs text-gray-500">
+                    Invia promemoria ai manager per richieste pendenti
+                  </p>
+                </div>
+                <StatusButton
+                  enabled={localSettings['notifications.remind_managers'] ?? true}
+                  onToggle={(enabled) => handleSettingChange('notifications.remind_managers', enabled)}
+                />
+              </div>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleSaveSetting('notifications.email_enabled')}
+                disabled={Boolean(
+                  saveLoading === 'notifications.email_enabled' ||
+                  (localSettings['notifications.email_enabled'] === settings['notifications.email_enabled'] &&
+                   localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'] &&
+                   localSettings['notifications.remind_managers'] === settings['notifications.remind_managers'])
+                )}
+                className="w-full"
+              >
+                {saveLoading === 'notifications.email_enabled' ? 'Salvando...' : 'Salva Notifiche'}
+              </Button>
+            </div>
           </div>
-        </div>
+        </SettingCard>
+      </div>
 
-        {/* Leave Type Settings - NEW SECTION */}
-        <div className="lg:col-span-2">
-          <LeaveTypeSettings />
+      {/* Logo Customization Section - Side by Side */}
+      <div className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <LogoCustomization />
+          <LoginLogoCustomization />
         </div>
+      </div>
+
+      {/* Leave Type Settings - NEW SECTION */}
+      <div className="mt-6">
+        <LeaveTypeSettings />
       </div>
     </div>
   );
-}
+});
+
+export { SystemSettingsComponent };

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCompanyName } from '@/lib/hooks/useCompanyName';
 import { LanguageSelector } from '@/components/layout/language-selector';
 import { LoginLogoDisplay } from '@/components/login/login-logo-display';
 import { AnimatedBackground } from '@/components/login/animated-background';
@@ -11,6 +12,7 @@ import { AnimatedBackground } from '@/components/login/animated-background';
 function LoginPageContent() {
   const { t } = useTranslation();
   const { login, loading, error, clearError, user, isAuthenticated } = useAuth();
+  const { companyName, loading: companyLoading } = useCompanyName();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -81,9 +83,11 @@ function LoginPageContent() {
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
             {t('auth.login.title')}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {t('auth.login.subtitle')}
-          </p>
+          {!companyLoading && (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              {t('auth.login.subtitle', { companyName })}
+            </p>
+          )}
         </div>
         
         {error && (

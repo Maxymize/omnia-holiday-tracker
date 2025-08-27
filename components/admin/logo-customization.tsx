@@ -18,6 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import Image from 'next/image';
+import { useLogoSettings } from '@/lib/contexts/LogoContext';
 
 interface LogoSettings {
   logo_type: 'image' | 'text';
@@ -30,6 +31,8 @@ interface LogoCustomizationProps {
 }
 
 export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
+  const { logoSettings: globalLogoSettings, loading: globalLoading, refreshLogoSettings } = useLogoSettings();
+  
   const [logoSettings, setLogoSettings] = useState<LogoSettings>({
     logo_type: 'text',
     logo_url: null,

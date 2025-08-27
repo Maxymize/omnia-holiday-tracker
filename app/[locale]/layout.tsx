@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { locales } from '@/lib/i18n/config';
 import { I18nProvider } from '@/lib/i18n/provider';
+import { LogoProvider } from '@/lib/contexts/LogoContext';
 
 export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -19,7 +20,9 @@ export default async function LocaleLayout({
   
   return (
     <I18nProvider locale={locale}>
-      {children}
+      <LogoProvider>
+        {children}
+      </LogoProvider>
     </I18nProvider>
   );
 }

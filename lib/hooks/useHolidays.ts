@@ -154,14 +154,14 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
         
         // Increment request counter
         requestCountRef.current++;
-        console.log(`🔄 API Request #${requestCountRef.current} for holidays (viewMode: ${paramsRef.current.viewMode})`);
+        // API Request for holidays
         
         // Reset counter after circuit breaker time
         if (resetTimeoutRef.current) {
           clearTimeout(resetTimeoutRef.current);
         }
         resetTimeoutRef.current = setTimeout(() => {
-          console.log('🔄 Resetting circuit breaker counter');
+          // Reset circuit breaker counter
           requestCountRef.current = 0;
         }, CIRCUIT_BREAKER_RESET_TIME);
 
@@ -315,21 +315,16 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
 
   // Fetch data on mount and when user changes - with strict debouncing
   useEffect(() => {
-    console.log('🔄 useHolidays useEffect triggered:', { user: user?.email, initialized: hasInitializedRef.current });
     
     if (!user) {
-      console.log('❌ No user, setting loading to false');
       setLoading(false);
       return;
     }
 
     // Only fetch once per user change with strict initialization control
     if (!hasInitializedRef.current) {
-      console.log('✅ First initialization, calling fetchHolidays');
       hasInitializedRef.current = true;
       fetchHolidays();
-    } else {
-      console.log('⚠️ Already initialized, skipping fetchHolidays call');
     }
 
     // Cleanup function to abort requests and clear timeouts

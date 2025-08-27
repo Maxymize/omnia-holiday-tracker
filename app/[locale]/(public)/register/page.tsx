@@ -6,9 +6,11 @@ import { useTranslation } from '@/lib/i18n/provider';
 import { LanguageSelector } from '@/components/layout/language-selector';
 import { LoginLogoDisplay } from '@/components/login/login-logo-display';
 import { AnimatedBackground } from '@/components/login/animated-background';
+import { useCompanyName } from '@/lib/hooks/useCompanyName';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
+  const { companyName, loading: companyLoading } = useCompanyName();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -133,9 +135,11 @@ export default function RegisterPage() {
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
             {t('auth.register.title')}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {t('auth.register.subtitle')}
-          </p>
+          {!companyLoading && (
+            <p className="mt-2 text-center text-sm text-gray-600">
+              {t('auth.register.subtitle', { companyName })}
+            </p>
+          )}
         </div>
         
         <form className="space-y-6 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg" onSubmit={handleSubmit}>
@@ -244,13 +248,15 @@ export default function RegisterPage() {
             </span>
           </div>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-500">
-              Registrandoti accetti che i tuoi dati vengano utilizzati per la gestione delle ferie aziendali in conformità alla privacy policy di OmniaGroup.
-              <br />
-              Solo email aziendali OmniaGroup sono accettate.
-            </p>
-          </div>
+          {!companyLoading && (
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                Registrandoti accetti che i tuoi dati vengano utilizzati per la gestione delle ferie aziendali in conformità alla privacy policy di {companyName}.
+                <br />
+                Solo email aziendali {companyName} sono accettate.
+              </p>
+            </div>
+          )}
         </form>
       </div>
     </div>
