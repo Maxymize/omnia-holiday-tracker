@@ -18,13 +18,13 @@ export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingP
   const [hasChanges, setHasChanges] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Only update when initialValue actually changes
+  // Only update when initialValue actually changes from parent
   useEffect(() => {
     if (initialValue && initialValue !== value) {
       setValue(initialValue);
       setHasChanges(false);
     }
-  }, [initialValue, value]); // Fixed: Added 'value' dependency
+  }, [initialValue]); // Fixed: Removed 'value' to prevent infinite loop
 
   // Stable change handler
   const handleChange = useCallback((newValue: string) => {
