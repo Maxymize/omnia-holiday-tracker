@@ -14,6 +14,11 @@ const getProfileSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().min(2, 'Nome deve avere almeno 2 caratteri').max(100).optional(),
+  email: z.string().email('Email non valida').optional(),
+  phone: z.string().min(10, 'Numero di telefono deve avere almeno 10 cifre').max(20).optional().nullable(),
+  departmentId: z.string().uuid('ID dipartimento non valido').optional().nullable(),
+  avatarUrl: z.string().optional().nullable().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, { message: 'URL avatar non valido' }),
+  jobTitle: z.string().min(2, 'Mansione deve avere almeno 2 caratteri').max(100, 'Mansione non può superare 100 caratteri').optional().nullable(),
   currentPassword: z.string().min(1, 'Password attuale richiesta').optional(),
   newPassword: z.string().min(8, 'Nuova password deve avere almeno 8 caratteri').optional(),
 });
@@ -40,6 +45,9 @@ async function getProfile(userId: string) {
       departmentId: users.departmentId,
       departmentName: departments.name,
       holidayAllowance: users.holidayAllowance,
+      phone: users.phone,
+      avatarUrl: users.avatarUrl,
+      jobTitle: users.jobTitle,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt
     })
@@ -64,6 +72,9 @@ async function getProfile(userId: string) {
     departmentId: user.departmentId,
     departmentName: user.departmentName,
     holidayAllowance: user.holidayAllowance,
+    phone: user.phone,
+    avatarUrl: user.avatarUrl,
+    jobTitle: user.jobTitle,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };
@@ -84,6 +95,42 @@ async function updateProfile(userId: string, updateData: any) {
   // Update name if provided
   if (updateData.name) {
     updateFields.name = updateData.name;
+  }
+
+  // Update email if provided (check for uniqueness)
+  if (updateData.email && updateData.email !== user.email) {
+    // Check if email is already in use
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, updateData.email))
+      .limit(1);
+    
+    if (existingUser.length > 0) {
+      throw new Error('Email già in uso da un altro utente');
+    }
+    
+    updateFields.email = updateData.email;
+  }
+
+  // Update phone if provided
+  if (updateData.phone !== undefined) {
+    updateFields.phone = updateData.phone || null;
+  }
+
+  // Update avatar URL if provided
+  if (updateData.avatarUrl !== undefined) {
+    updateFields.avatarUrl = updateData.avatarUrl || null;
+  }
+
+  // Update job title if provided
+  if (updateData.jobTitle !== undefined) {
+    updateFields.jobTitle = updateData.jobTitle || null;
+  }
+
+  // Update department if provided
+  if (updateData.departmentId !== undefined) {
+    updateFields.departmentId = updateData.departmentId || null;
   }
 
   // Update password if provided
@@ -115,7 +162,9 @@ async function updateProfile(userId: string, updateData: any) {
     throw new Error('Errore durante l\'aggiornamento del profilo');
   }
 
-  return result[0];
+  // Get updated user with department info
+  const updatedProfile = await getProfile(userId);
+  return updatedProfile;
 }
 
 export const handler: Handler = async (event, context) => {
@@ -174,24 +223,14 @@ export const handler: Handler = async (event, context) => {
       };
       console.log('Profile updated:', JSON.stringify(updateLog));
 
-      // Return updated profile (without sensitive data)
+      // Return updated profile (with complete data including department info)
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: true,
           message: 'Profilo aggiornato con successo',
-          user: {
-            id: updatedUser.id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            role: updatedUser.role,
-            status: updatedUser.status,
-            departmentId: updatedUser.departmentId,
-            departmentName: null, // Note: department name would need to be fetched separately after update
-            holidayAllowance: updatedUser.holidayAllowance,
-            updatedAt: updatedUser.updatedAt
-          }
+          user: updatedUser
         })
       };
     }

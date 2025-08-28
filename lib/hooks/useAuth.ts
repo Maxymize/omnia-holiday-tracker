@@ -12,6 +12,9 @@ interface User {
   departmentId?: string;
   departmentName?: string;
   holidayAllowance?: number;
+  phone?: string;
+  avatarUrl?: string;
+  jobTitle?: string;
 }
 
 interface AuthState {

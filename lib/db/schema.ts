@@ -27,6 +27,9 @@ export const users = pgTable('users', {
   status: userStatusEnum('status').notNull().default('pending'),
   departmentId: uuid('department_id').references(() => departments.id),
   holidayAllowance: integer('holiday_allowance').notNull().default(20), // Annual holiday days
+  phone: text('phone'), // Optional phone number
+  avatarUrl: text('avatar_url'), // Optional avatar image URL
+  jobTitle: text('job_title'), // Optional job title/position (e.g., Project Manager, CEO, Developer)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

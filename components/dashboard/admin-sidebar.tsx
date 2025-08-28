@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { 
   TrendingUp,
@@ -121,6 +121,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12 border-2 border-purple-200">
+            {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
             <AvatarFallback className="text-lg font-medium bg-purple-100 text-purple-700">
               {getUserInitials(user?.name)}
             </AvatarFallback>

@@ -12,11 +12,12 @@ import { UpcomingHolidays } from '@/components/dashboard/upcoming-holidays';
 import { CompletedHolidays } from '@/components/dashboard/completed-holidays';
 import { EmployeeSidebar } from '@/components/dashboard/employee-sidebar';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
+import { ProfileEditModal } from '@/components/profile/profile-edit-modal';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Calendar, 
   BarChart3, 
@@ -32,6 +33,8 @@ import {
   FileText,
   Download,
   Building2,
+  Phone,
+  UserCog,
   CalendarDays,
   CalendarCheck,
   CalendarClock
@@ -55,6 +58,7 @@ function EmployeeDashboardContent() {
   
   // Holiday details modal state
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
   // Fetch holiday data - let the calendar handle visibility filtering
   const { 
@@ -207,9 +211,19 @@ function EmployeeDashboardContent() {
       <div className="lg:pl-80">
         {/* Header con Logo Personalizzabile */}
         <CustomizableHeader style={{ minHeight: '92px' }}>
-          <span className="text-sm text-gray-500">
-            Benvenuto, {user?.name}
-          </span>
+          <div className="flex justify-between items-center w-full">
+            <span className="text-sm text-gray-500">
+              Benvenuto, {user?.name}
+            </span>
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              title="Modifica Profilo"
+            >
+              <UserCog className="h-3 w-3" />
+              <span>Modifica</span>
+            </button>
+          </div>
         </CustomizableHeader>
 
         <div className="px-4 py-6 lg:px-8">
@@ -480,27 +494,39 @@ function EmployeeDashboardContent() {
                       <User className="h-5 w-5" />
                       <span>Informazioni Personali</span>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={async () => {
-                        // Profile refresh triggered - using direct user.holidayAllowance
-                        // Simply refresh user data - the display now uses user.holidayAllowance directly
-                        await refreshUserData();
-                        // Also refresh holidays for completeness
-                        refreshHolidays();
-                        // Profile refresh completed
-                      }}
-                      className="text-xs"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-1" />
-                      Aggiorna
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={() => setIsProfileModalOpen(true)}
+                        className="text-xs"
+                      >
+                        <UserCog className="h-4 w-4 mr-1" />
+                        Modifica Profilo
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={async () => {
+                          // Profile refresh triggered - using direct user.holidayAllowance
+                          // Simply refresh user data - the display now uses user.holidayAllowance directly
+                          await refreshUserData();
+                          // Also refresh holidays for completeness
+                          refreshHolidays();
+                          // Profile refresh completed
+                        }}
+                        className="text-xs"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                        Aggiorna
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                     <Avatar className="h-16 w-16">
+                      {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
                       <AvatarFallback className="text-xl font-medium bg-blue-100 text-blue-700">
                         {getUserInitials(user.name)}
                       </AvatarFallback>
@@ -548,6 +574,24 @@ function EmployeeDashboardContent() {
                         <Building2 className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
                           {user.departmentName || 'Non assegnato'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Telefono</label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-900">
+                          {user.phone || 'Non inserito'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Mansione Aziendale</label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <UserCog className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-900">
+                          {user.jobTitle || 'Non specificata'}
                         </span>
                       </div>
                     </div>
@@ -759,6 +803,16 @@ function EmployeeDashboardContent() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onProfileUpdate={() => {
+          refreshUserData();
+          refreshHolidays();
+        }}
+      />
     </div>
   );
 }

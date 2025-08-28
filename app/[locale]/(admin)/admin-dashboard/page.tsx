@@ -15,6 +15,7 @@ import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
 import { RecentActivities } from '@/components/admin/recent-activities';
 import { NotificationHeader } from '@/components/ui/notification-header';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
+import { ProfileEditModal } from '@/components/profile/profile-edit-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Image from 'next/image';
@@ -28,7 +29,8 @@ import {
   Clock,
   TrendingUp,
   AlertTriangle,
-  Building2
+  Building2,
+  UserCog
 } from 'lucide-react';
 
 type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
@@ -50,6 +52,7 @@ export default function AdminDashboard() {
   const { user, loading: authLoading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTabType>('overview');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Fetch admin data
   const {
@@ -199,10 +202,22 @@ export default function AdminDashboard() {
             }}
           />
           
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-            <p className="text-xs text-gray-600">{user?.email}</p>
-            <p className="text-xs text-blue-600 font-medium">Amministratore</p>
+          <div className="text-right space-y-1">
+            <div className="flex items-center justify-end space-x-2">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <p className="text-xs text-gray-600">{user?.email}</p>
+                <p className="text-xs text-blue-600 font-medium">Amministratore</p>
+              </div>
+              <button
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                title="Modifica Profilo"
+              >
+                <UserCog className="h-3 w-3" />
+                <span>Modifica</span>
+              </button>
+            </div>
           </div>
         </CustomizableHeader>
 
@@ -424,6 +439,13 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onProfileUpdate={fetchAllAdminData}
+      />
     </div>
   );
 }
