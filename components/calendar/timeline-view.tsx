@@ -74,6 +74,11 @@ export function TimelineView({
   const [dragStart, setDragStart] = useState({ x: 0, scrollLeft: 0 })
   const [dragActive, setDragActive] = useState(false)
 
+  // Tooltip state for hover events
+  const [hoveredEvent, setHoveredEvent] = useState<HolidayEvent | null>(null)
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+  const [showTooltip, setShowTooltip] = useState(false)
+
   // Scroll synchronization effect
   useEffect(() => {
     const headerElement = headerScrollRef.current
@@ -103,6 +108,27 @@ export function TimelineView({
       contentElement.removeEventListener('scroll', syncContentScroll)
     }
   }, [])
+
+  // Hide tooltip on scroll
+  useEffect(() => {
+    const headerElement = headerScrollRef.current
+    const contentElement = contentScrollRef.current
+
+    const hideTooltipOnScroll = () => {
+      if (showTooltip) {
+        setShowTooltip(false)
+        setHoveredEvent(null)
+      }
+    }
+
+    headerElement?.addEventListener('scroll', hideTooltipOnScroll)
+    contentElement?.addEventListener('scroll', hideTooltipOnScroll)
+
+    return () => {
+      headerElement?.removeEventListener('scroll', hideTooltipOnScroll)
+      contentElement?.removeEventListener('scroll', hideTooltipOnScroll)
+    }
+  }, [showTooltip])
 
   // Get locale for date-fns
   const getDateFnsLocale = () => {
@@ -151,7 +177,7 @@ export function TimelineView({
     return events.filter(event => 
       event.resource.userId === employeeId &&
       date >= event.start && 
-      date <= event.end
+      date < event.end // Changed from <= to < because FullCalendar uses exclusive end dates
     )
   }, [events])
 
@@ -168,6 +194,26 @@ export function TimelineView({
     setSelectedEvent(event)
     setShowEventDialog(true)
     onEventClick?.(event)
+  }
+
+  // Handle event hover for tooltip
+  const handleEventMouseEnter = (event: HolidayEvent, e: React.MouseEvent) => {
+    if (isDragging || dragActive) return
+    
+    setHoveredEvent(event)
+    setTooltipPosition({ x: e.clientX, y: e.clientY })
+    setShowTooltip(true)
+  }
+
+  const handleEventMouseLeave = () => {
+    setShowTooltip(false)
+    setHoveredEvent(null)
+  }
+
+  const handleEventMouseMove = (e: React.MouseEvent) => {
+    if (showTooltip && !isDragging) {
+      setTooltipPosition({ x: e.clientX, y: e.clientY })
+    }
   }
 
   // Get employee initials for avatar
@@ -396,7 +442,7 @@ export function TimelineView({
                             if (isEventStart) {
                               const remainingDays = monthDays.slice(dayIndex)
                               for (let i = 1; i < remainingDays.length; i++) {
-                                if (remainingDays[i] <= event.end) {
+                                if (remainingDays[i] < event.end) { // Changed from <= to < for FullCalendar exclusive end dates
                                   spanWidth++
                                 } else {
                                   break
@@ -420,6 +466,9 @@ export function TimelineView({
                                   zIndex: 5
                                 }}
                                 onClick={() => handleEventClick(event)}
+                                onMouseEnter={(e) => handleEventMouseEnter(event, e)}
+                                onMouseLeave={handleEventMouseLeave}
+                                onMouseMove={handleEventMouseMove}
                                 whileHover={{ scale: 1.02, zIndex: 10 }}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -537,6 +586,60 @@ export function TimelineView({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Tooltip for event hover */}
+      {showTooltip && hoveredEvent && (
+        <div
+          className="fixed pointer-events-none z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-48"
+          style={{
+            left: tooltipPosition.x + 10,
+            top: tooltipPosition.y - 10,
+          }}
+        >
+          <div className="space-y-2">
+            {/* Employee Name */}
+            <div className="font-semibold text-gray-900 text-sm border-b border-gray-100 pb-1">
+              {hoveredEvent.resource.userName}
+            </div>
+            
+            {/* Dates */}
+            <div className="text-xs text-gray-600">
+              <div>
+                <span className="font-medium">Dal:</span> {format(hoveredEvent.start, 'dd/MM/yyyy', { locale: getDateFnsLocale() })}
+              </div>
+              <div>
+                <span className="font-medium">Al:</span> {format(new Date(hoveredEvent.end.getTime() - 24 * 60 * 60 * 1000), 'dd/MM/yyyy', { locale: getDateFnsLocale() })}
+              </div>
+            </div>
+
+            {/* Type and Working Days */}
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="text-xs">
+                {hoveredEvent.resource.type === 'vacation' && '🏖️ Ferie'}
+                {hoveredEvent.resource.type === 'sick' && '🏥 Malattia'}
+                {hoveredEvent.resource.type === 'personal' && '👤 Personale'}
+              </Badge>
+              <span className="text-xs text-gray-500">
+                {hoveredEvent.resource.workingDays} giorni
+              </span>
+            </div>
+
+            {/* Status */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600 font-medium">Stato:</span>
+              <StatusBadge status={hoveredEvent.resource.status} size="sm" />
+            </div>
+
+            {/* Notes if available */}
+            {hoveredEvent.resource.notes && (
+              <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100">
+                <span className="font-medium">Note:</span>
+                <p className="mt-1 text-gray-500 italic">{hoveredEvent.resource.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

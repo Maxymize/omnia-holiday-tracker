@@ -27,7 +27,8 @@ import {
   Download,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Trash2
 } from 'lucide-react';
 import { PendingHolidayRequest } from '@/lib/hooks/useAdminData';
 
@@ -37,6 +38,7 @@ interface HolidayRequestsManagementProps {
   error: string | null;
   onApproveRequest: (requestId: string) => Promise<boolean>;
   onRejectRequest: (requestId: string, reason?: string) => Promise<boolean>;
+  onDeleteRequest?: (requestId: string) => Promise<boolean>;
   onRefresh: () => void;
 }
 
@@ -46,6 +48,7 @@ export function HolidayRequestsManagement({
   error, 
   onApproveRequest, 
   onRejectRequest, 
+  onDeleteRequest,
   onRefresh 
 }: HolidayRequestsManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +64,9 @@ export function HolidayRequestsManagement({
     request: PendingHolidayRequest | null;
     action: 'approve' | 'reject';
   }>({ isOpen: false, request: null, action: 'approve' });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [requestToDelete, setRequestToDelete] = useState<PendingHolidayRequest | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
@@ -229,6 +235,35 @@ export function HolidayRequestsManagement({
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Handle delete request
+  const handleDeleteRequest = async () => {
+    if (!requestToDelete || !onDeleteRequest) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await onDeleteRequest(requestToDelete.id);
+      if (success) {
+        setDeleteDialogOpen(false);
+        setRequestToDelete(null);
+        onRefresh();
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Open delete confirmation dialog
+  const openDeleteDialog = (request: PendingHolidayRequest) => {
+    setRequestToDelete(request);
+    setDeleteDialogOpen(true);
+  };
+
+  // Close delete dialog
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setRequestToDelete(null);
   };
 
   const getStatusBadge = (status: PendingHolidayRequest['status']) => {
@@ -602,6 +637,20 @@ export function HolidayRequestsManagement({
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                           )}
+                          
+                          {/* Delete button - available for all requests */}
+                          {onDeleteRequest && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openDeleteDialog(request)}
+                              disabled={actionLoading === request.id || isDeleting}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Elimina richiesta"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
@@ -917,6 +966,89 @@ export function HolidayRequestsManagement({
               }
             >
               {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">
+              Conferma Eliminazione
+            </DialogTitle>
+          </DialogHeader>
+          
+          {requestToDelete && (
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                  <div>
+                    <h4 className="font-medium text-red-900">Attenzione</h4>
+                    <p className="text-sm text-red-700">
+                      Sei sicuro di voler eliminare questa richiesta ferie di <strong>{requestToDelete.employeeName}</strong>? L&apos;operazione non può essere annullata.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Dipendente:</span>
+                  <div>
+                    <div className="text-sm font-medium">{requestToDelete.employeeName}</div>
+                    <div className="text-xs text-gray-600">{requestToDelete.employeeEmail}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Periodo:</span>
+                  <span className="text-sm">
+                    {formatDateRange(requestToDelete.startDate, requestToDelete.endDate)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Giorni:</span>
+                  <span className="text-sm">{requestToDelete.workingDays} giorni lavorativi</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Tipo:</span>
+                  {getTypeBadge(requestToDelete.type)}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-700">Stato:</span>
+                  {getStatusBadge(requestToDelete.status)}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeDeleteDialog}
+              disabled={isDeleting}
+            >
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteRequest}
+              disabled={isDeleting}
+              className="min-w-20"
+            >
+              {isDeleting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  <span>Eliminando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1">
+                  <Trash2 className="h-4 w-4" />
+                  <span>Elimina</span>
+                </div>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -69,10 +69,20 @@ export default function HolidayRequestPage() {
     console.log('Holiday request completed successfully:', data);
     
     try {
-      // Show success message 
-      toast.success('✅ Richiesta ferie inviata con successo!', 
-        'La tua richiesta è stata inviata per approvazione.'
-      );
+      // Get the API response data 
+      const apiResponse = data.apiResponse;
+      const isAutoApproved = apiResponse?.data?.status === 'approved';
+      
+      // Show success message based on approval mode
+      if (isAutoApproved) {
+        toast.success('✅ Richiesta ferie approvata automaticamente!', 
+          'La tua richiesta è stata automaticamente approvata ed è già attiva.'
+        );
+      } else {
+        toast.success('✅ Richiesta ferie inviata con successo!', 
+          'La tua richiesta è stata inviata per approvazione.'
+        );
+      }
       
       // Redirect back to dashboard after a short delay
       setTimeout(() => {

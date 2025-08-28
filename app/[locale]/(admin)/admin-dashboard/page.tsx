@@ -65,6 +65,7 @@ export default function AdminDashboard() {
     rejectEmployee,
     approveHolidayRequest,
     rejectHolidayRequest,
+    deleteHolidayRequest,
     updateSystemSetting,
     clearError
   } = useAdminData();
@@ -382,6 +383,7 @@ export default function AdminDashboard() {
               error={adminError}
               onApproveRequest={approveHolidayRequest}
               onRejectRequest={rejectHolidayRequest}
+              onDeleteRequest={deleteHolidayRequest}
               onRefresh={fetchAllAdminData}
             />
           )}

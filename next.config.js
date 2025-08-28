@@ -65,10 +65,21 @@ const nextConfig = {
   },
   serverExternalPackages: ['@neondatabase/serverless', 'bcryptjs'],
   reactStrictMode: true,
+  transpilePackages: ['framer-motion'], // FIXED: Force transpilation of framer-motion for Next.js 15
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+  },
+  webpack: (config, { isServer }) => {
+    // FIXED: Additional webpack config to handle framer-motion properly
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'framer-motion': require.resolve('framer-motion'),
+      };
+    }
+    return config;
   },
   async headers() {
     return [

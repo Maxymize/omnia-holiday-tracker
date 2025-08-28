@@ -77,32 +77,35 @@ function EmployeeDashboardContent() {
     }
   }, [searchParams]);
 
-  // Auto-refresh user data when page becomes visible (for vacation days updates)
+  // Auto-refresh user data when page becomes visible (for vacation days updates) - debounced
   useEffect(() => {
+    let refreshTimeout: NodeJS.Timeout | null = null;
+
     const handleVisibilityChange = async () => {
       if (!document.hidden && user) {
-        // Simply refresh user data - display uses user.holidayAllowance directly
-        await refreshUserData();
-        refreshHolidays();
+        // Clear any pending refresh
+        if (refreshTimeout) {
+          clearTimeout(refreshTimeout);
+        }
+        
+        // Debounce the refresh to prevent rapid calls
+        refreshTimeout = setTimeout(async () => {
+          await refreshUserData();
+          refreshHolidays();
+        }, 1000);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Also refresh on page focus (when switching tabs/windows)
-    const handleFocus = async () => {
-      if (user) {
-        // Simply refresh user data - display uses user.holidayAllowance directly
-        await refreshUserData();
-        refreshHolidays();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
+    // Remove the focus handler that was causing excessive refreshes
+    // Only keep visibility change for when user switches back to the tab
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
     };
   }, [user, refreshUserData, refreshHolidays]);
 
@@ -375,19 +378,53 @@ function EmployeeDashboardContent() {
               )}
 
               {/* Main Overview - Upcoming and Completed Holidays */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <UpcomingHolidays 
-                  holidays={holidays} 
-                  loading={holidaysLoading}
-                  onCreateRequest={handleCreateRequest}
-                  onHolidayClick={handleHolidayClick}
-                />
-                <CompletedHolidays 
-                  holidays={holidays} 
-                  loading={holidaysLoading}
-                  onHolidayClick={handleHolidayClick}
-                />
-              </div>
+              {holidaysLoading ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Loading skeletons for both modules */}
+                  <div className="space-y-4">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-32"></div>
+                    <div className="border rounded-lg p-4 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-32"></div>
+                    <div className="border rounded-lg p-4 space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <UpcomingHolidays 
+                    holidays={getUpcomingHolidays()} 
+                    loading={false}
+                    onCreateRequest={handleCreateRequest}
+                    onHolidayClick={handleHolidayClick}
+                  />
+                  <CompletedHolidays 
+                    holidays={getRecentHolidays()} 
+                    loading={false}
+                    onHolidayClick={handleHolidayClick}
+                  />
+                </div>
+              )}
 
             </div>
           )}

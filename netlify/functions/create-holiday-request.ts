@@ -1,8 +1,8 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { createHolidayWithAudit, getUserByEmail, getLeaveTypeAllowances } from '../../lib/db/operations';
+import { createHolidayWithAudit, getUserByEmail, getLeaveTypeAllowances, createAuditLog } from '../../lib/db/operations';
 import { db } from '../../lib/db/index';
-import { holidays } from '../../lib/db/schema';
+import { holidays, settings } from '../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { format, parseISO, differenceInBusinessDays } from 'date-fns';
@@ -183,13 +183,96 @@ export const handler: Handler = async (event, context) => {
     }
     // Note: Sick days are typically unlimited (-1) so no validation needed
 
+    // Check for date conflicts with existing holidays
+    try {
+      const conflictingHolidays = await db
+        .select({
+          id: holidays.id,
+          startDate: holidays.startDate,
+          endDate: holidays.endDate,
+          status: holidays.status
+        })
+        .from(holidays)
+        .where(
+          and(
+            eq(holidays.userId, user.id),
+            // Check for overlapping dates: new holiday overlaps if start <= existing_end AND end >= existing_start
+            // Using SQL date comparison for accuracy
+          )
+        );
+
+      // Check conflicts manually since Drizzle date comparison can be complex
+      const hasConflict = conflictingHolidays.some(existing => {
+        const existingStart = parseISO(existing.startDate);
+        const existingEnd = parseISO(existing.endDate);
+        
+        // Only consider approved and pending holidays as conflicts
+        if (existing.status !== 'approved' && existing.status !== 'pending') {
+          return false;
+        }
+        
+        // Check if dates overlap: new start <= existing end AND new end >= existing start
+        return startDate <= existingEnd && endDate >= existingStart;
+      });
+
+      if (hasConflict) {
+        return {
+          statusCode: 409, // Conflict status code
+          headers,
+          body: JSON.stringify({ 
+            error: 'Le date selezionate si sovrappongono con una richiesta esistente',
+            conflictDetails: {
+              startDate: validatedData.startDate,
+              endDate: validatedData.endDate,
+              conflictingHolidays: conflictingHolidays
+                .filter(h => h.status === 'approved' || h.status === 'pending')
+                .map(h => ({
+                  startDate: h.startDate,
+                  endDate: h.endDate,
+                  status: h.status
+                }))
+            }
+          })
+        };
+      }
+
+      console.log('Date conflict check passed - no overlapping holidays found');
+    } catch (conflictError) {
+      console.error('Error checking for date conflicts:', conflictError);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Errore nel controllo dei conflitti di data' })
+      };
+    }
+
+    // Check approval mode settings to determine initial status
+    let initialStatus: 'pending' | 'approved' = 'pending'; // Default to pending
+    
+    try {
+      const approvalModeSetting = await db
+        .select()
+        .from(settings)
+        .where(eq(settings.key, 'holidays.approval_mode'))
+        .limit(1);
+
+      if (approvalModeSetting.length > 0 && approvalModeSetting[0].value === 'auto') {
+        initialStatus = 'approved';
+        console.log('Holiday request auto-approved due to automatic approval mode');
+      } else {
+        console.log('Holiday request requires manual approval');
+      }
+    } catch (settingsError) {
+      console.warn('Could not fetch approval mode settings, defaulting to pending:', settingsError);
+    }
+
     // Create holiday request in database
     const holidayData = {
       userId: user.id,
       startDate: validatedData.startDate,
       endDate: validatedData.endDate,
       type: validatedData.type as 'vacation' | 'sick' | 'personal',
-      status: 'pending' as const,
+      status: initialStatus,
       notes: validatedData.notes || '',
       workingDays: workingDays
     };
@@ -202,12 +285,42 @@ export const handler: Handler = async (event, context) => {
 
     console.log('New holiday request created in database:', newHoliday.id);
 
+    // Add audit log for auto-approval if applicable
+    if (initialStatus === 'approved') {
+      try {
+        await createAuditLog(
+          'holiday_approved', // action
+          null, // userId (system action, no user ID)
+          {
+            holidayId: newHoliday.id,
+            previousStatus: 'pending',
+            newStatus: 'approved',
+            autoApproved: true,
+            type: validatedData.type,
+            startDate: validatedData.startDate,
+            endDate: validatedData.endDate,
+            workingDays: workingDays
+          }, // details
+          user.id, // targetUserId 
+          newHoliday.id, // targetResourceId
+          'holiday', // resourceType
+          ipAddress, // ipAddress
+          userAgent // userAgent
+        );
+        console.log('Auto-approval audit log created for holiday:', newHoliday.id);
+      } catch (auditError) {
+        console.warn('Failed to create audit log for auto-approval:', auditError);
+      }
+    }
+
     return {
       statusCode: 201,
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Richiesta ferie creata con successo',
+        message: initialStatus === 'approved' 
+          ? 'Richiesta ferie creata e approvata automaticamente' 
+          : 'Richiesta ferie creata con successo',
         data: {
           id: newHoliday.id,
           employeeId: newHoliday.userId,

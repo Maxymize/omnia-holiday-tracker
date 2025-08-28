@@ -1,6 +1,6 @@
 import { subMonths, addMonths, startOfYear, format } from 'date-fns';
 
-export type DateRangeFilter = 'all' | 'yearToDate' | 'last12Months' | 'last6Months' | 'last3Months' | 'next3Months' | 'next6Months' | 'next12Months';
+export type DateRangeFilter = 'yearToDate' | 'last12Months' | 'last6Months' | 'last3Months' | 'next3Months' | 'next6Months' | 'next12Months';
 
 export interface DateRange {
   startDate?: string;
@@ -16,9 +16,6 @@ export function calculateDateRange(filter: DateRangeFilter): DateRange {
   const today = format(now, 'yyyy-MM-dd');
 
   switch (filter) {
-    case 'all':
-      return {}; // No date filtering
-
     case 'yearToDate':
       const yearStart = startOfYear(now);
       return {
@@ -96,8 +93,6 @@ export function buildDateFilterParams(filter: DateRangeFilter): string {
  * Used for client-side filtering if needed
  */
 export function isDateInRange(dateStr: string, filter: DateRangeFilter): boolean {
-  if (filter === 'all') return true;
-  
   const date = new Date(dateStr);
   const range = calculateDateRange(filter);
   

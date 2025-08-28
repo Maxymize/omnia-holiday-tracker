@@ -488,6 +488,33 @@ export function useAdminData() {
     }
   }, [isAdmin, fetchAllRequests]);
 
+  const deleteHolidayRequest = useCallback(async (requestId: string) => {
+    if (!isAdmin) return false;
+
+    try {
+      const baseUrl = getBaseUrl();
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${baseUrl}/.netlify/functions/delete-holiday-request`, 
+        createFetchConfig('DELETE', token || undefined, {
+          holidayId: requestId
+        }));
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete holiday request');
+      }
+
+      // Refresh all requests
+      await fetchAllRequests();
+      return true;
+    } catch (err) {
+      console.error('Error deleting holiday request:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete holiday request');
+      return false;
+    }
+  }, [isAdmin, fetchAllRequests]);
+
   const updateSystemSetting = useCallback(async (key: keyof SystemSettings, value: any) => {
     if (!isAdmin) return false;
 
@@ -566,6 +593,7 @@ export function useAdminData() {
     rejectEmployee,
     approveHolidayRequest,
     rejectHolidayRequest,
+    deleteHolidayRequest,
     updateSystemSetting,
     
     // Utilities

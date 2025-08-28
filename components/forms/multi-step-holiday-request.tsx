@@ -91,7 +91,7 @@ const STEPS = [
 ] as const
 
 interface MultiStepHolidayRequestProps {
-  onSubmit: (data: HolidayRequestFormData & { workingDays: number }) => Promise<void>
+  onSubmit: (data: HolidayRequestFormData & { workingDays: number, apiResponse?: any }) => Promise<void>
   onCancel?: () => void
   isLoading?: boolean
   defaultValues?: Partial<HolidayRequestFormData>
@@ -125,6 +125,7 @@ export function MultiStepHolidayRequest({
   const [medicalCertOption, setMedicalCertOption] = React.useState<"upload" | "send_later" | null>(null)
   const [dragActive, setDragActive] = React.useState(false)
   const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
+  const [userConfirmedSubmit, setUserConfirmedSubmit] = React.useState(false)
   
   const { user } = useAuth()
   const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
@@ -180,11 +181,8 @@ export function MultiStepHolidayRequest({
   }
 
   const checkForConflicts = useCallback(async (start: Date, end: Date) => {
-    // Prevent multiple simultaneous checks
-    if (isCheckingConflicts) {
-      console.log('Conflict check already in progress, skipping...')
-      return
-    }
+    // Create current check ID to prevent stale checks
+    const checkId = Date.now()
     
     setIsCheckingConflicts(true)
     setConflictWarning(null)
@@ -246,19 +244,22 @@ export function MultiStepHolidayRequest({
     } finally {
       setIsCheckingConflicts(false)
     }
-  }, [existingHolidays, user?.id, isCheckingConflicts])
+  }, [existingHolidays, user?.id])
 
   // Debounced conflict checking to prevent infinite loops
   React.useEffect(() => {
-    if (startDate && endDate) {
+    if (startDate && endDate && !isCheckingConflicts) {
       setConflictWarning(null) // Reset warning when dates change
       const timeoutId = setTimeout(() => {
-        checkForConflicts(startDate, endDate)
-      }, 500) // Increased debounce to 500ms for better performance
+        // Only check if not already checking
+        if (!isCheckingConflicts) {
+          checkForConflicts(startDate, endDate)
+        }
+      }, 300) // Reduced debounce for better UX
       
       return () => clearTimeout(timeoutId)
     }
-  }, [startDate, endDate, checkForConflicts]) // Fixed: Added checkForConflicts dependency
+  }, [startDate, endDate]) // Removed checkForConflicts to break circular dependency
 
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {
@@ -296,12 +297,34 @@ export function MultiStepHolidayRequest({
     const isValid = await form.trigger(fieldsToValidate)
     
     if (isValid && !conflictWarning) {
-      setCurrentStep(prev => Math.min(prev + 1, STEPS.length))
+      const newStep = Math.min(currentStep + 1, STEPS.length)
+      setCurrentStep(newStep)
+      
+      // FIXED: Only reset submit confirmation when NOT arriving at final step
+      if (newStep !== STEPS.length) {
+        setUserConfirmedSubmit(false)
+      }
+      
+      // FIXED: Debug log for step 4 auto-submit investigation
+      if (newStep === 4) {
+        console.log('🔍 Arrived at step 4 - checking states:', {
+          isLoading,
+          isSubmittingRequest,
+          userConfirmedSubmit,
+          canProceed: !conflictWarning && !isLoading && !isSubmittingRequest
+        });
+      }
     }
   }
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1))
+    const newStep = Math.max(currentStep - 1, 1)
+    setCurrentStep(newStep)
+    
+    // FIXED: Reset submit confirmation when going back from final step
+    if (currentStep === STEPS.length) {
+      setUserConfirmedSubmit(false)
+    }
   }
 
   const getFieldsForStep = (step: number): (keyof HolidayRequestFormData)[] => {
@@ -321,6 +344,12 @@ export function MultiStepHolidayRequest({
     // FIXED: Prevent duplicate submissions with submission lock
     if (isLoading || isSubmittingRequest) {
       console.log('Submission already in progress, preventing duplicate');
+      return;
+    }
+
+    // FIXED: Prevent auto-submit - require explicit user confirmation
+    if (!userConfirmedSubmit) {
+      console.log('Submit blocked - user has not explicitly confirmed submission');
       return;
     }
 
@@ -391,6 +420,11 @@ export function MultiStepHolidayRequest({
       const result = await response.json()
 
       if (!response.ok) {
+        // Handle specific conflict errors from backend
+        if (response.status === 409) {
+          setConflictWarning(result.error || 'Le date selezionate si sovrappongono con una richiesta esistente')
+          return; // Don't throw, just set conflict warning and return
+        }
         throw new Error(result.error || 'Errore durante la creazione della richiesta')
       }
 
@@ -468,6 +502,7 @@ export function MultiStepHolidayRequest({
         await onSubmit({
           ...data,
           workingDays,
+          apiResponse: result
         })
       }
     } catch (error) {
@@ -703,6 +738,12 @@ export function MultiStepHolidayRequest({
                     <textarea
                       className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="Aggiungi eventuali note, motivi per la richiesta, o informazioni aggiuntive per il manager..."
+                      onKeyDown={(e) => {
+                        // Prevent form submission when Enter is pressed
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                        }
+                      }}
                       {...field}
                     />
                   </FormControl>
@@ -1115,7 +1156,20 @@ export function MultiStepHolidayRequest({
       </CardHeader>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form 
+          onSubmit={(e) => {
+            // FIXED: Block all form submissions - only allow explicit button click
+            e.preventDefault();
+            console.log('❌ Form submit blocked - only button click allowed');
+          }}
+          onKeyDown={(e) => {
+            // Prevent accidental form submission with Enter key
+            const target = e.target as HTMLElement
+            if (e.key === 'Enter' && target?.tagName !== 'TEXTAREA') {
+              e.preventDefault()
+            }
+          }}
+        >
           <CardContent className="min-h-[400px]">
             {renderStepContent()}
           </CardContent>
@@ -1147,7 +1201,14 @@ export function MultiStepHolidayRequest({
                 </Button>
               ) : (
                 <Button 
-                  type="submit" 
+                  type="button" 
+                  onClick={async () => {
+                    // FIXED: Direct call to handleSubmit instead of form event
+                    console.log('🚀 User clicked submit button - calling handleSubmit directly');
+                    setUserConfirmedSubmit(true);
+                    const formData = form.getValues();
+                    await handleSubmit(formData);
+                  }}
                   disabled={!canProceed() || isLoading || isSubmittingRequest}
                   className="relative"
                 >

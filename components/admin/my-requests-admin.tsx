@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useHolidays } from '@/lib/hooks/useHolidays';
 import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-request';
@@ -55,38 +55,16 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
     loading,
     error,
     refreshHolidays,
-    getHolidaysByStatus
+    getHolidaysByStatus,
+    getUpcomingHolidays,
+    getRecentHolidays
   } = useHolidays({ viewMode: 'own' });
 
   // Derive data from hooks
   const pendingHolidays = getHolidaysByStatus('pending');
 
-  // Refresh data when component mounts - with strict control to prevent loops
-  useEffect(() => {
-    let mounted = true;
-    
-    // Only run if component is still mounted
-    const loadData = async () => {
-      if (!mounted) return;
-      
-      try {
-        await Promise.all([
-          refreshHolidays(),
-          refreshUserData()
-        ]);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
-    };
-    
-    // Only run once on mount
-    loadData();
-    
-    // Cleanup function
-    return () => {
-      mounted = false;
-    };
-  }, [refreshHolidays, refreshUserData]); // Fixed: Added missing dependencies
+  // Note: Data loading is handled by useHolidays hook automatically
+  // No need for additional useEffect that causes double loading and delays
 
   const handleHolidayCreated = async () => {
     await refreshHolidays();
@@ -387,23 +365,57 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
           )}
 
           {/* Main Overview - Upcoming and Completed Holidays */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <UpcomingHolidays 
-              holidays={holidays} 
-              loading={loading}
-              onCreateRequest={() => setShowCreateDialog(true)}
-              onHolidayClick={(holiday) => {
-                setSelectedHoliday(holiday);
-              }}
-            />
-            <CompletedHolidays 
-              holidays={holidays} 
-              loading={loading}
-              onHolidayClick={(holiday) => {
-                setSelectedHoliday(holiday);
-              }}
-            />
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Loading skeletons for both modules */}
+              <div className="space-y-4">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-32"></div>
+                <div className="border rounded-lg p-4 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-32"></div>
+                <div className="border rounded-lg p-4 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <UpcomingHolidays 
+                holidays={getUpcomingHolidays()} 
+                loading={false}
+                onCreateRequest={() => setShowCreateDialog(true)}
+                onHolidayClick={(holiday) => {
+                  setSelectedHoliday(holiday);
+                }}
+              />
+              <CompletedHolidays 
+                holidays={getRecentHolidays()} 
+                loading={false}
+                onHolidayClick={(holiday) => {
+                  setSelectedHoliday(holiday);
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -541,20 +553,40 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             <DialogTitle>Crea Nuova Richiesta di Ferie</DialogTitle>
           </DialogHeader>
           <MultiStepHolidayRequest
+            existingHolidays={holidays.map(holiday => ({
+              startDate: holiday.startDate,
+              endDate: holiday.endDate,
+              status: holiday.status
+            }))}
             onSubmit={async (data) => {
               // Show success message without auto-redirect
               console.log('Holiday request completed successfully:', data);
               
-              // Refresh data
+              // Refresh data BEFORE showing success message
               await handleHolidayCreated();
               
-              // Show success message
-              toast.success('✅ Richiesta ferie inviata con successo!', 
-                'La tua richiesta è stata inviata per approvazione.'
-              );
+              // Get the API response data 
+              const apiResponse = data.apiResponse;
+              const isAutoApproved = apiResponse?.data?.status === 'approved';
               
-              // Close dialog only - no redirect
+              // Show success message based on approval mode
+              if (isAutoApproved) {
+                toast.success('✅ Richiesta ferie approvata automaticamente!', 
+                  'La richiesta è stata automaticamente approvata ed è già attiva.'
+                );
+              } else {
+                toast.success('✅ Richiesta ferie inviata con successo!', 
+                  'La richiesta è stata inviata per approvazione.'
+                );
+              }
+              
+              // Force close and reopen dialog to refresh data
               setShowCreateDialog(false);
+              // Small delay to allow state update, then reopen if user wants to create another
+              setTimeout(() => {
+                // Don't auto-reopen, let user manually reopen to avoid confusion
+                // setShowCreateDialog(true); 
+              }, 100);
             }}
             onCancel={() => setShowCreateDialog(false)}
           />

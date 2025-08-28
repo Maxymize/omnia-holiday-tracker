@@ -84,7 +84,7 @@ export function IntegratedCalendar({
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<string>('dayGridMonth')
   const [viewMode, setViewMode] = useState<'own' | 'team' | 'all'>('all')
-  const [dateFilter, setDateFilter] = useState<DateRangeFilter>('all')
+  const [dateFilter, setDateFilter] = useState<DateRangeFilter>('next3Months')
   
   // Dialog states
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false)
@@ -201,6 +201,18 @@ export function IntegratedCalendar({
     fetchHolidays()
   }, [fetchHolidays])
 
+  // Effect to refresh data when switching to list view
+  useEffect(() => {
+    if (view === 'listMonth') {
+      // Small delay to ensure the view has switched
+      const timeoutId = setTimeout(() => {
+        fetchHolidays()
+      }, 100)
+      
+      return () => clearTimeout(timeoutId)
+    }
+  }, [view, fetchHolidays])
+
   // Effect to auto-correct viewMode when system settings don't allow it
   useEffect(() => {
     if (!settingsLoading && !isAdmin) {
@@ -283,7 +295,7 @@ export function IntegratedCalendar({
   // Generate label based on view and filter
   const getToolbarLabel = () => {
     // For list view with active date filter, show filter description
-    if (view === 'list' && dateFilter !== 'all') {
+    if (view === 'list') {
       switch (dateFilter) {
         case 'yearToDate':
           return t('dashboard.calendar.dateFilters.yearToDate');
@@ -323,7 +335,7 @@ export function IntegratedCalendar({
           {/* Navigation Controls and Date */}
           <div className="flex items-center gap-3">
             {/* Hide navigation controls for list view with active filter */}
-            {!(currentView === 'list' && dateFilter !== 'all') && (
+            {currentView !== 'list' && (
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
@@ -403,7 +415,6 @@ export function IntegratedCalendar({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{t('dashboard.calendar.dateFilters.all')}</SelectItem>
                     <SelectItem value="yearToDate">{t('dashboard.calendar.dateFilters.yearToDate')}</SelectItem>
                     <SelectItem value="last12Months">{t('dashboard.calendar.dateFilters.last12Months')}</SelectItem>
                     <SelectItem value="last6Months">{t('dashboard.calendar.dateFilters.last6Months')}</SelectItem>
