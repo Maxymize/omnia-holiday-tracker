@@ -73,25 +73,110 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false); // ⭐ New loading state for modal initialization
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Initialize form with user data
+  // Load fresh user data from server to ensure latest info
+  const loadUserProfile = async () => {
+    try {
+      const baseUrl = process.env.NODE_ENV === 'development' 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.user) {
+          const freshUserData = result.user;
+          console.log('🔄 Fresh user data loaded:', {
+            departmentId: freshUserData.departmentId,
+            departmentName: freshUserData.departmentName,
+            email: freshUserData.email,
+            name: freshUserData.name
+          });
+          const newFormData = {
+            name: freshUserData.name || '',
+            email: freshUserData.email || '',
+            phone: freshUserData.phone || '',
+            jobTitle: freshUserData.jobTitle || '',
+            departmentId: freshUserData.departmentId || 'none',
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+          };
+          console.log('📝 Setting form data:', { 
+            departmentId: newFormData.departmentId,
+            availableDepartments: departments.length,
+            departmentMatch: departments.find(d => d.id === newFormData.departmentId)?.name
+          });
+          setFormData(newFormData);
+          setAvatarPreview(freshUserData.avatarUrl || '');
+          return;
+        }
+      }
+      
+      // Fallback to user context data if API call fails
+      if (user) {
+        const fallbackFormData = {
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          jobTitle: user.jobTitle || '',
+          departmentId: user.departmentId || 'none',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        };
+        console.log('📝 Fallback form data:', { 
+          departmentId: fallbackFormData.departmentId,
+          availableDepartments: departments.length,
+          departmentMatch: departments.find(d => d.id === fallbackFormData.departmentId)?.name
+        });
+        setFormData(fallbackFormData);
+        setAvatarPreview(user.avatarUrl || '');
+      }
+    } catch (error) {
+      console.error('Failed to load fresh profile data:', error);
+      // Fallback to user context data
+      if (user) {
+        setFormData({
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          jobTitle: user.jobTitle || '',
+          departmentId: user.departmentId || 'none',
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setAvatarPreview(user.avatarUrl || '');
+      }
+    }
+  };
+
+  // Initialize form with fresh user data from server
   useEffect(() => {
     if (user && isOpen) {
-      setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        jobTitle: user.jobTitle || '',
-        departmentId: user.departmentId || 'none',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      setAvatarPreview(user.avatarUrl || '');
-      loadDepartments();
+      // Call both functions with proper async handling
+      const initializeModal = async () => {
+        setIsInitializing(true);
+        try {
+          await loadDepartments(); // ⭐ Load departments FIRST so they're available
+          await loadUserProfile(); // ⭐ Then load profile - form will find correct department
+        } finally {
+          setIsInitializing(false);
+        }
+      };
+      initializeModal();
     }
   }, [user, isOpen]);
 
@@ -112,7 +197,9 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
 
       if (response.ok) {
         const data = await response.json();
-        setDepartments(data.departments || []);
+        const depts = data.departments || [];
+        console.log('🏢 Departments loaded:', depts.map((d: any) => ({id: d.id, name: d.name})));
+        setDepartments(depts);
       }
     } catch (err) {
       console.error('Error loading departments:', err);
@@ -429,10 +516,16 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               </Label>
               <Select 
                 value={formData.departmentId} 
-                onValueChange={(value) => handleInputChange('departmentId', value === 'none' ? '' : value)}
+                onValueChange={(value) => {
+                  console.log('🔄 Department changed to:', value);
+                  handleInputChange('departmentId', value === 'none' ? 'none' : value);
+                }}
+                disabled={isInitializing} // ⭐ Disable during initialization
               >
                 <SelectTrigger className={errors.departmentId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Seleziona dipartimento" />
+                  <SelectValue 
+                    placeholder={isInitializing ? "Caricamento..." : "Seleziona dipartimento"} 
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nessun dipartimento</SelectItem>

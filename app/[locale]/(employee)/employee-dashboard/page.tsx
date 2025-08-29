@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useHolidays } from '@/lib/hooks/useHolidays';
+import { useProfile } from '@/lib/hooks/useProfile';
 import { ResponsiveCalendar, CalendarLegend } from '@/components/calendar/responsive-calendar';
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
 import { HolidayHistoryTable } from '@/components/dashboard/holiday-history-table';
@@ -22,7 +23,6 @@ import {
   Calendar, 
   BarChart3, 
   User, 
-  Settings, 
   CheckCircle, 
   Clock, 
   TrendingUp,
@@ -45,11 +45,12 @@ import { Holiday } from '@/lib/hooks/useHolidays';
 import { format } from 'date-fns';
 import { it, enUS, es } from 'date-fns/locale';
 
-type TabType = 'overview' | 'calendar' | 'requests' | 'profile' | 'settings';
+type TabType = 'overview' | 'calendar' | 'requests' | 'profile';
 
 function EmployeeDashboardContent() {
   const { t, locale } = useTranslation();
   const { user, refreshUserData } = useAuth();
+  const { profile, refreshProfile } = useProfile(); // Fresh profile data from server
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -74,7 +75,7 @@ function EmployeeDashboardContent() {
   // Handle tab changes from URL params
   useEffect(() => {
     const tab = searchParams.get('tab') as TabType;
-    if (tab && ['overview', 'calendar', 'requests', 'profile', 'settings'].includes(tab)) {
+    if (tab && ['overview', 'calendar', 'requests', 'profile'].includes(tab)) {
       setActiveTab(tab);
     } else {
       setActiveTab('overview');
@@ -205,26 +206,15 @@ function EmployeeDashboardContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <EmployeeSidebar holidayStats={sidebarStats} />
+      <EmployeeSidebar 
+        holidayStats={sidebarStats} 
+        onEditProfile={() => setIsProfileModalOpen(true)} 
+      />
       
       {/* Main Content */}
       <div className="lg:pl-80">
         {/* Header con Logo Personalizzabile */}
-        <CustomizableHeader style={{ minHeight: '92px' }}>
-          <div className="flex justify-between items-center w-full">
-            <span className="text-sm text-gray-500">
-              Benvenuto, {user?.name}
-            </span>
-            <button
-              onClick={() => setIsProfileModalOpen(true)}
-              className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              title="Modifica Profilo"
-            >
-              <UserCog className="h-3 w-3" />
-              <span>Modifica</span>
-            </button>
-          </div>
-        </CustomizableHeader>
+        <CustomizableHeader style={{ minHeight: '92px' }} />
 
         <div className="px-4 py-6 lg:px-8">
           {/* Header */}
@@ -239,11 +229,11 @@ function EmployeeDashboardContent() {
                     <p className="text-blue-100 text-sm sm:text-base">
                       {t('dashboard.welcome.subtitle')}
                     </p>
-                    {user.departmentName && (
+                    {(profile?.departmentName || user.departmentName) && (
                       <div className="flex items-center space-x-2">
                         <Building2 className="h-4 w-4 text-blue-200 flex-shrink-0" />
                         <span className="text-sm text-blue-200 truncate">
-                          Dipartimento: <span className="font-medium text-white">{user.departmentName}</span>
+                          Dipartimento: <span className="font-medium text-white">{profile?.departmentName || user.departmentName}</span>
                         </span>
                       </div>
                     )}
@@ -267,10 +257,9 @@ function EmployeeDashboardContent() {
                     variant="outline" 
                     size="sm" 
                     onClick={async () => {
-                      // Header refresh triggered - using direct user.holidayAllowance
-                      // Simply refresh user data - the display now uses user.holidayAllowance directly
+                      // Header refresh triggered - refresh all data including profile
                       await refreshUserData();
-                      // Also refresh holidays for completeness (stats, sidebar, etc.)
+                      await refreshProfile(); // ⭐ Added profile refresh
                       refreshHolidays();
                       // Refresh completed
                     }}
@@ -489,44 +478,29 @@ function EmployeeDashboardContent() {
               {/* Profile Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                  <CardTitle className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <User className="h-5 w-5" />
                       <span>Informazioni Personali</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => setIsProfileModalOpen(true)}
-                        className="text-xs"
-                      >
-                        <UserCog className="h-4 w-4 mr-1" />
-                        Modifica Profilo
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={async () => {
-                          // Profile refresh triggered - using direct user.holidayAllowance
-                          // Simply refresh user data - the display now uses user.holidayAllowance directly
-                          await refreshUserData();
-                          // Also refresh holidays for completeness
-                          refreshHolidays();
-                          // Profile refresh completed
-                        }}
-                        className="text-xs"
-                      >
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        Aggiorna
-                      </Button>
-                    </div>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => setIsProfileModalOpen(true)}
+                      className="text-xs"
+                    >
+                      <UserCog className="h-4 w-4 mr-1" />
+                      Modifica Profilo
+                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                     <Avatar className="h-16 w-16">
-                      {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                      <AvatarImage 
+                        src={user.avatarUrl || ''} 
+                        alt={user.name || 'User'} 
+                      />
                       <AvatarFallback className="text-xl font-medium bg-blue-100 text-blue-700">
                         {getUserInitials(user.name)}
                       </AvatarFallback>
@@ -573,7 +547,7 @@ function EmployeeDashboardContent() {
                       <div className="flex items-center space-x-2 mt-1">
                         <Building2 className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
-                          {user.departmentName || 'Non assegnato'}
+                          {profile?.departmentName || user.departmentName || 'Non assegnato'}
                         </span>
                       </div>
                     </div>
@@ -613,25 +587,6 @@ function EmployeeDashboardContent() {
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Impostazioni</h2>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Settings className="h-5 w-5" />
-                    <span>Preferenze Account</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600">
-                    Le impostazioni del profilo e le preferenze utente saranno disponibili qui.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
 
@@ -808,8 +763,9 @@ function EmployeeDashboardContent() {
       <ProfileEditModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
-        onProfileUpdate={() => {
-          refreshUserData();
+        onProfileUpdate={async () => {
+          await refreshUserData();
+          await refreshProfile(); // ⭐ Auto-refresh profile after modal save
           refreshHolidays();
         }}
       />

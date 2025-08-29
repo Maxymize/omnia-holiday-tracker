@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -620,6 +620,10 @@ export function EmployeeManagement({
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage 
+                              src={employee.avatarUrl || ''} 
+                              alt={employee.name} 
+                            />
                             <AvatarFallback className="text-sm">
                               {getUserInitials(employee.name)}
                             </AvatarFallback>
@@ -755,6 +759,10 @@ export function EmployeeManagement({
                                 <div className="space-y-4">
                                   <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                                     <Avatar className="h-12 w-12">
+                                      <AvatarImage 
+                                        src={selectedEmployee.avatarUrl || ''} 
+                                        alt={selectedEmployee.name} 
+                                      />
                                       <AvatarFallback>
                                         {getUserInitials(selectedEmployee.name)}
                                       </AvatarFallback>
@@ -921,6 +929,10 @@ export function EmployeeManagement({
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-10 w-10">
+                  <AvatarImage 
+                    src={assigningEmployee.avatarUrl || ''} 
+                    alt={assigningEmployee.name} 
+                  />
                   <AvatarFallback>
                     {getUserInitials(assigningEmployee.name)}
                   </AvatarFallback>
@@ -984,6 +996,10 @@ export function EmployeeManagement({
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-10 w-10">
+                  <AvatarImage 
+                    src={editingEmployee.avatarUrl || ''} 
+                    alt={editingEmployee.name} 
+                  />
                   <AvatarFallback>
                     {getUserInitials(editingEmployee.name)}
                   </AvatarFallback>
@@ -1080,6 +1096,10 @@ export function EmployeeManagement({
             <div className="space-y-6">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-12 w-12">
+                  <AvatarImage 
+                    src={editingEmployeeUnified.avatarUrl || ''} 
+                    alt={editingEmployeeUnified.name} 
+                  />
                   <AvatarFallback>
                     {getUserInitials(editingEmployeeUnified.name)}
                   </AvatarFallback>

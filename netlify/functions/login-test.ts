@@ -216,7 +216,7 @@ export const handler: Handler = async (event, context) => {
             name: user.name,
             role: user.role,
             status: user.status,
-            department,
+            departmentId: department,    // Changed from 'department' to 'departmentId'
             departmentName,
             holidayAllowance: user.holidayAllowance
           },

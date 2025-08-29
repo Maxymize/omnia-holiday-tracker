@@ -22,6 +22,7 @@ export interface Employee {
   pendingDays?: number; // Days in pending requests
   createdAt: string;
   lastLogin?: string;
+  avatarUrl?: string;
 }
 
 export interface Department {
@@ -212,7 +213,8 @@ export function useAdminData() {
             bookedDays,
             pendingDays,
             createdAt: emp.createdAt,
-            lastLogin: emp.lastLoginAt
+            lastLogin: emp.lastLoginAt,
+            avatarUrl: emp.avatarUrl
           };
         });
 

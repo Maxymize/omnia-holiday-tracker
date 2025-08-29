@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useProfile } from '@/lib/hooks/useProfile';
 import { useAdminData } from '@/lib/hooks/useAdminData';
 import { useRouter } from 'next/navigation';
 import { ResponsiveCalendar, CalendarLegend } from '@/components/calendar/responsive-calendar';
@@ -50,6 +51,7 @@ interface Activity {
 
 export default function AdminDashboard() {
   const { user, loading: authLoading, isAuthenticated, isAdmin } = useAuth();
+  const { profile, refreshProfile } = useProfile();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTabType>('overview');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -183,6 +185,7 @@ export default function AdminDashboard() {
         adminStats={adminStats || undefined}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        onEditProfile={() => setIsProfileModalOpen(true)}
       />
       
       {/* Main Content */}
@@ -201,24 +204,6 @@ export default function AdminDashboard() {
               await handleDeleteActivities([id]);
             }}
           />
-          
-          <div className="text-right space-y-1">
-            <div className="flex items-center justify-end space-x-2">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-600">{user?.email}</p>
-                <p className="text-xs text-blue-600 font-medium">Amministratore</p>
-              </div>
-              <button
-                onClick={() => setIsProfileModalOpen(true)}
-                className="flex items-center space-x-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                title="Modifica Profilo"
-              >
-                <UserCog className="h-3 w-3" />
-                <span>Modifica</span>
-              </button>
-            </div>
-          </div>
         </CustomizableHeader>
 
         <div className="px-4 py-6 lg:px-8">

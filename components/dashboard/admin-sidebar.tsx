@@ -21,7 +21,8 @@ import {
   X,
   AlertTriangle,
   Shield,
-  CalendarCheck
+  CalendarCheck,
+  UserCog
 } from 'lucide-react';
 
 export interface AdminStats {
@@ -38,9 +39,10 @@ interface AdminSidebarProps {
   adminStats?: AdminStats;
   activeTab?: AdminTabType;
   onTabChange?: (tab: AdminTabType) => void;
+  onEditProfile?: () => void; // ⭐ New callback for opening profile modal
 }
 
-export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }: AdminSidebarProps) {
+export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, onEditProfile }: AdminSidebarProps) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -121,7 +123,10 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12 border-2 border-purple-200">
-            {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+            <AvatarImage 
+              src={user?.avatarUrl || ''} 
+              alt={user?.name || 'Administrator'} 
+            />
             <AvatarFallback className="text-lg font-medium bg-purple-100 text-purple-700">
               {getUserInitials(user?.name)}
             </AvatarFallback>
@@ -139,6 +144,22 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange }
             </Badge>
           </div>
         </div>
+        {onEditProfile && (
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onEditProfile();
+                setIsMobileMenuOpen(false);
+              }}
+              className="w-full justify-start text-xs h-7 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300"
+            >
+              <UserCog className="h-3 w-3 mr-1.5" />
+              <span>Modifica Profilo</span>
+            </Button>
+          </div>
+        )}
       </div>
 
 

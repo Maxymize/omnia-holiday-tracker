@@ -183,6 +183,7 @@ export const handler: Handler = async (event, context) => {
       const profile = await getProfile(userToken.userId);
 
       // Log profile access for audit trail
+      console.log(`🖼️ Profile accessed: ${userToken.email} avatarUrl:`, profile.avatarUrl);
       console.log(`Profile accessed: ${userToken.email} at ${new Date().toISOString()}`);
 
       return {
@@ -199,6 +200,7 @@ export const handler: Handler = async (event, context) => {
     if (event.httpMethod === 'PUT') {
       // Parse and validate input
       const body = JSON.parse(event.body || '{}');
+      console.log('🔍 Profile update received data:', JSON.stringify(body, null, 2));
       const validatedData = updateProfileSchema.parse(body);
 
       // Check if password change is requested but current password is missing

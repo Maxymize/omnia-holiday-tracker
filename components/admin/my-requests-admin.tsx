@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { 
   Calendar, 
@@ -478,6 +478,10 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-16 w-16">
+                  <AvatarImage 
+                    src={user?.avatarUrl || ''} 
+                    alt={user?.name || 'Administrator'} 
+                  />
                   <AvatarFallback className="text-xl font-medium bg-blue-100 text-blue-700">
                     {getUserInitials(user?.name)}
                   </AvatarFallback>

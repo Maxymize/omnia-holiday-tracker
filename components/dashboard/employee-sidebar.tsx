@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n/provider';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, 
@@ -16,12 +16,12 @@ import {
   Plus, 
   Clock, 
   CheckCircle, 
-  Settings,
   LogOut,
   Menu,
   X,
   Home,
-  FileText
+  FileText,
+  UserCog
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,10 +31,11 @@ interface EmployeeSidebarProps {
     upcomingHolidays: number;
     remainingDays: number;
   };
+  onEditProfile?: () => void; // ⭐ New callback for opening profile modal
   className?: string;
 }
 
-export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProps) {
+export function EmployeeSidebar({ holidayStats, onEditProfile, className }: EmployeeSidebarProps) {
   const { t, locale } = useTranslation();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -113,6 +114,10 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
       <div className="p-4 border-b">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
+            <AvatarImage 
+              src={user?.avatarUrl || ''} 
+              alt={user?.name || 'Employee'} 
+            />
             <AvatarFallback className="text-sm font-medium bg-blue-100 text-blue-700">
               {getUserInitials(user?.name)}
             </AvatarFallback>
@@ -129,20 +134,36 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
 
         {/* Quick Status */}
         {holidayStats && (
-          <div className="mt-3 flex items-center justify-between text-xs">
-            <div className="flex items-center space-x-1">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                getStatusColor(holidayStats.remainingDays)
-              )}></div>
-              <span className="text-gray-600">
-                {holidayStats.remainingDays} giorni rimasti
-              </span>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-1">
+                <div className={cn(
+                  "w-2 h-2 rounded-full",
+                  getStatusColor(holidayStats.remainingDays)
+                )}></div>
+                <span className="text-gray-600">
+                  {holidayStats.remainingDays} giorni rimasti
+                </span>
+              </div>
+              {holidayStats.pendingRequests > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {holidayStats.pendingRequests} in attesa
+                </Badge>
+              )}
             </div>
-            {holidayStats.pendingRequests > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {holidayStats.pendingRequests} in attesa
-              </Badge>
+            {onEditProfile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onEditProfile();
+                  setIsMobileOpen(false);
+                }}
+                className="w-full justify-start mt-2 text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
+              >
+                <UserCog className="h-3 w-3 mr-1.5" />
+                <span>Modifica Profilo</span>
+              </Button>
             )}
           </div>
         )}
@@ -219,17 +240,6 @@ export function EmployeeSidebar({ holidayStats, className }: EmployeeSidebarProp
       {/* Bottom Actions */}
       <div className="p-4 border-t">
         <div className="space-y-2">
-          <Link href={`/${locale}/employee-dashboard?tab=settings`}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Impostazioni
-            </Button>
-          </Link>
           <Button
             variant="ghost"
             size="sm"

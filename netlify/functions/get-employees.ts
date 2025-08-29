@@ -191,12 +191,13 @@ export const handler: Handler = async (event, context) => {
       const usedHolidayDays = holidayData?.usedDays || 0;
       const remainingHolidayDays = (user.holidayAllowance || 25) - usedHolidayDays;
 
-      return {
+      const employeeData = {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         status: user.status,
+        avatarUrl: user.avatarUrl,
         department: result.department ? {
           id: result.department.id,
           name: result.department.name,
@@ -213,6 +214,11 @@ export const handler: Handler = async (event, context) => {
         updatedAt: user.updatedAt,
         lastLoginAt: user.lastLoginAt
       };
+      
+      // Debug log to see avatar data
+      console.log(`🖼️ Employee ${user.name} (${user.email}) avatarUrl:`, user.avatarUrl);
+      
+      return employeeData;
     });
 
     // Apply sorting (since complex sorting with joins is difficult in SQL)
