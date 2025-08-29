@@ -274,7 +274,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
       if (err instanceof z.ZodError) {
         // Handle validation errors
         const newErrors: Record<string, string> = {};
-        err.errors.forEach((zodErr) => {
+        err.issues.forEach((zodErr) => {
           const field = zodErr.path[0] as string;
           newErrors[field] = zodErr.message;
         });
