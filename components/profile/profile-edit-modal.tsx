@@ -236,7 +236,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         email: validatedData.email,
         phone: validatedData.phone || null,
         jobTitle: validatedData.jobTitle || null,
-        departmentId: validatedData.departmentId || null,
+        departmentId: validatedData.departmentId === 'none' ? null : validatedData.departmentId,
         avatarUrl: avatarUrl || null
       };
 
