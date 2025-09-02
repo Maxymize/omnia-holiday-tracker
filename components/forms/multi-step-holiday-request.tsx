@@ -23,15 +23,15 @@ import { useTranslation } from "@/lib/i18n/provider"
 import { toast } from "@/lib/utils/toast"
 
 // Enhanced validation schema for multi-step form
-const holidayRequestSchema = z.object({
+const createHolidayRequestSchema = (t: any) => z.object({
   startDate: z.date({
-    message: "Seleziona data di inizio",
+    message: t('forms.validation.selectStartDate'),
   }),
   endDate: z.date({
-    message: "Seleziona data di fine",
+    message: t('forms.validation.selectEndDate'),
   }),
   type: z.enum(["vacation", "sick", "personal"], {
-    message: "Seleziona il tipo di assenza",
+    message: t('forms.validation.selectLeaveType'),
   }),
   notes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
   medicalCertificate: z.any().optional(), // File upload for medical certificate
@@ -46,7 +46,7 @@ const holidayRequestSchema = z.object({
   }
   return true
 }, {
-  message: "La data di fine deve essere uguale o successiva alla data di inizio",
+  message: t('forms.validation.endDateAfterStart'),
   path: ["endDate"],
 }).refine((data) => {
   if (data.startDate) {
@@ -56,7 +56,7 @@ const holidayRequestSchema = z.object({
   }
   return true
 }, {
-  message: "Non è possibile richiedere permessi per date passate",
+  message: t('forms.validation.noPastDates'),
   path: ["startDate"],
 }).refine((data) => {
   if (data.startDate) {
@@ -65,7 +65,7 @@ const holidayRequestSchema = z.object({
   }
   return true
 }, {
-  message: "Non è possibile richiedere permessi oltre un anno in anticipo",
+  message: t('forms.validation.noFutureDates'),
   path: ["startDate"],
 }).refine((data) => {
   if (data.type === "sick") {
@@ -76,11 +76,11 @@ const holidayRequestSchema = z.object({
   }
   return true
 }, {
-  message: "Il certificato medico è obbligatorio per i congedi per malattia",
+  message: t('forms.validation.medicalCertRequired'),
   path: ["medicalCertificate"],
 })
 
-type HolidayRequestFormData = z.infer<typeof holidayRequestSchema>
+type HolidayRequestFormData = z.infer<ReturnType<typeof createHolidayRequestSchema>>
 
 // Step definitions
 const STEPS = [
@@ -129,10 +129,10 @@ export function MultiStepHolidayRequest({
   
   const { user } = useAuth()
   const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
 
   const form = useForm<HolidayRequestFormData>({
-    resolver: zodResolver(holidayRequestSchema),
+    resolver: zodResolver(createHolidayRequestSchema(t)),
     defaultValues: {
       type: "vacation",
       notes: "",
@@ -547,7 +547,7 @@ export function MultiStepHolidayRequest({
                           placeholder={t('forms.holidays.request.dateLabels.startDate')}
                           minDate={new Date()}
                           maxDate={addDays(new Date(), 365)}
-                          locale="it"
+                          locale={locale}
                           className="w-full"
                         />
                       </FormControl>
@@ -573,7 +573,7 @@ export function MultiStepHolidayRequest({
                           placeholder={t('forms.holidays.request.dateLabels.endDate')}
                           minDate={startDate || new Date()}
                           maxDate={addDays(new Date(), 365)}
-                          locale="it"
+                          locale={locale}
                           className="w-full"
                           disabled={!startDate}
                         />
@@ -1129,7 +1129,7 @@ export function MultiStepHolidayRequest({
           <div>
             <CardTitle>{t('forms.holidays.request.modalTitle')}</CardTitle>
             <CardDescription>
-              {t('forms.holidays.request.multiStep.step')} {currentStep} {t('forms.holidays.request.multiStep.of')} {STEPS.length}: {t(`holidays.request.steps.${STEPS[currentStep - 1].description}`)}
+              {t('forms.holidays.request.multiStep.step')} {currentStep} {t('forms.holidays.request.multiStep.of')} {STEPS.length}: {t(`forms.multiStepForm.steps.${STEPS[currentStep - 1].description}.title`)}
             </CardDescription>
           </div>
           <Badge variant="outline">

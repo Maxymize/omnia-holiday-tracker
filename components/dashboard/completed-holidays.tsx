@@ -102,7 +102,7 @@ export function CompletedHolidays({
       return locale === 'it' ? '1 giorno' : locale === 'es' ? '1 día' : '1 day';
     }
     
-    const dayLabel = locale === 'it' ? 'giorni' : locale === 'es' ? 'días' : 'days';
+    const dayLabel = t('dashboard.stats.days');
     return `${workingDays} ${dayLabel}`;
   };
 
@@ -120,7 +120,7 @@ export function CompletedHolidays({
             <span>
               {locale === 'it' ? 'Ferie Godute' : 
                locale === 'es' ? 'Vacaciones Disfrutadas' : 
-               'Completed Holidays'}
+               t('dashboard.stats.completedHolidays')}
             </span>
           </CardTitle>
         </CardHeader>
@@ -150,7 +150,7 @@ export function CompletedHolidays({
             <span>
               {locale === 'it' ? 'Ferie Godute' : 
                locale === 'es' ? 'Vacaciones Disfrutadas' : 
-               'Completed Holidays'}
+               t('dashboard.stats.completedHolidays')}
             </span>
           </CardTitle>
           
@@ -187,9 +187,7 @@ export function CompletedHolidays({
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-1">
-                {locale === 'it' ? 'Nessuna feria completata' :
-                 locale === 'es' ? 'No hay vacaciones completadas' :
-                 'No completed holidays'}
+                {t('dashboard.stats.noCompletedHolidays')}
               </h3>
               <p className="text-xs text-gray-600">
                 {viewMode === 'own' 
@@ -251,7 +249,7 @@ export function CompletedHolidays({
                       <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                         {locale === 'it' ? 'Completata' :
                          locale === 'es' ? 'Completada' :
-                         'Completed'}
+                         t('dashboard.stats.completed')}
                       </Badge>
                     </div>
                     

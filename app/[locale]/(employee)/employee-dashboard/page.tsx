@@ -163,7 +163,7 @@ function EmployeeDashboardContent() {
   };
 
   const getTypeLabel = (type: Holiday['type']) => {
-    return t(`holidays.request.types.${type}`);
+    return t(`forms.holidays.request.types.${type}`);
   };
 
   const formatDateRange = (startDate: string, endDate: string) => {
@@ -198,7 +198,7 @@ function EmployeeDashboardContent() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Caricamento dashboard...</p>
+          <p className="text-gray-600">{t('dashboard.stats.loadingDashboard')}</p>
         </div>
       </div>
     );
@@ -239,7 +239,7 @@ function EmployeeDashboardContent() {
                       <div className="flex items-center space-x-2">
                         <Building2 className="h-4 w-4 text-blue-200 flex-shrink-0" />
                         <span className="text-sm text-blue-200 truncate">
-                          Dipartimento: <span className="font-medium text-white">{profile?.departmentName || user.departmentName}</span>
+                          {t('dashboard.stats.departmentLabel')}: <span className="font-medium text-white">{profile?.departmentName || user.departmentName}</span>
                         </span>
                       </div>
                     )}
@@ -256,7 +256,7 @@ function EmployeeDashboardContent() {
                       <div className="text-2xl font-bold">
                         {stats.availableDays}
                       </div>
-                      <div className="text-sm text-blue-200">giorni disponibili</div>
+                      <div className="text-sm text-blue-200">{t('dashboard.stats.availableDays')}</div>
                     </div>
                   )}
                   <Button 
@@ -272,7 +272,7 @@ function EmployeeDashboardContent() {
                     className="text-blue-700 border-white hover:bg-white/20"
                   >
                     <RefreshCw className="h-4 w-4 mr-1" />
-                    Aggiorna
+                    {t('dashboard.stats.refresh')}
                   </Button>
                 </div>
               </div>
@@ -286,7 +286,7 @@ function EmployeeDashboardContent() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
                 <div>
                   <h3 className="text-sm font-medium text-red-800">
-                    Errore nel caricamento dei dati
+                    {t('dashboard.stats.errorLoading')}
                   </h3>
                   <p className="text-sm text-red-700">{holidaysError}</p>
                 </div>
@@ -297,7 +297,7 @@ function EmployeeDashboardContent() {
                   className="ml-auto"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Riprova
+                  {t('dashboard.stats.retry')}
                 </Button>
               </div>
             </div>
@@ -322,13 +322,13 @@ function EmployeeDashboardContent() {
                           <Calendar className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni disponibili</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
                           <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
                           {stats.leaveTypes && (
                             <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                              <div>🏖️ {stats.leaveTypes.vacation.availableDays} ferie</div>
-                              <div>👤 {stats.leaveTypes.personal.availableDays} permessi</div>
-                              <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} malattia</div>
+                              <div>🏖️ {stats.leaveTypes.vacation.availableDays} {t('dashboard.stats.vacation')}</div>
+                              <div>👤 {stats.leaveTypes.personal.availableDays} {t('dashboard.stats.personal')}</div>
+                              <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} {t('dashboard.stats.sick')}</div>
                             </div>
                           )}
                         </div>
@@ -344,9 +344,9 @@ function EmployeeDashboardContent() {
                           <CalendarCheck className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni già goduti</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.takenDays')}</p>
                           <p className="text-2xl font-bold text-blue-600">{stats.takenDays}</p>
-                          <p className="text-xs text-gray-500">ferie passate</p>
+                          <p className="text-xs text-gray-500">{t('dashboard.stats.takenDaysDesc')}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -360,9 +360,9 @@ function EmployeeDashboardContent() {
                           <CalendarDays className="h-5 w-5 text-amber-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni prenotati</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.bookedDays')}</p>
                           <p className="text-2xl font-bold text-amber-600">{stats.bookedDays}</p>
-                          <p className="text-xs text-gray-500">ferie future</p>
+                          <p className="text-xs text-gray-500">{t('dashboard.stats.bookedDaysDesc')}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -376,9 +376,9 @@ function EmployeeDashboardContent() {
                           <CalendarClock className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Giorni in attesa</p>
+                          <p className="text-sm text-gray-600">{t('dashboard.stats.pendingDays')}</p>
                           <p className="text-2xl font-bold text-purple-600">{stats.pendingDays}</p>
-                          <p className="text-xs text-gray-500">da approvare</p>
+                          <p className="text-xs text-gray-500">{t('dashboard.stats.pendingDaysDesc')}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -463,7 +463,7 @@ function EmployeeDashboardContent() {
                 <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.navigation.requests')}</h2>
                 <Button onClick={handleCreateRequest}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nuova Richiesta
+                  {t('dashboard.navigation.newRequest')}
                 </Button>
               </div>
               
@@ -487,7 +487,7 @@ function EmployeeDashboardContent() {
                   <CardTitle className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <User className="h-5 w-5" />
-                      <span>Informazioni Personali</span>
+                      <span>{t('dashboard.stats.personalInfo')}</span>
                     </div>
                     <Button 
                       variant="default" 
@@ -522,34 +522,34 @@ function EmployeeDashboardContent() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Ruolo</label>
+                      <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.role')}</label>
                       <p className="text-sm text-gray-900 mt-1">
                         {user.role === 'admin' ? t('dashboard.profile.role.admin') : t('dashboard.profile.role.employee')}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Stato Account</label>
+                      <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.accountStatus')}</label>
                       <div className="flex items-center space-x-2 mt-1">
                         {user.status === 'active' ? (
                           <>
                             <CheckCircle className="h-4 w-4 text-green-600" />
-                            <span className="text-sm text-green-700 font-medium">Attivo</span>
+                            <span className="text-sm text-green-700 font-medium">{t('dashboard.stats.active')}</span>
                           </>
                         ) : user.status === 'pending' ? (
                           <>
                             <Clock className="h-4 w-4 text-amber-600" />
-                            <span className="text-sm text-amber-700 font-medium">In attesa di approvazione</span>
+                            <span className="text-sm text-amber-700 font-medium">{t('dashboard.stats.pending')}</span>
                           </>
                         ) : (
                           <>
                             <AlertTriangle className="h-4 w-4 text-red-600" />
-                            <span className="text-sm text-red-700 font-medium">Inattivo</span>
+                            <span className="text-sm text-red-700 font-medium">{t('dashboard.stats.inactive')}</span>
                           </>
                         )}
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Dipartimento</label>
+                      <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.departmentLabel')}</label>
                       <div className="flex items-center space-x-2 mt-1">
                         <Building2 className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
@@ -558,7 +558,7 @@ function EmployeeDashboardContent() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Telefono</label>
+                      <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.telephone')}</label>
                       <div className="flex items-center space-x-2 mt-1">
                         <Phone className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
@@ -567,7 +567,7 @@ function EmployeeDashboardContent() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Mansione Aziendale</label>
+                      <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.jobTitle')}</label>
                       <div className="flex items-center space-x-2 mt-1">
                         <UserCog className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
@@ -578,12 +578,12 @@ function EmployeeDashboardContent() {
                     {stats && (
                       <>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Giorni Ferie Annuali</label>
-                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance || 25} giorni</p>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.annualHolidays')}</label>
+                          <p className="text-sm text-gray-900 mt-1">{user.holidayAllowance || 25} {t('dashboard.stats.days')}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Giorni Rimanenti</label>
-                          <p className="text-sm text-gray-900 mt-1">{(user.holidayAllowance || 25) - stats.usedDays} giorni</p>
+                          <label className="text-sm font-medium text-gray-700">{t('dashboard.stats.remainingDays')}</label>
+                          <p className="text-sm text-gray-900 mt-1">{(user.holidayAllowance || 25) - stats.usedDays} {t('dashboard.stats.days')}</p>
                         </div>
                       </>
                     )}
@@ -600,7 +600,7 @@ function EmployeeDashboardContent() {
       <Dialog open={!!selectedHoliday} onOpenChange={(open) => !open && setSelectedHoliday(null)}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Dettagli Ferie</DialogTitle>
+            <DialogTitle>{t('dashboard.stats.holidayDetails')}</DialogTitle>
           </DialogHeader>
           {selectedHoliday && (
             <div className="space-y-4">
@@ -620,17 +620,17 @@ function EmployeeDashboardContent() {
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <label className="font-medium text-gray-700">Periodo</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.period')}</label>
                   <p className="mt-1 text-gray-900">
                     {formatDateRange(selectedHoliday.startDate, selectedHoliday.endDate)}
                   </p>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Giorni lavorativi</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.workingDays')}</label>
                   <p className="mt-1 text-gray-900">{formatWorkingDays(selectedHoliday.workingDays)}</p>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Tipo</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.type')}</label>
                   <div className="mt-1">
                     <Badge variant="outline" className={
                       selectedHoliday.type === 'vacation' ? 'bg-blue-100 text-blue-800' :
@@ -642,7 +642,7 @@ function EmployeeDashboardContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Stato</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.status')}</label>
                   <div className="mt-1">
                     <Badge className={
                       selectedHoliday.status === 'approved' ? 'bg-green-100 text-green-800' :
@@ -659,7 +659,7 @@ function EmployeeDashboardContent() {
 
               {selectedHoliday.notes && (
                 <div>
-                  <label className="font-medium text-gray-700">Note</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.notes')}</label>
                   <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
                     {selectedHoliday.notes}
                   </div>
@@ -669,7 +669,7 @@ function EmployeeDashboardContent() {
               {/* Medical Certificate Section for Sick Leave */}
               {selectedHoliday.type === 'sick' && (
                 <div className="border-t pt-4">
-                  <label className="font-medium text-gray-700">Certificato Medico</label>
+                  <label className="font-medium text-gray-700">{t('dashboard.stats.medicalCertificate')}</label>
                   <div className="mt-2">
                     {selectedHoliday.medicalCertificateOption === 'upload' && selectedHoliday.medicalCertificateFileName ? (
                       <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
@@ -677,7 +677,7 @@ function EmployeeDashboardContent() {
                           <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-green-800">
-                              Certificato caricato
+                              {t('dashboard.stats.certificateUploaded')}
                             </p>
                             <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
                               {selectedHoliday.medicalCertificateFileName}
@@ -728,7 +728,7 @@ function EmployeeDashboardContent() {
                           }}
                         >
                           <Download className="h-4 w-4 mr-1" />
-                          Scarica
+                          {t('dashboard.stats.download')}
                         </Button>
                       </div>
                     ) : selectedHoliday.medicalCertificateOption === 'send_later' ? (
@@ -737,10 +737,10 @@ function EmployeeDashboardContent() {
                           <Clock className="h-5 w-5 text-blue-600" />
                           <div>
                             <p className="text-sm font-medium text-blue-800">
-                              Invio previsto via email
+                              {t('dashboard.stats.sendViaEmail')}
                             </p>
                             <p className="text-xs text-blue-600">
-                              Certificato da inviare entro 3 giorni lavorativi
+                              {t('dashboard.stats.sendWithinThreeDays')}
                             </p>
                           </div>
                         </div>
@@ -751,7 +751,7 @@ function EmployeeDashboardContent() {
                           <AlertTriangle className="h-5 w-5 text-gray-600" />
                           <div>
                             <p className="text-sm font-medium text-gray-800">
-                              Certificato non specificato
+                              {t('dashboard.stats.certificateNotSpecified')}
                             </p>
                           </div>
                         </div>

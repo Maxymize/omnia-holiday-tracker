@@ -99,6 +99,32 @@ const formsIt = {
         invalidFileFormat: 'Formato file non valido. Sono supportati solo PDF, DOC, DOCX, JPG e PNG.'
       }
     },
+    pageContent: {
+      backButton: 'Indietro',
+      loadingText: 'Caricamento...',
+      loadingData: 'Caricamento dati...',
+      subtitle: 'Compila il modulo per richiedere giorni di ferie, malattia o permessi personali',
+      statsCards: {
+        availableDays: 'Giorni disponibili',
+        pendingRequests: 'In attesa',
+        approvedRequests: 'Approvate'
+      },
+      helpSection: {
+        title: 'Informazioni Utili',
+        leaveTypes: {
+          title: 'Tipi di Assenza',
+          vacation: 'Ferie: Vengono scalate dal monte ore annuale',
+          sick: 'Malattia: Richiedono certificato medico',
+          personal: 'Permesso Personale: Per esigenze familiari'
+        },
+        approvalProcess: {
+          title: 'Processo di Approvazione',
+          managerReview: 'Le richieste vengono inviate al manager',
+          approvalTime: 'Tempi di approvazione: 1-3 giorni lavorativi',
+          emailNotification: 'Riceverai una notifica via email'
+        }
+      }
+    },
     profile: {
       editTitle: 'Modifica Profilo',
       nameLabel: 'Nome e Cognome',
@@ -181,6 +207,13 @@ const formsIt = {
     endDateRequired: 'Data di fine richiesta',
     typeRequired: 'Seleziona il tipo di permesso',
     notesOptional: 'Note aggiuntive (opzionale)',
+    selectStartDate: 'Seleziona data di inizio',
+    selectEndDate: 'Seleziona data di fine',
+    selectLeaveType: 'Seleziona il tipo di assenza',
+    endDateAfterStart: 'La data di fine deve essere uguale o successiva alla data di inizio',
+    noPastDates: 'Non è possibile richiedere permessi per date passate',
+    noFutureDates: 'Non è possibile richiedere permessi oltre un anno in anticipo',
+    medicalCertRequired: 'Il certificato medico è obbligatorio per i congedi per malattia',
   },
   multiStepForm: {
     steps: {
@@ -199,6 +232,10 @@ const formsIt = {
       summary: {
         title: 'Riepilogo',
         description: 'Conferma e invia',
+      },
+      dates: {
+        title: 'Date',
+        description: 'Seleziona date',
       },
     },
   },

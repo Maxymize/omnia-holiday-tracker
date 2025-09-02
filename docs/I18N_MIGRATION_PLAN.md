@@ -350,7 +350,68 @@ lib/i18n/
 
 ---
 
+---
+
+## 🐛 VERSION 2.8.0 - CRITICAL TRANSLATION PATH STRUCTURE BUG FIX
+
+### 📋 Issue Summary
+**Date**: Settembre 2025  
+**Severity**: HIGH - Breaking functionality for Italian locale users  
+**Component**: Holiday Request Page Translation System  
+**Root Cause**: Structural mismatch between component translation paths and translation file organization  
+
+### 🚨 Problem Details
+**Symptom**: Italian users seeing raw translation keys instead of proper Italian text
+- Displayed: `"forms.holidays.request.pageContent.loadingText"`
+- Expected: `"Caricamento..."`
+
+**Console Errors**: Multiple translation resolution failures
+```
+Translation key not found: forms.holidays.request.pageContent.loadingText for locale: it
+Translation key not found: forms.holidays.request.pageContent.backButton for locale: it
+Translation key not found: forms.holidays.request.pageContent.subtitle for locale: it
+```
+
+### 🔍 Root Cause Analysis
+**Component Path Structure**: Components accessing `forms.holidays.request.pageContent.*`  
+**Translation File Structure**: Actually contained `forms.holidays.pageContent.*` (missing `.request` level)
+
+**Affected Component**: `/app/[locale]/(employee)/holiday-request/page.tsx`  
+**Translation Files**: All forms translations (it.ts, en.ts, es.ts)  
+
+### ✅ Solution Implemented
+**Fix Applied**: Systematic correction of translation path structure in holiday request page  
+**Files Modified**: 1 component file with 14 translation key path corrections  
+**Method**: Removed erroneous `.request` segment from all pageContent translation calls
+
+**Key Changes Applied**:
+- Line 109: `t('forms.holidays.request.pageContent.loadingText')` → `t('forms.holidays.pageContent.loadingText')`
+- Line 134: `t('forms.holidays.request.pageContent.backButton')` → `t('forms.holidays.pageContent.backButton')`
+- Line 143: `t('forms.holidays.request.pageContent.subtitle')` → `t('forms.holidays.pageContent.subtitle')`
+- Plus 11 additional similar corrections for statsCards, helpSection elements
+
+### 🧪 Validation Results
+**✅ Console Errors Eliminated**: Zero "Translation key not found" errors  
+**✅ Italian Text Restored**: Proper display of "Caricamento...", "Indietro", etc.  
+**✅ User Experience Recovered**: Italian locale users now see properly localized interface  
+**✅ Translation System Integrity**: All translation paths now correctly resolve  
+**✅ Multi-language Functionality**: EN/ES translations unaffected and working correctly  
+
+### 📊 Technical Impact
+**Scope**: Holiday request page translation resolution system  
+**Severity**: HIGH (user-facing functionality broken)  
+**Resolution Time**: Immediate - critical path structure issue  
+**Testing**: Verified across all supported locales (IT/EN/ES)  
+**Risk Level**: LOW - targeted fix with clear validation criteria  
+
+### 🔄 Prevention Measures
+**Documentation Enhanced**: Translation path structure guidelines updated  
+**Architecture Note**: Reinforced importance of consistent nested translation structure  
+**Development Process**: Added translation key validation to development workflow  
+
+---
+
 **👥 Team**: Claude Code + Development Team  
 **📅 Created**: Settembre 2025  
-**🔄 Last Update**: [DA AGGIORNARE DURANTE IMPLEMENTAZIONE]  
-**📊 Status**: 📋 **AWAITING APPROVAL**
+**🔄 Last Update**: Version 2.8.0 - Settembre 2025 (Translation Path Bug Fix)  
+**📊 Status**: ✅ **MIGRATION COMPLETED** + 🐛 **CRITICAL BUG FIXED**

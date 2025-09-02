@@ -106,7 +106,7 @@ export default function HolidayRequestPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Caricamento...</p>
+          <p className="mt-4 text-gray-600">{t('forms.holidays.pageContent.loadingText')}</p>
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ export default function HolidayRequestPage() {
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Indietro</span>
+              <span>{t('forms.holidays.pageContent.backButton')}</span>
             </Button>
           </div>
           
@@ -140,7 +140,7 @@ export default function HolidayRequestPage() {
               {t('forms.holidays.request.title')}
             </h1>
             <p className="mt-2 text-blue-100">
-              Compila il modulo per richiedere giorni di ferie, malattia o permessi personali
+              {t('forms.holidays.pageContent.subtitle')}
             </p>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function HolidayRequestPage() {
             <CardContent className="flex items-center p-4">
               <Calendar className="h-8 w-8 text-blue-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Giorni disponibili</p>
+                <p className="text-sm text-gray-600">{t('forms.holidays.pageContent.statsCards.availableDays')}</p>
                 {holidaysLoading ? (
                   <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
                 ) : (
@@ -167,7 +167,7 @@ export default function HolidayRequestPage() {
             <CardContent className="flex items-center p-4">
               <Clock className="h-8 w-8 text-orange-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">In attesa</p>
+                <p className="text-sm text-gray-600">{t('forms.holidays.pageContent.statsCards.pendingRequests')}</p>
                 {holidaysLoading ? (
                   <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
                 ) : (
@@ -183,7 +183,7 @@ export default function HolidayRequestPage() {
             <CardContent className="flex items-center p-4">
               <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-600">Approvate</p>
+                <p className="text-sm text-gray-600">{t('forms.holidays.pageContent.statsCards.approvedRequests')}</p>
                 {holidaysLoading ? (
                   <div className="animate-pulse h-8 bg-gray-200 rounded w-12"></div>
                 ) : (
@@ -203,7 +203,7 @@ export default function HolidayRequestPage() {
               <CardContent className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Caricamento dati...</p>
+                  <p className="mt-4 text-gray-600">{t('forms.holidays.pageContent.loadingData')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -221,24 +221,24 @@ export default function HolidayRequestPage() {
         {/* Help Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Informazioni Utili</CardTitle>
+            <CardTitle className="text-lg">{t('forms.holidays.pageContent.helpSection.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Tipi di Assenza</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t('forms.holidays.pageContent.helpSection.leaveTypes.title')}</h4>
                 <ul className="space-y-1 text-gray-600">
-                  <li>• <strong>Ferie:</strong> Vengono scalate dal monte ore annuale</li>
-                  <li>• <strong>Malattia:</strong> Richiedono certificato medico</li>
-                  <li>• <strong>Permesso Personale:</strong> Per esigenze familiari</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.leaveTypes.vacation')}</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.leaveTypes.sick')}</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.leaveTypes.personal')}</li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Processo di Approvazione</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t('forms.holidays.pageContent.helpSection.approvalProcess.title')}</h4>
                 <ul className="space-y-1 text-gray-600">
-                  <li>• Le richieste vengono inviate al manager</li>
-                  <li>• Tempi di approvazione: 1-3 giorni lavorativi</li>
-                  <li>• Riceverai una notifica via email</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.approvalProcess.managerReview')}</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.approvalProcess.approvalTime')}</li>
+                  <li>• {t('forms.holidays.pageContent.helpSection.approvalProcess.emailNotification')}</li>
                 </ul>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,39 +25,42 @@ interface ProfileEditModalProps {
   onProfileUpdate: () => void;
 }
 
-// Validation schema
-const profileSchema = z.object({
-  name: z.string().min(2, 'Nome deve avere almeno 2 caratteri').max(100),
-  email: z.string().email('Email non valida'),
-  phone: z.string().min(10, 'Numero di telefono deve avere almeno 10 cifre').max(20).optional().or(z.literal('')),
-  jobTitle: z.string().min(2, 'Mansione deve avere almeno 2 caratteri').max(100, 'Mansione non può superare 100 caratteri').optional().or(z.literal('')),
-  departmentId: z.string().optional().or(z.literal('')),
-  currentPassword: z.string().optional(),
-  newPassword: z.string().min(8, 'Password deve avere almeno 8 caratteri').optional().or(z.literal('')),
-  confirmPassword: z.string().optional()
-}).refine(
-  (data) => {
-    if (data.newPassword && data.newPassword.length > 0) {
-      return data.currentPassword && data.currentPassword.length > 0;
-    }
-    return true;
-  },
-  {
-    message: "Password attuale richiesta per cambio password",
-    path: ["currentPassword"],
-  }
-).refine(
-  (data) => data.newPassword === data.confirmPassword,
-  {
-    message: "Le password non corrispondono",
-    path: ["confirmPassword"],
-  }
-);
+// Validation schema will be created inside component to access translations
 
 export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEditModalProps) {
   const { user, refreshUserData } = useAuth();
   const { success, error } = useToasts();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
+
+  // Dynamic validation schema with translations
+  const profileSchema = z.object({
+    name: z.string().min(2, t('dashboard.profile.modal.validation.nameMin')).max(100),
+    email: z.string().email(t('dashboard.profile.modal.validation.emailInvalid')),
+    phone: z.string().min(10, t('dashboard.profile.modal.validation.phoneMin')).max(20).optional().or(z.literal('')),
+    jobTitle: z.string().min(2, t('dashboard.profile.modal.validation.jobTitleMin')).max(100, t('dashboard.profile.modal.validation.jobTitleMax')).optional().or(z.literal('')),
+    departmentId: z.string().optional().or(z.literal('')),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().min(8, t('dashboard.profile.modal.validation.passwordMin')).optional().or(z.literal('')),
+    confirmPassword: z.string().optional()
+  }).refine(
+    (data) => {
+      if (data.newPassword && data.newPassword.length > 0) {
+        return data.currentPassword && data.currentPassword.length > 0;
+      }
+      return true;
+    },
+    {
+      message: t('dashboard.profile.modal.validation.currentPasswordRequired'),
+      path: ["currentPassword"],
+    }
+  ).refine(
+    (data) => data.newPassword === data.confirmPassword,
+    {
+      message: t('dashboard.profile.modal.validation.passwordMismatch'),
+      path: ["confirmPassword"],
+    }
+  );
 
   // Form state
   const [formData, setFormData] = useState({
@@ -223,13 +227,13 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      error("Errore", "Formato file non supportato. Usa: JPEG, PNG, GIF o WebP");
+      error("Errore", t('dashboard.profile.modal.errors.fileNotSupported'));
       return;
     }
 
     // Validate file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
-      error("Errore", "File troppo grande. Dimensione massima: 2MB");
+      error("Errore", t('dashboard.profile.modal.errors.fileTooLarge'));
       return;
     }
 
@@ -306,7 +310,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             );
             avatarUrl = uploadResult.data.avatarUrl;
           } catch (avatarError) {
-            error("Errore Avatar", avatarError instanceof Error ? avatarError.message : "Errore durante il caricamento dell'avatar");
+            error("Errore Avatar", avatarError instanceof Error ? avatarError.message : t('dashboard.profile.modal.errors.avatarUploadFailed'));
             // Continue with profile update even if avatar fails
           }
         }
@@ -345,7 +349,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
       const result = await response.json();
 
       if (response.ok && result.success) {
-        success("Successo", "Profilo aggiornato con successo");
+        success("Successo", t('dashboard.profile.modal.success.profileUpdated'));
 
         // Refresh user data
         await refreshUserData();
@@ -367,7 +371,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         });
         setErrors(newErrors);
       } else {
-        error("Errore", err instanceof Error ? err.message : "Errore durante l'aggiornamento del profilo");
+        error("Errore", err instanceof Error ? err.message : t('dashboard.profile.modal.errors.profileUpdateFailed'));
       }
     } finally {
       setIsLoading(false);
@@ -388,7 +392,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <UserCog className="h-5 w-5" />
-            <span>Modifica Profilo</span>
+            <span>{t('dashboard.profile.modal.title')}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -433,9 +437,9 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               className="hidden"
             />
             <p className="text-xs text-muted-foreground text-center">
-              Clicca sulla fotocamera per cambiare avatar<br/>
-              {(avatarPreview || user.avatarUrl) && "Clicca sul cestino per rimuovere l'avatar<br/>"}
-              (Formati supportati: JPEG, PNG, GIF, WebP - Max 2MB)
+              {t('dashboard.profile.modal.avatar.clickCamera')}<br/>
+              {(avatarPreview || user.avatarUrl) && <>{t('dashboard.profile.modal.avatar.clickTrash')}<br/></>}
+              {t('dashboard.profile.modal.avatar.supportedFormats')}
             </p>
           </div>
 
@@ -444,13 +448,13 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             <div className="space-y-2">
               <Label htmlFor="name" className="flex items-center space-x-2">
                 <User className="h-4 w-4" />
-                <span>Nome e Cognome</span>
+                <span>{t('dashboard.profile.modal.fields.nameLabel')}</span>
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Inserisci nome e cognome"
+                placeholder={t('dashboard.profile.modal.fields.namePlaceholder')}
                 className={errors.name ? 'border-red-500' : ''}
               />
               {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
@@ -459,14 +463,14 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>Email</span>
+                <span>{t('dashboard.profile.modal.fields.emailLabel')}</span>
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="Inserisci email"
+                placeholder={t('dashboard.profile.modal.fields.emailPlaceholder')}
                 className={errors.email ? 'border-red-500' : ''}
               />
               {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
@@ -477,14 +481,14 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
-                <span>Telefono (opzionale)</span>
+                <span>{t('dashboard.profile.modal.fields.phoneLabel')}</span>
               </Label>
               <Input
                 id="phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="+39 123 456 7890"
+                placeholder={t('dashboard.profile.modal.fields.phonePlaceholder')}
                 className={errors.phone ? 'border-red-500' : ''}
               />
               {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
@@ -493,26 +497,26 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             <div className="space-y-2">
               <Label htmlFor="jobTitle" className="flex items-center space-x-2">
                 <UserCog className="h-4 w-4" />
-                <span>Mansione Aziendale</span>
+                <span>{t('dashboard.profile.modal.fields.jobTitleLabel')}</span>
               </Label>
               <Input
                 id="jobTitle"
                 type="text"
                 value={formData.jobTitle}
                 onChange={(e) => handleInputChange('jobTitle', e.target.value)}
-                placeholder="es. Project Manager, CEO, Sviluppatore..."
+                placeholder={t('dashboard.profile.modal.fields.jobTitlePlaceholder')}
                 className={errors.jobTitle ? 'border-red-500' : ''}
               />
               {errors.jobTitle && <p className="text-sm text-red-500">{errors.jobTitle}</p>}
               <p className="text-xs text-muted-foreground">
-                Inserisci la tua mansione o posizione aziendale
+                {t('dashboard.profile.modal.fields.jobTitleHint')}
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="department" className="flex items-center space-x-2">
                 <Building2 className="h-4 w-4" />
-                <span>Dipartimento</span>
+                <span>{t('dashboard.profile.modal.fields.departmentLabel')}</span>
               </Label>
               <Select 
                 value={formData.departmentId} 
@@ -524,11 +528,11 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               >
                 <SelectTrigger className={errors.departmentId ? 'border-red-500' : ''}>
                   <SelectValue 
-                    placeholder={isInitializing ? "Caricamento..." : "Seleziona dipartimento"} 
+                    placeholder={isInitializing ? t('dashboard.profile.modal.fields.departmentLoading') : t('dashboard.profile.modal.fields.departmentPlaceholder')} 
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Nessun dipartimento</SelectItem>
+                  <SelectItem value="none">{t('dashboard.profile.modal.fields.departmentNone')}</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name} {dept.location && `(${dept.location})`}
@@ -544,36 +548,36 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
           <div className="space-y-2">
             <Label className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
-              <span>Ruolo</span>
+              <span>{t('dashboard.profile.modal.fields.roleLabel')}</span>
             </Label>
             <div className="flex items-center space-x-2 p-3 border rounded-md bg-gray-50">
               <span className="text-sm">
-                {user.role === 'admin' ? 'Amministratore' : 'Dipendente'}
+                {user.role === 'admin' ? t('dashboard.profile.role.admin') : t('dashboard.profile.role.employee')}
               </span>
               {user.email === 'max.giurastante@omniaservices.net' && (
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                  Super Admin
+                  {t('dashboard.profile.modal.fields.superAdmin')}
                 </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Il ruolo può essere modificato solo dagli amministratori
+              {t('dashboard.profile.modal.fields.roleHint')}
             </p>
           </div>
 
           {/* Password Change Section */}
           <div className="space-y-4 border-t pt-4">
-            <h4 className="text-sm font-medium text-gray-900">Cambio Password (opzionale)</h4>
+            <h4 className="text-sm font-medium text-gray-900">{t('dashboard.profile.modal.password.section')}</h4>
             
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Password Attuale</Label>
+              <Label htmlFor="currentPassword">{t('dashboard.profile.modal.password.currentLabel')}</Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
                   type={showCurrentPassword ? "text" : "password"}
                   value={formData.currentPassword}
                   onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                  placeholder="Inserisci password attuale"
+                  placeholder={t('dashboard.profile.modal.password.currentPlaceholder')}
                   className={errors.currentPassword ? 'border-red-500' : ''}
                 />
                 <Button
@@ -591,14 +595,14 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Nuova Password</Label>
+                <Label htmlFor="newPassword">{t('dashboard.profile.modal.password.newLabel')}</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
                     type={showNewPassword ? "text" : "password"}
                     value={formData.newPassword}
                     onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                    placeholder="Nuova password"
+                    placeholder={t('dashboard.profile.modal.password.newPlaceholder')}
                     className={errors.newPassword ? 'border-red-500' : ''}
                   />
                   <Button
@@ -615,13 +619,13 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Conferma Password</Label>
+                <Label htmlFor="confirmPassword">{t('dashboard.profile.modal.password.confirmLabel')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Conferma nuova password"
+                  placeholder={t('dashboard.profile.modal.password.confirmPlaceholder')}
                   className={errors.confirmPassword ? 'border-red-500' : ''}
                 />
                 {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
@@ -638,14 +642,14 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               disabled={isLoading}
             >
               <X className="h-4 w-4 mr-2" />
-              Annulla
+              {t('dashboard.profile.modal.actions.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
             >
               <Save className="h-4 w-4 mr-2" />
-              {isLoading ? 'Salvataggio...' : 'Salva Modifiche'}
+              {isLoading ? t('dashboard.profile.modal.actions.saving') : t('dashboard.profile.modal.actions.save')}
             </Button>
           </div>
         </form>

@@ -64,31 +64,31 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
       label: t('dashboard.navigation.calendar'),
       href: `/${locale}/employee-dashboard?tab=calendar`,
       icon: Calendar,
-      description: 'Visualizza calendario ferie',
+      description: t('dashboard.navigation.calendarDesc'),
       badge: holidayStats?.upcomingHolidays
     },
     {
       label: t('dashboard.navigation.requests'),
       href: `/${locale}/employee-dashboard?tab=requests`,
       icon: FileText,
-      description: 'Storico richieste ferie',
+      description: t('dashboard.navigation.requestsDesc'),
       badge: holidayStats?.pendingRequests
     },
     {
       label: t('dashboard.navigation.profile'),
       href: `/${locale}/employee-dashboard?tab=profile`,
       icon: User,
-      description: 'Informazioni personali'
+      description: t('dashboard.navigation.profileDesc')
     },
   ];
 
   const quickActions = [
     {
-      label: 'Nuova Richiesta',
+      label: t('dashboard.navigation.newRequest'),
       href: `/${locale}/holiday-request`,
       icon: Plus,
       variant: 'default' as const,
-      description: 'Richiedi nuove ferie'
+      description: t('dashboard.navigation.newRequestDesc')
     },
   ];
 
@@ -124,7 +124,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
           </Avatar>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-medium text-gray-900 truncate">
-              {user?.name || 'Dipendente'}
+              {user?.name || t('dashboard.stats.employee')}
             </h3>
             <p className="text-xs text-gray-600 truncate">
               {user?.email}
@@ -142,12 +142,12 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
                   getStatusColor(holidayStats.remainingDays)
                 )}></div>
                 <span className="text-gray-600">
-                  {holidayStats.remainingDays} giorni rimasti
+                  {holidayStats.remainingDays} {t('dashboard.stats.daysRemaining')}
                 </span>
               </div>
               {holidayStats.pendingRequests > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {holidayStats.pendingRequests} in attesa
+                  {holidayStats.pendingRequests} {t('dashboard.stats.pending')}
                 </Badge>
               )}
             </div>
@@ -172,7 +172,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
       {/* Quick Actions */}
       <div className="p-4 border-b">
         <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-          Azioni Rapide
+          {t('dashboard.navigation.quickActions')}
         </h4>
         <div className="space-y-2">
           {quickActions.map((action) => {
@@ -197,7 +197,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
       {/* Navigation */}
       <div className="flex-1 p-4">
         <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-          Navigazione
+          {t('dashboard.navigation.navigationTitle')}
         </h4>
         <nav className="space-y-1">
           {navigationItems.map((item) => {
@@ -285,7 +285,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.navigation.menu')}</h2>
           <Button
             variant="ghost"
             size="sm"

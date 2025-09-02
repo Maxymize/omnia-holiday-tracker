@@ -99,6 +99,65 @@ const formsEs = {
         invalidFileFormat: 'Formato de archivo inválido. Solo se admiten PDF, DOC, DOCX, JPG y PNG.'
       }
     },
+    pageContent: {
+      backButton: 'Atrás',
+      loadingText: 'Cargando...',
+      loadingData: 'Cargando datos...',
+      subtitle: 'Completa el formulario para solicitar días de vacaciones, baja médica o días personales',
+      statsCards: {
+        availableDays: 'Días disponibles',
+        pendingRequests: 'Pendientes',
+        approvedRequests: 'Aprobadas'
+      },
+      helpSection: {
+        title: 'Información Útil',
+        leaveTypes: {
+          title: 'Tipos de Ausencia',
+          vacation: 'Vacaciones: Se descuentan del subsidio anual',
+          sick: 'Baja Médica: Requiere certificado médico',
+          personal: 'Día Personal: Para necesidades familiares'
+        },
+        approvalProcess: {
+          title: 'Proceso de Aprobación',
+          managerReview: 'Las solicitudes se envían al gerente',
+          approvalTime: 'Tiempo de aprobación: 1-3 días laborables',
+          emailNotification: 'Recibirás una notificación por email'
+        }
+      }
+    },
+    profile: {
+      editTitle: 'Editar Perfil',
+      nameLabel: 'Nombre Completo',
+      emailLabel: 'Correo Electrónico',
+      phoneLabel: 'Teléfono (opcional)',
+      departmentLabel: 'Departamento',
+      roleInfo: 'El rol solo puede ser modificado por administradores',
+      confirmPasswordLabel: 'Confirmar Contraseña',
+      confirmPasswordPlaceholder: 'Confirma nueva contraseña',
+      cancel: 'Cancelar',
+      save: 'Guardar Cambios',
+      saving: 'Guardando...',
+      validation: {
+        nameMin: 'El nombre debe tener al menos 2 caracteres',
+        emailInvalid: 'Correo electrónico inválido',
+        phoneMin: 'El número de teléfono debe tener al menos 10 dígitos',
+        jobTitleMin: 'El puesto debe tener al menos 2 caracteres',
+        jobTitleMax: 'El puesto no puede exceder 100 caracteres',
+      },
+      errors: {
+        generic: 'Error',
+        unsupportedFormat: 'Formato de archivo no soportado. Usa: JPEG, PNG, GIF o WebP',
+        fileTooLarge: 'Archivo muy grande. Tamaño máximo: 2MB',
+        avatarUpload: 'Error durante la subida del avatar',
+        avatarError: 'Error de Avatar',
+        profileUpdate: 'Error durante la actualización',
+        profileUpdateGeneric: 'Error durante la actualización del perfil',
+      },
+      success: {
+        title: 'Éxito',
+        profileUpdated: 'Perfil actualizado exitosamente',
+      },
+    },
   },
   holidayHistory: {
     title: 'Historial de Solicitudes',
@@ -148,6 +207,13 @@ const formsEs = {
     endDateRequired: 'Fecha de fin requerida',
     typeRequired: 'Selecciona el tipo de solicitud',
     notesOptional: 'Notas adicionales (opcional)',
+    selectStartDate: 'Selecciona fecha de inicio',
+    selectEndDate: 'Selecciona fecha de fin',
+    selectLeaveType: 'Selecciona el tipo de ausencia',
+    endDateAfterStart: 'La fecha de fin debe ser igual o posterior a la fecha de inicio',
+    noPastDates: 'No se pueden solicitar permisos para fechas pasadas',
+    noFutureDates: 'No se pueden solicitar permisos con más de un año de antelación',
+    medicalCertRequired: 'El certificado médico es obligatorio para la baja médica',
   },
   multiStepForm: {
     steps: {
@@ -166,6 +232,10 @@ const formsEs = {
       summary: {
         title: 'Resumen',
         description: 'Confirmar y enviar',
+      },
+      dates: {
+        title: 'Fechas',
+        description: 'Seleccionar fechas',
       },
     },
   },

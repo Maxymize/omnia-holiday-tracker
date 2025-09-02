@@ -99,6 +99,65 @@ const formsEn = {
         invalidFileFormat: 'Invalid file format. Only PDF, DOC, DOCX, JPG and PNG are supported.'
       }
     },
+    pageContent: {
+      backButton: 'Back',
+      loadingText: 'Loading...',
+      loadingData: 'Loading data...',
+      subtitle: 'Complete the form to request vacation days, sick leave, or personal days',
+      statsCards: {
+        availableDays: 'Available days',
+        pendingRequests: 'Pending',
+        approvedRequests: 'Approved'
+      },
+      helpSection: {
+        title: 'Useful Information',
+        leaveTypes: {
+          title: 'Types of Leave',
+          vacation: 'Vacation: Deducted from annual allowance',
+          sick: 'Sick Leave: Medical certificate required',
+          personal: 'Personal Leave: For family needs'
+        },
+        approvalProcess: {
+          title: 'Approval Process',
+          managerReview: 'Requests are sent to the manager',
+          approvalTime: 'Approval time: 1-3 business days',
+          emailNotification: 'You will receive an email notification'
+        }
+      }
+    },
+    profile: {
+      editTitle: 'Edit Profile',
+      nameLabel: 'Full Name',
+      emailLabel: 'Email',
+      phoneLabel: 'Phone (optional)',
+      departmentLabel: 'Department',
+      roleInfo: 'Role can only be modified by administrators',
+      confirmPasswordLabel: 'Confirm Password',
+      confirmPasswordPlaceholder: 'Confirm new password',
+      cancel: 'Cancel',
+      save: 'Save Changes',
+      saving: 'Saving...',
+      validation: {
+        nameMin: 'Name must have at least 2 characters',
+        emailInvalid: 'Invalid email',
+        phoneMin: 'Phone number must have at least 10 digits',
+        jobTitleMin: 'Job title must have at least 2 characters',
+        jobTitleMax: 'Job title cannot exceed 100 characters',
+      },
+      errors: {
+        generic: 'Error',
+        unsupportedFormat: 'Unsupported file format. Use: JPEG, PNG, GIF or WebP',
+        fileTooLarge: 'File too large. Maximum size: 2MB',
+        avatarUpload: 'Error during avatar upload',
+        avatarError: 'Avatar Error',
+        profileUpdate: 'Error during update',
+        profileUpdateGeneric: 'Error during profile update',
+      },
+      success: {
+        title: 'Success',
+        profileUpdated: 'Profile updated successfully',
+      },
+    },
   },
   holidayHistory: {
     title: 'Request History',
@@ -148,6 +207,13 @@ const formsEn = {
     endDateRequired: 'End date required',
     typeRequired: 'Select request type',
     notesOptional: 'Additional notes (optional)',
+    selectStartDate: 'Select start date',
+    selectEndDate: 'Select end date',
+    selectLeaveType: 'Select leave type',
+    endDateAfterStart: 'End date must be equal to or after start date',
+    noPastDates: 'Cannot request leave for past dates',
+    noFutureDates: 'Cannot request leave more than one year in advance',
+    medicalCertRequired: 'Medical certificate is required for sick leave',
   },
   multiStepForm: {
     steps: {
@@ -166,6 +232,10 @@ const formsEn = {
       summary: {
         title: 'Summary',
         description: 'Confirm and submit',
+      },
+      dates: {
+        title: 'Dates',
+        description: 'Select dates',
       },
     },
   },

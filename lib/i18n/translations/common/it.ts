@@ -22,6 +22,11 @@ const commonTranslations = {
   logout: 'Esci',
   tomorrow: 'Domani',
   refresh: 'Aggiorna',
+  notifications: {
+    actions: {
+      closeNotification: 'Chiudi notifica',
+    },
+  },
 };
 
 export default commonTranslations;

@@ -132,7 +132,7 @@ export function UpcomingHolidays({
       return locale === 'it' ? '1 giorno' : locale === 'es' ? '1 día' : '1 day';
     }
     
-    const dayLabel = locale === 'it' ? 'giorni' : locale === 'es' ? 'días' : 'days';
+    const dayLabel = t('dashboard.stats.days');
     return `${workingDays} ${dayLabel}`;
   };
 
@@ -215,10 +215,10 @@ export function UpcomingHolidays({
                 {viewMode === 'own' 
                   ? (locale === 'it' ? 'Le tue prossime ferie appariranno qui' : 
                      locale === 'es' ? 'Tus próximas vacaciones aparecerán aquí' : 
-                     'Your upcoming holidays will appear here')
+                     t('dashboard.stats.upcomingHolidaysDesc'))
                   : (locale === 'it' ? 'Nessuna ferie del team in programma' :
                      locale === 'es' ? 'No hay vacaciones del equipo programadas' :
-                     'No team holidays scheduled')
+                     t('dashboard.stats.noTeamHolidays'))
                 }
               </p>
             </div>
@@ -338,9 +338,7 @@ export function UpcomingHolidays({
             ).length > 15 && (
               <div className="text-center pt-2 border-t">
                 <Button variant="ghost" size="sm" className="text-xs">
-                  {locale === 'it' ? `Vedi altre (${holidays.length - 15})` :
-                   locale === 'es' ? `Ver más (${holidays.length - 15})` :
-                   `Show more (${holidays.length - 15})`}
+                  {`${t('dashboard.stats.showMore')} (${holidays.length - 15})`}
                   <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               </div>
