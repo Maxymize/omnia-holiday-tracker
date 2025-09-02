@@ -137,7 +137,7 @@ export default function HolidayRequestPage() {
           
           <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-lg p-6 text-white">
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {t('holidays.request.title')}
+              {t('forms.holidays.request.title')}
             </h1>
             <p className="mt-2 text-blue-100">
               Compila il modulo per richiedere giorni di ferie, malattia o permessi personali

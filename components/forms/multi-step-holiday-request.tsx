@@ -202,7 +202,7 @@ export function MultiStepHolidayRequest({
       })
 
       if (hasLocalConflict) {
-        setConflictWarning(t('holidays.request.multiStep.conflictWarning'))
+        setConflictWarning(t('forms.holidays.request.multiStep.conflictWarning'))
         return
       }
 
@@ -235,7 +235,7 @@ export function MultiStepHolidayRequest({
           })
 
           if (hasConflict) {
-            setConflictWarning(t('holidays.request.multiStep.conflictWarning'))
+            setConflictWarning(t('forms.holidays.request.multiStep.conflictWarning'))
           }
         }
       }
@@ -264,11 +264,11 @@ export function MultiStepHolidayRequest({
   const getHolidayTypeLabel = (type: string) => {
     switch (type) {
       case "vacation":
-        return t('holidays.request.types.vacation')
+        return t('forms.holidays.request.types.vacation')
       case "sick":
-        return t('holidays.request.types.sick')
+        return t('forms.holidays.request.types.sick')
       case "personal":
-        return t('holidays.request.types.personal')
+        return t('forms.holidays.request.types.personal')
       default:
         return type
     }
@@ -277,11 +277,11 @@ export function MultiStepHolidayRequest({
   const getHolidayTypeDescription = (type: string) => {
     switch (type) {
       case "vacation":
-        return t('holidays.request.multiStep.vacationDescription')
+        return t('forms.holidays.request.multiStep.vacationDescription')
       case "sick":
-        return t('holidays.request.multiStep.sickDescription')
+        return t('forms.holidays.request.multiStep.sickDescription')
       case "personal":
-        return t('holidays.request.multiStep.personalDescription')
+        return t('forms.holidays.request.multiStep.personalDescription')
       default:
         return ""
     }
@@ -422,7 +422,7 @@ export function MultiStepHolidayRequest({
       if (!response.ok) {
         // Handle specific conflict errors from backend
         if (response.status === 409) {
-          setConflictWarning(result.error || t('holidays.request.multiStep.conflictWarning'))
+          setConflictWarning(result.error || t('forms.holidays.request.multiStep.conflictWarning'))
           return; // Don't throw, just set conflict warning and return
         }
         throw new Error(result.error || 'Errore durante l\'invio della richiesta ferie')
@@ -521,8 +521,8 @@ export function MultiStepHolidayRequest({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold">{t('holidays.request.stepTitles.selectPeriod')}</h3>
-              <p className="text-muted-foreground">{t('holidays.request.stepTitles.selectPeriodDescription')}</p>
+              <h3 className="text-lg font-semibold">{t('forms.holidays.request.stepTitles.selectPeriod')}</h3>
+              <p className="text-muted-foreground">{t('forms.holidays.request.stepTitles.selectPeriodDescription')}</p>
             </div>
             
             <div className="space-y-4">
@@ -533,7 +533,7 @@ export function MultiStepHolidayRequest({
                   name="startDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('holidays.request.dateLabels.startDate')}</FormLabel>
+                      <FormLabel>{t('forms.holidays.request.dateLabels.startDate')}</FormLabel>
                       <FormControl>
                         <DatePicker
                           date={field.value}
@@ -544,7 +544,7 @@ export function MultiStepHolidayRequest({
                               form.setValue("endDate", null as any)
                             }
                           }}
-                          placeholder={t('holidays.request.dateLabels.startDate')}
+                          placeholder={t('forms.holidays.request.dateLabels.startDate')}
                           minDate={new Date()}
                           maxDate={addDays(new Date(), 365)}
                           locale="it"
@@ -553,7 +553,7 @@ export function MultiStepHolidayRequest({
                       </FormControl>
                       <FormMessage />
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('holidays.request.dateLabels.startDateHelper')}
+                        {t('forms.holidays.request.dateLabels.startDateHelper')}
                       </p>
                     </FormItem>
                   )}
@@ -565,12 +565,12 @@ export function MultiStepHolidayRequest({
                   name="endDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('holidays.request.dateLabels.endDate')}</FormLabel>
+                      <FormLabel>{t('forms.holidays.request.dateLabels.endDate')}</FormLabel>
                       <FormControl>
                         <DatePicker
                           date={field.value}
                           onDateChange={field.onChange}
-                          placeholder={t('holidays.request.dateLabels.endDate')}
+                          placeholder={t('forms.holidays.request.dateLabels.endDate')}
                           minDate={startDate || new Date()}
                           maxDate={addDays(new Date(), 365)}
                           locale="it"
@@ -580,7 +580,7 @@ export function MultiStepHolidayRequest({
                       </FormControl>
                       <FormMessage />
                       <p className="text-xs text-muted-foreground mt-1">
-                        {t('holidays.request.dateLabels.endDateHelper')}
+                        {t('forms.holidays.request.dateLabels.endDateHelper')}
                       </p>
                     </FormItem>
                   )}
@@ -592,7 +592,7 @@ export function MultiStepHolidayRequest({
                 <Alert>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <AlertDescription>
-                    {t('holidays.request.multiStep.checkingConflicts')}
+                    {t('forms.holidays.request.multiStep.checkingConflicts')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -609,14 +609,14 @@ export function MultiStepHolidayRequest({
                 <div className="rounded-lg border p-4 bg-muted/50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{t('holidays.request.dateLabels.workingDaysRequested')}</p>
+                      <p className="font-medium">{t('forms.holidays.request.dateLabels.workingDaysRequested')}</p>
                       <p className="text-sm text-muted-foreground">
                         {format(startDate, "dd/MM/yyyy")} - {format(endDate, "dd/MM/yyyy")}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold">{workingDays}</p>
-                      <p className="text-sm text-muted-foreground">{t('holidays.request.dateLabels.days')}</p>
+                      <p className="text-sm text-muted-foreground">{t('forms.holidays.request.dateLabels.days')}</p>
                     </div>
                   </div>
                 </div>
@@ -629,8 +629,8 @@ export function MultiStepHolidayRequest({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold">{t('holidays.request.stepTitles.leaveType')}</h3>
-              <p className="text-muted-foreground">{t('holidays.request.stepTitles.leaveTypeDescription')}</p>
+              <h3 className="text-lg font-semibold">{t('forms.holidays.request.stepTitles.leaveType')}</h3>
+              <p className="text-muted-foreground">{t('forms.holidays.request.stepTitles.leaveTypeDescription')}</p>
             </div>
             
             <FormField
@@ -638,11 +638,11 @@ export function MultiStepHolidayRequest({
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('holidays.request.multiStep.absenceType')}</FormLabel>
+                  <FormLabel>{t('forms.holidays.request.multiStep.absenceType')}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-12 w-full">
-                        <SelectValue placeholder={t('holidays.request.multiStep.absenceType')}>
+                        <SelectValue placeholder={t('forms.holidays.request.multiStep.absenceType')}>
                           {field.value && (
                             <span className="font-medium">{getHolidayTypeLabel(field.value)}</span>
                           )}
@@ -652,19 +652,19 @@ export function MultiStepHolidayRequest({
                     <SelectContent>
                       <SelectItem value="vacation">
                         <div className="flex flex-col items-start">
-                          <span className="font-medium">{t('holidays.request.types.vacation')}</span>
-                          <span className="text-xs text-muted-foreground">{t('holidays.request.multiStep.vacationDescription')}</span>
+                          <span className="font-medium">{t('forms.holidays.request.types.vacation')}</span>
+                          <span className="text-xs text-muted-foreground">{t('forms.holidays.request.multiStep.vacationDescription')}</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="sick">
                         <div className="flex flex-col items-start">
-                          <span className="font-medium">{t('holidays.request.types.sick')}</span>
-                          <span className="text-xs text-muted-foreground">{t('holidays.request.multiStep.sickDescription')}</span>
+                          <span className="font-medium">{t('forms.holidays.request.types.sick')}</span>
+                          <span className="text-xs text-muted-foreground">{t('forms.holidays.request.multiStep.sickDescription')}</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="personal">
                         <div className="flex flex-col items-start">
-                          <span className="font-medium">{t('holidays.request.types.personal')}</span>
+                          <span className="font-medium">{t('forms.holidays.request.types.personal')}</span>
                           <span className="text-xs text-muted-foreground">Per esigenze personali e familiari</span>
                         </div>
                       </SelectItem>
@@ -681,35 +681,35 @@ export function MultiStepHolidayRequest({
             {/* Holiday Balance Check for Vacation */}
             {holidayType === "vacation" && (
               <div className="rounded-lg border p-4">
-                <h4 className="font-medium mb-2">{t('holidays.request.multiStep.holidayBalance')}</h4>
+                <h4 className="font-medium mb-2">{t('forms.holidays.request.multiStep.holidayBalance')}</h4>
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">{holidayAllowance}</p>
-                    <p className="text-muted-foreground">{t('holidays.request.multiStep.total')}</p>
+                    <p className="text-muted-foreground">{t('forms.holidays.request.multiStep.total')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-orange-600">{usedDays}</p>
-                    <p className="text-muted-foreground">{t('holidays.request.multiStep.used')}</p>
+                    <p className="text-muted-foreground">{t('forms.holidays.request.multiStep.used')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-green-600">{remainingDays}</p>
-                    <p className="text-muted-foreground">{t('holidays.request.multiStep.remaining')}</p>
+                    <p className="text-muted-foreground">{t('forms.holidays.request.multiStep.remaining')}</p>
                   </div>
                 </div>
                 
                 {workingDays > 0 && (
                   <div className="mt-4 pt-4 border-t">
                     <div className="flex justify-between items-center">
-                      <span>{t('holidays.request.multiStep.afterRequest')}</span>
+                      <span>{t('forms.holidays.request.multiStep.afterRequest')}</span>
                       <span className={`font-bold ${remainingDays - workingDays < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {remainingDays - workingDays} {t('holidays.request.multiStep.daysRemaining')}
+                        {remainingDays - workingDays} {t('forms.holidays.request.multiStep.daysRemaining')}
                       </span>
                     </div>
                     {remainingDays - workingDays < 0 && (
                       <Alert variant="destructive" className="mt-2">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                          {t('holidays.request.multiStep.insufficientBalance')}
+                          {t('forms.holidays.request.multiStep.insufficientBalance')}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -724,8 +724,8 @@ export function MultiStepHolidayRequest({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold">{t('holidays.request.stepTitles.additionalNotes')}</h3>
-              <p className="text-muted-foreground">{t('holidays.request.stepTitles.additionalNotesDescription')}</p>
+              <h3 className="text-lg font-semibold">{t('forms.holidays.request.stepTitles.additionalNotes')}</h3>
+              <p className="text-muted-foreground">{t('forms.holidays.request.stepTitles.additionalNotesDescription')}</p>
             </div>
             
             <FormField
@@ -733,7 +733,7 @@ export function MultiStepHolidayRequest({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('holidays.request.notes')}</FormLabel>
+                  <FormLabel>{t('forms.holidays.request.notes')}</FormLabel>
                   <FormControl>
                     <textarea
                       className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -748,7 +748,7 @@ export function MultiStepHolidayRequest({
                     />
                   </FormControl>
                   <FormDescription>
-                    {field.value?.length || 0}/500 {t('holidays.request.multiStep.characters')}
+                    {field.value?.length || 0}/500 {t('forms.holidays.request.multiStep.characters')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -761,10 +761,10 @@ export function MultiStepHolidayRequest({
                 <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="h-4 w-4 text-yellow-600" />
-                    <h4 className="font-medium text-yellow-800">{t('holidays.request.multiStep.medicalCertRequired')}</h4>
+                    <h4 className="font-medium text-yellow-800">{t('forms.holidays.request.multiStep.medicalCertRequired')}</h4>
                   </div>
                   <p className="text-sm text-yellow-700">
-                    {t('holidays.request.multiStep.medicalCertRequiredDesc')}
+                    {t('forms.holidays.request.multiStep.medicalCertRequiredDesc')}
                   </p>
                 </div>
 
@@ -774,7 +774,7 @@ export function MultiStepHolidayRequest({
                   name="medicalCertificateOption"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('holidays.request.multiStep.medicalCertOptions')}</FormLabel>
+                      <FormLabel>{t('forms.holidays.request.multiStep.medicalCertOptions')}</FormLabel>
                       <FormControl>
                         <div className="space-y-3">
                           <div className="flex items-center space-x-3">
@@ -791,7 +791,7 @@ export function MultiStepHolidayRequest({
                               className="h-4 w-4 text-blue-600"
                             />
                             <label htmlFor="upload-now" className="text-sm font-medium">
-                              {t('holidays.request.multiStep.uploadNow')}
+                              {t('forms.holidays.request.multiStep.uploadNow')}
                             </label>
                           </div>
                           <div className="flex items-center space-x-3">
@@ -811,7 +811,7 @@ export function MultiStepHolidayRequest({
                               className="h-4 w-4 text-blue-600"
                             />
                             <label htmlFor="send-later" className="text-sm font-medium">
-                              {t('holidays.request.multiStep.sendLater')}
+                              {t('forms.holidays.request.multiStep.sendLater')}
                             </label>
                           </div>
                         </div>
@@ -828,7 +828,7 @@ export function MultiStepHolidayRequest({
                     name="medicalCertificate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('holidays.request.multiStep.uploadMedicalCert')}</FormLabel>
+                        <FormLabel>{t('forms.holidays.request.multiStep.uploadMedicalCert')}</FormLabel>
                         <FormControl>
                           <div className="space-y-2">
                             <div
@@ -867,7 +867,7 @@ export function MultiStepHolidayRequest({
                                     'image/jpeg', 'image/jpg', 'image/png']
                                   
                                   if (!allowedTypes.includes(file.type)) {
-                                    toast.error(t('holidays.request.multiStep.invalidFileFormat'))
+                                    toast.error(t('forms.holidays.request.multiStep.invalidFileFormat'))
                                     return
                                   }
                                   
@@ -898,12 +898,12 @@ export function MultiStepHolidayRequest({
                                 <Upload className={`w-8 h-8 mb-2 ${dragActive ? 'text-blue-500' : 'text-gray-500'}`} />
                                 <p className={`mb-2 text-sm ${dragActive ? 'text-blue-600' : 'text-gray-500'}`}>
                                   <span className="font-semibold">
-                                    {dragActive ? t('holidays.request.multiStep.dropFile') : t('holidays.request.multiStep.selectFile')}
+                                    {dragActive ? t('forms.holidays.request.multiStep.dropFile') : t('forms.holidays.request.multiStep.selectFile')}
                                   </span> 
-                                  {!dragActive && ` ${t('holidays.request.multiStep.dragFile')}`}
+                                  {!dragActive && ` ${t('forms.holidays.request.multiStep.dragFile')}`}
                                 </p>
                                 <p className={`text-xs ${dragActive ? 'text-blue-500' : 'text-gray-500'}`}>
-                                  {t('holidays.request.multiStep.fileFormats')}
+                                  {t('forms.holidays.request.multiStep.fileFormats')}
                                 </p>
                               </div>
                             </div>
@@ -964,7 +964,7 @@ export function MultiStepHolidayRequest({
                           </div>
                         </FormControl>
                         <FormDescription>
-                          {t('holidays.request.multiStep.uploadDesc')}
+                          {t('forms.holidays.request.multiStep.uploadDesc')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -977,10 +977,10 @@ export function MultiStepHolidayRequest({
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="h-4 w-4 text-blue-600" />
-                      <h4 className="font-medium text-blue-800">{t('holidays.request.multiStep.commitmentConfirmed')}</h4>
+                      <h4 className="font-medium text-blue-800">{t('forms.holidays.request.multiStep.commitmentConfirmed')}</h4>
                     </div>
                     <p className="text-sm text-blue-700">
-                      {t('holidays.request.multiStep.commitmentText')}
+                      {t('forms.holidays.request.multiStep.commitmentText')}
                     </p>
                   </div>
                 )}
@@ -993,44 +993,44 @@ export function MultiStepHolidayRequest({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold">{t('holidays.request.stepTitles.summary')}</h3>
-              <p className="text-muted-foreground">{t('holidays.request.stepTitles.summaryDescription')}</p>
+              <h3 className="text-lg font-semibold">{t('forms.holidays.request.stepTitles.summary')}</h3>
+              <p className="text-muted-foreground">{t('forms.holidays.request.stepTitles.summaryDescription')}</p>
             </div>
             
             <div className="space-y-4">
               <div className="rounded-lg border p-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.employee')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.employee')}</Label>
                     <p className="font-medium">{user?.name || 'Non disponibile'}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.email')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.email')}</Label>
                     <p className="font-medium">{user?.email || 'Non disponibile'}</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.startDate')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.startDate')}</Label>
                     <p className="font-medium">{startDate ? format(startDate, "dd/MM/yyyy") : "-"}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.endDate')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.endDate')}</Label>
                     <p className="font-medium">{endDate ? format(endDate, "dd/MM/yyyy") : "-"}</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.type')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.type')}</Label>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{getHolidayTypeLabel(holidayType)}</Badge>
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.workingDays')}</Label>
-                    <p className="font-medium">{workingDays} {t('holidays.request.dateLabels.days')}</p>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.workingDays')}</Label>
+                    <p className="font-medium">{workingDays} {t('forms.holidays.request.dateLabels.days')}</p>
                   </div>
                 </div>
                 
@@ -1045,7 +1045,7 @@ export function MultiStepHolidayRequest({
 
                 {holidayType === "sick" && (
                   <div>
-                    <Label className="text-muted-foreground">{t('holidays.request.multiStep.medicalCertRequired')}</Label>
+                    <Label className="text-muted-foreground">{t('forms.holidays.request.multiStep.medicalCertRequired')}</Label>
                     {selectedFile ? (
                       <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded">
                         <FileText className="h-4 w-4 text-green-600" />
@@ -1081,7 +1081,7 @@ export function MultiStepHolidayRequest({
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    {t('holidays.request.multiStep.finalWarning')}
+                    {t('forms.holidays.request.multiStep.finalWarning')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -1090,7 +1090,7 @@ export function MultiStepHolidayRequest({
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    {typeof conflictWarning === 'string' ? conflictWarning : t('holidays.request.multiStep.conflictWarning')}
+                    {typeof conflictWarning === 'string' ? conflictWarning : t('forms.holidays.request.multiStep.conflictWarning')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -1127,9 +1127,9 @@ export function MultiStepHolidayRequest({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>{t('holidays.request.modalTitle')}</CardTitle>
+            <CardTitle>{t('forms.holidays.request.modalTitle')}</CardTitle>
             <CardDescription>
-              {t('holidays.request.multiStep.step')} {currentStep} {t('holidays.request.multiStep.of')} {STEPS.length}: {t(`holidays.request.steps.${STEPS[currentStep - 1].description}`)}
+              {t('forms.holidays.request.multiStep.step')} {currentStep} {t('forms.holidays.request.multiStep.of')} {STEPS.length}: {t(`holidays.request.steps.${STEPS[currentStep - 1].description}`)}
             </CardDescription>
           </div>
           <Badge variant="outline">
@@ -1178,13 +1178,13 @@ export function MultiStepHolidayRequest({
             <div className="flex gap-2">
               {onCancel && (
                 <Button type="button" variant="outline" onClick={onCancel}>
-                  {t('holidays.request.multiStep.cancel')}
+                  {t('forms.holidays.request.multiStep.cancel')}
                 </Button>
               )}
               {currentStep > 1 && (
                 <Button type="button" variant="outline" onClick={prevStep}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  {t('holidays.request.multiStep.back')}
+                  {t('forms.holidays.request.multiStep.back')}
                 </Button>
               )}
             </div>
@@ -1196,7 +1196,7 @@ export function MultiStepHolidayRequest({
                   onClick={nextStep}
                   disabled={!canProceed()}
                 >
-                  {t('holidays.request.multiStep.next')}
+                  {t('forms.holidays.request.multiStep.next')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
@@ -1220,7 +1220,7 @@ export function MultiStepHolidayRequest({
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      {t('holidays.request.multiStep.submit')}
+                      {t('forms.holidays.request.multiStep.submit')}
                     </>
                   )}
                 </Button>

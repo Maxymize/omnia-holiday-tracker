@@ -108,7 +108,7 @@ export function DashboardHeader({
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium">{user.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {user.role === "admin" ? t('roles.admin') : t('roles.employee')}
+                    {user.role === "admin" ? t('forms.roles.admin') : t('forms.roles.employee')}
                   </p>
                 </div>
               </div>

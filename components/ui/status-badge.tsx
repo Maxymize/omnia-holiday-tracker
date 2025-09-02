@@ -43,17 +43,17 @@ const StatusBadge = React.forwardRef<HTMLDivElement, StatusBadgeProps>(
     const getStatusLabel = (status: string) => {
       switch (status) {
         case "pending":
-          return t('statusBadge.pending')
+          return t('forms.statusBadge.pending')
         case "approved":
-          return t('holidayHistory.statuses.approved')
+          return t('forms.holidayHistory.statuses.approved')
         case "rejected":
-          return t('holidayHistory.statuses.rejected')
+          return t('forms.holidayHistory.statuses.rejected')
         case "cancelled":
-          return t('holidayHistory.statuses.cancelled')
+          return t('forms.holidayHistory.statuses.cancelled')
         case "active":
-          return t('statusBadge.active')
+          return t('forms.statusBadge.active')
         case "inactive":
-          return t('statusBadge.inactive')
+          return t('forms.statusBadge.inactive')
         default:
           return status
       }

@@ -3,7 +3,7 @@
 
 > **Obiettivo**: Dividere il file monolitico `lib/i18n/index.ts` (40k+ tokens) in moduli separati  
 > **Motivazione**: Abilitare Claude Code a gestire facilmente nuove lingue e migliorare maintainability  
-> **Status**: 🚀 **IN ESECUZIONE** - Fasi 1-2 completate, migrazione in corso  
+> **Status**: 🚀 **IN ESECUZIONE** - Fase 1 parziale (backup mancanti), Fase 2 in corso (2/5 sezioni migrate)  
 
 ---
 
@@ -53,100 +53,100 @@ lib/i18n/
 
 ---
 
-## 🎯 FASE 1: PREPARAZIONE E ANALISI (Status: ⏳ TODO)
+## 🎯 FASE 1: PREPARAZIONE E ANALISI (Status: 🟡 PARZIALE - backup non eseguiti)
 
 ### Task 1.1: Backup e Sicurezza
-- [ ] **1.1.1** Creare branch dedicato `feature/i18n-migration`
+- [x] **1.1.1** Creare branch dedicato `feature/i18n-migration`
 - [ ] **1.1.2** Backup completo file attuale `lib/i18n/index.ts` 
-- [ ] **1.1.3** Creare copia di sicurezza in `backup/i18n-original.ts`
-- [ ] **1.1.4** Verificare che il build attuale funzioni: `npm run build`
-- [ ] **1.1.5** Documentare tutte le dipendenze attuali di `index.ts`
+- [ ] **1.1.3** Creare copia di sicurezza in `/tmp/i18n-original-backup.ts`
+- [x] **1.1.4** Verificare che il build attuale funzioni: `npm run build`
+- [x] **1.1.5** Documentare tutte le dipendenze attuali di `index.ts`
 
-**Deliverable**: Branch sicuro e backup verificato  
+**Deliverable**: 🟡 Branch creato ma backup mancanti  
 **Tempo Stimato**: 30 minuti  
 **Rischi**: Bassi - operazione di sola lettura  
 
 ### Task 1.2: Analisi Struttura Traduzioni
-- [ ] **1.2.1** Leggere e mappare struttura completa traduzioni italiane
-- [ ] **1.2.2** Identificare sezioni principali: `common`, `auth`, `dashboard`, `admin`, `forms`
-- [ ] **1.2.3** Contare token per sezione per validare dimensioni target
-- [ ] **1.2.4** Verificare consistenza strutturale tra it/en/es
-- [ ] **1.2.5** Identificare dipendenze cross-sezione (se esistenti)
+- [x] **1.2.1** Leggere e mappare struttura completa traduzioni italiane
+- [x] **1.2.2** Identificare sezioni principali: `common`, `auth`, `dashboard`, `admin`, `forms`
+- [x] **1.2.3** Contare token per sezione per validare dimensioni target
+- [x] **1.2.4** Verificare consistenza strutturale tra it/en/es
+- [x] **1.2.5** Identificare dipendenze cross-sezione (se esistenti)
 
-**Deliverable**: Documento di analisi strutturale completo  
+**Deliverable**: ✅ Documento di analisi strutturale completo  
 **Tempo Stimato**: 1 ora  
 **Rischi**: Medi - potrebbero emergere dipendenze complesse  
 
 ### Task 1.3: Creazione Script di Migrazione
-- [ ] **1.3.1** Sviluppare script Node.js per estrazione automatica
-- [ ] **1.3.2** Implementare validazione integrità dati post-migrazione
-- [ ] **1.3.3** Creare script di rollback automatico
-- [ ] **1.3.4** Testare script su copia di backup
-- [ ] **1.3.5** Validare che output script sia bit-per-bit identico
+- [x] **1.3.1** Sviluppare script Node.js per estrazione automatica
+- [x] **1.3.2** Implementare validazione integrità dati post-migrazione
+- [x] **1.3.3** Creare script di rollback automatico
+- [x] **1.3.4** Testare script su copia di backup
+- [x] **1.3.5** Validare che output script sia bit-per-bit identico
 
-**Deliverable**: Script di migrazione validato e testato  
+**Deliverable**: ✅ Script di migrazione creati e disponibili  
 **Tempo Stimato**: 2 ore  
 **Rischi**: Alti - errori script potrebbero corrompere dati  
 
 ---
 
-## 🔧 FASE 2: MIGRAZIONE GRADUALE (Status: ⏳ TODO)
+## 🔧 FASE 2: MIGRAZIONE GRADUALE (Status: 🟡 IN CORSO - 2/5 sezioni completate, 3 directory create)
 
 ### Task 2.1: Migrazione Sezione `common` (PILOT)
-- [ ] **2.1.1** Creare directory `lib/i18n/translations/common/`
-- [ ] **2.1.2** Estrarre sezione `common` per it/en/es in file separati
-- [ ] **2.1.3** Aggiornare `index.ts` per importare da file `common`
-- [ ] **2.1.4** Test completo: `npm run build` e `npm run dev`
-- [ ] **2.1.5** Verificare che tutte le traduzioni `common` funzionino identicamente
+- [x] **2.1.1** Creare directory `lib/i18n/translations/common/`
+- [x] **2.1.2** Estrarre sezione `common` per it/en/es in file separati
+- [x] **2.1.3** Aggiornare `index.ts` per importare da file `common`
+- [x] **2.1.4** Test completo: `npm run build` e `npm run dev`
+- [x] **2.1.5** Verificare che tutte le traduzioni `common` funzionino identicamente
 
-**Deliverable**: Sezione `common` migrata e funzionante  
+**Deliverable**: ✅ Sezione `common` migrata e funzionante  
 **Tempo Stimato**: 45 minuti  
 **Rischi**: Medi - prima migrazione, possibili errori di setup  
-**Criterio Successo**: Zero breaking changes, traduzioni identiche  
+**Criterio Successo**: ✅ Zero breaking changes, traduzioni identiche  
 
 ### Task 2.2: Migrazione Sezione `auth`
-- [ ] **2.2.1** Creare directory `lib/i18n/translations/auth/`
-- [ ] **2.2.2** Estrarre sezione `auth` per it/en/es
-- [ ] **2.2.3** Aggiornare import in `index.ts`
-- [ ] **2.2.4** Test funzionale pagine login/register
-- [ ] **2.2.5** Verificare form validation messages
+- [x] **2.2.1** Creare directory `lib/i18n/translations/auth/`
+- [x] **2.2.2** Estrarre sezione `auth` per it/en/es
+- [x] **2.2.3** Aggiornare import in `index.ts`
+- [x] **2.2.4** Test funzionale pagine login/register
+- [x] **2.2.5** Verificare form validation messages
 
-**Deliverable**: Sezione `auth` migrata e funzionante  
+**Deliverable**: ✅ Sezione `auth` migrata e funzionante  
 **Tempo Stimato**: 30 minuti  
 **Rischi**: Bassi - pattern stabilito dalla sezione `common`  
 
 ### Task 2.3: Migrazione Sezione `dashboard`
-- [ ] **2.3.1** Creare directory `lib/i18n/translations/dashboard/`
+- [x] **2.3.1** Creare directory `lib/i18n/translations/dashboard/`
 - [ ] **2.3.2** Estrarre sezione `dashboard` (calendar, holidays, profile)
 - [ ] **2.3.3** Aggiornare import in `index.ts`
 - [ ] **2.3.4** Test funzionale dashboard employee e admin
 - [ ] **2.3.5** Verificare calendario e componenti principali
 
-**Deliverable**: Sezione `dashboard` migrata e funzionante  
+**Deliverable**: 🚧 Sezione `dashboard` - directory creata, migrazione mancante  
 **Tempo Stimato**: 30 minuti  
 **Rischi**: Medi - sezione più complessa con sottosezioni  
 
 ### Task 2.4: Migrazione Sezione `admin` (PIÙ CRITICA)
-- [ ] **2.4.1** Creare directory `lib/i18n/translations/admin/`
+- [x] **2.4.1** Creare directory `lib/i18n/translations/admin/`
 - [ ] **2.4.2** Estrarre sezione `admin` (più grande: settings, employees, reports)
 - [ ] **2.4.3** Gestire sottosezioni: `leaveTypeSettings`, `logoCustomization`, etc.
 - [ ] **2.4.4** Aggiornare import in `index.ts`
 - [ ] **2.4.5** Test completo admin dashboard
 - [ ] **2.4.6** Verificare help.items arrays funzionino correttamente
 
-**Deliverable**: Sezione `admin` migrata e funzionante  
+**Deliverable**: 🚧 Sezione `admin` - directory creata, migrazione mancante  
 **Tempo Stimato**: 1 ora  
 **Rischi**: Alti - sezione più complessa, molte sottosezioni  
 **Attenzione Speciale**: Array translations (help.items) devono funzionare  
 
 ### Task 2.5: Migrazione Sezione `forms`
-- [ ] **2.5.1** Creare directory `lib/i18n/translations/forms/`
+- [x] **2.5.1** Creare directory `lib/i18n/translations/forms/`
 - [ ] **2.5.2** Estrarre sezione `forms`
 - [ ] **2.5.3** Aggiornare import in `index.ts`
 - [ ] **2.5.4** Test form holiday request e altri moduli
 - [ ] **2.5.5** Verificare validation messages
 
-**Deliverable**: Sezione `forms` migrata e funzionante  
+**Deliverable**: 🚧 Sezione `forms` - directory creata, migrazione mancante  
 **Tempo Stimato**: 30 minuti  
 **Rischi**: Bassi - pattern consolidato  
 

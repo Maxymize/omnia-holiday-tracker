@@ -118,13 +118,13 @@ export function HolidayHistoryTable({
             break;
           case 'tipo':
             // Use translation keys for type sorting
-            const typeOrder = { vacation: t('holidayHistory.types.vacation'), sick: t('holidayHistory.types.sick'), personal: t('holidayHistory.types.personal') };
+            const typeOrder = { vacation: t('forms.holidayHistory.types.vacation'), sick: t('forms.holidayHistory.types.sick'), personal: t('forms.holidayHistory.types.personal') };
             aValue = typeOrder[a.type];
             bValue = typeOrder[b.type];
             break;
           case 'stato':
             // Use translation keys for status sorting
-            const statusOrder = { approved: t('holidayHistory.statuses.approved'), pending: t('holidayHistory.statuses.pending'), rejected: t('holidayHistory.statuses.rejected'), cancelled: t('holidayHistory.statuses.cancelled') };
+            const statusOrder = { approved: t('forms.holidayHistory.statuses.approved'), pending: t('forms.holidayHistory.statuses.pending'), rejected: t('forms.holidayHistory.statuses.rejected'), cancelled: t('forms.holidayHistory.statuses.cancelled') };
             aValue = statusOrder[a.status];
             bValue = statusOrder[b.status];
             break;
@@ -215,7 +215,7 @@ export function HolidayHistoryTable({
         body: JSON.stringify({
           holidayId: holiday.id,
           action: 'reject',
-          notes: t('holidayHistory.messages.cancelNote')
+          notes: t('forms.holidayHistory.messages.cancelNote')
         }),
       });
 
@@ -230,7 +230,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Cancel request error:', error);
-      toast.error(t('holidayHistory.messages.cancelError'));
+      toast.error(t('forms.holidayHistory.messages.cancelError'));
     }
   };
 
@@ -296,7 +296,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Download certificate error:', error);
-      toast.error(t('holidayHistory.messages.downloadError'));
+      toast.error(t('forms.holidayHistory.messages.downloadError'));
     } finally {
       setDownloadingFiles(prev => {
         const next = new Set(prev);
@@ -349,7 +349,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Delete request error:', error);
-      toast.error(t('holidayHistory.messages.deleteError'));
+      toast.error(t('forms.holidayHistory.messages.deleteError'));
     } finally {
       setIsDeleting(false);
     }
@@ -424,34 +424,34 @@ export function HolidayHistoryTable({
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder={t('holidayHistory.filters.status')} />
+                  <SelectValue placeholder={t('forms.holidayHistory.filters.status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-{t('holidayHistory.filters.allStatuses')}
+{t('forms.holidayHistory.filters.allStatuses')}
                   </SelectItem>
                   <SelectItem value="pending">
-{t('holidayHistory.statuses.pending')}
+{t('forms.holidayHistory.statuses.pending')}
                   </SelectItem>
                   <SelectItem value="approved">
-{t('holidayHistory.statuses.approved')}
+{t('forms.holidayHistory.statuses.approved')}
                   </SelectItem>
                   <SelectItem value="rejected">
-{t('holidayHistory.statuses.rejected')}
+{t('forms.holidayHistory.statuses.rejected')}
                   </SelectItem>
                   <SelectItem value="cancelled">
-{t('holidayHistory.statuses.cancelled')}
+{t('forms.holidayHistory.statuses.cancelled')}
                   </SelectItem>
                 </SelectContent>
               </Select>
               
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder={t('holidayHistory.filters.type')} />
+                  <SelectValue placeholder={t('forms.holidayHistory.filters.type')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-{t('holidayHistory.filters.allTypes')}
+{t('forms.holidayHistory.filters.allTypes')}
                   </SelectItem>
                   <SelectItem value="vacation">
                     {t('dashboard.calendar.legendDetails.vacation')}
@@ -503,7 +503,7 @@ export function HolidayHistoryTable({
                     </div>
                     <div>
                       <span className="text-gray-600">
-{t('holidayHistory.columns.workingDays')}: 
+{t('forms.holidayHistory.columns.workingDays')}: 
                       </span>
                       <span className="font-medium">{formatWorkingDays(holiday.workingDays)}</span>
                     </div>
@@ -575,7 +575,7 @@ export function HolidayHistoryTable({
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
-{t('holidayHistory.actions.delete')}
+{t('forms.holidayHistory.actions.delete')}
                       </Button>
                     </div>
                   )}
@@ -615,7 +615,7 @@ export function HolidayHistoryTable({
                           onClick={() => handleSort('giorni')}
                           title="Ordina per giorni"
                         >
-                          <span>{t('holidayHistory.columns.days')}</span>
+                          <span>{t('forms.holidayHistory.columns.days')}</span>
                           {getSortIcon('giorni')}
                         </button>
                       </TableHead>
@@ -649,7 +649,7 @@ export function HolidayHistoryTable({
                     {filteredAndSortedHolidays.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={showActions ? 7 : 6} className="text-center py-8 text-gray-500">
-{t('holidayHistory.messages.noRequests')}
+{t('forms.holidayHistory.messages.noRequests')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -742,7 +742,7 @@ export function HolidayHistoryTable({
                                   disabled={isDeleting}
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
-          {t('holidayHistory.actions.delete')}
+          {t('forms.holidayHistory.actions.delete')}
                                 </Button>
                               </div>
                             </TableCell>

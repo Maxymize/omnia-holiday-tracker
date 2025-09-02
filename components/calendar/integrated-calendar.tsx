@@ -778,7 +778,7 @@ export function IntegratedCalendar({
           <DialogHeader className="pb-4">
             <DialogTitle>{t('dashboard.holidays.request.title')}</DialogTitle>
             <DialogDescription>
-              {t('holidays.request.modalDescription')}
+              {t('forms.holidays.request.modalDescription')}
             </DialogDescription>
           </DialogHeader>
           <MultiStepHolidayRequest
