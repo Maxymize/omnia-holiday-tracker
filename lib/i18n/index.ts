@@ -16,9 +16,9 @@ import dashboardEn from './translations/dashboard/en';
 import dashboardEs from './translations/dashboard/es';
 
 // Admin section modular imports
-import { adminIt } from './translations/admin/it';
-import { adminEn } from './translations/admin/en';
-import { adminEs } from './translations/admin/es';
+import adminIt from './translations/admin/it';
+import adminEn from './translations/admin/en';
+import adminEs from './translations/admin/es';
 
 // Forms section modular imports
 import formsIt from './translations/forms/it';

@@ -1,4 +1,4 @@
-export const adminEs = {
+const adminTranslations = {
   title: 'Panel de administrador',
   dashboard: {
     title: 'Panel de Control',
@@ -809,3 +809,5 @@ export const adminEs = {
     },
   },
 } as const;
+
+export default adminTranslations;
