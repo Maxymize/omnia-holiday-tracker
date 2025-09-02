@@ -1,26 +1,18 @@
 import { Locale } from './config';
 
+// Common section modular imports
+import commonIt from './translations/common/it';
+import commonEn from './translations/common/en';
+import commonEs from './translations/common/es';
+
+// Auth section modular imports
+import authIt from './translations/auth/it';
+import authEn from './translations/auth/en';
+import authEs from './translations/auth/es';
+
 export const translations = {
   it: {
-    common: {
-      loading: 'Caricamento...',
-      error: 'Errore',
-      success: 'Successo',
-      save: 'Salva',
-      cancel: 'Annulla',
-      delete: 'Elimina',
-      edit: 'Modifica',
-      create: 'Crea',
-      search: 'Cerca',
-      filter: 'Filtra',
-      back: 'Indietro',
-      next: 'Avanti',
-      previous: 'Precedente',
-      confirm: 'Conferma',
-      logout: 'Esci',
-      tomorrow: 'Domani',
-      refresh: 'Aggiorna',
-    },
+    common: commonIt,
     notifications: {
       types: {
         holiday_request: 'Richieste',
@@ -35,34 +27,7 @@ export const translations = {
         deleteNotification: 'Elimina notifica',
       },
     },
-    auth: {
-      login: {
-        title: 'Accedi',
-        subtitle: 'Sistema di gestione ferie {{companyName}}',
-        email: 'Email',
-        password: 'Password',
-        submit: 'Accedi',
-        forgotPassword: 'Password dimenticata?',
-        noAccount: 'Non hai un account?',
-        register: 'Registrati',
-        invalidCredentials: 'Email o password non validi',
-        accountPending: 'Il tuo account è in attesa di approvazione',
-      },
-      register: {
-        title: 'Registrazione',
-        subtitle: 'Crea il tuo account {{companyName}}',
-        name: 'Nome completo',
-        email: 'Email aziendale',
-        password: 'Password',
-        confirmPassword: 'Conferma password',
-        submit: 'Registrati',
-        hasAccount: 'Hai già un account?',
-        login: 'Accedi',
-        emailDomain: 'Usa la tua email @ominiaservice.net',
-        passwordMismatch: 'Le password non corrispondono',
-        registrationSuccess: 'Registrazione completata! Attendi l\'approvazione dell\'amministratore',
-      },
-    },
+    auth: authIt,
     dashboard: {
       welcome: {
         title: 'Benvenuto, {{name}}',
@@ -1212,25 +1177,7 @@ export const translations = {
     },
   },
   en: {
-    common: {
-      loading: 'Loading...',
-      error: 'Error',
-      success: 'Success',
-      save: 'Save',
-      cancel: 'Cancel',
-      delete: 'Delete',
-      edit: 'Edit',
-      create: 'Create',
-      search: 'Search',
-      filter: 'Filter',
-      back: 'Back',
-      next: 'Next',
-      previous: 'Previous',
-      confirm: 'Confirm',
-      logout: 'Logout',
-      tomorrow: 'Tomorrow',
-      refresh: 'Refresh',
-    },
+    common: commonEn,
     notifications: {
       types: {
         holiday_request: 'Requests',
@@ -1245,34 +1192,7 @@ export const translations = {
         deleteNotification: 'Delete notification',
       },
     },
-    auth: {
-      login: {
-        title: 'Sign In',
-        subtitle: '{{companyName}} Holiday Management System',
-        email: 'Email',
-        password: 'Password',
-        submit: 'Sign In',
-        forgotPassword: 'Forgot password?',
-        noAccount: "Don't have an account?",
-        register: 'Register',
-        invalidCredentials: 'Invalid email or password',
-        accountPending: 'Your account is pending approval',
-      },
-      register: {
-        title: 'Register',
-        subtitle: 'Create your {{companyName}} account',
-        name: 'Full name',
-        email: 'Company email',
-        password: 'Password',
-        confirmPassword: 'Confirm password',
-        submit: 'Register',
-        hasAccount: 'Already have an account?',
-        login: 'Sign In',
-        emailDomain: 'Use your @ominiaservice.net email',
-        passwordMismatch: 'Passwords do not match',
-        registrationSuccess: 'Registration complete! Wait for admin approval',
-      },
-    },
+    auth: authEn,
     dashboard: {
       welcome: {
         title: 'Welcome, {{name}}',
@@ -2378,25 +2298,7 @@ export const translations = {
     },
   },
   es: {
-    common: {
-      loading: 'Cargando...',
-      error: 'Error',
-      success: 'Éxito',
-      save: 'Guardar',
-      cancel: 'Cancelar',
-      delete: 'Eliminar',
-      edit: 'Editar',
-      create: 'Crear',
-      search: 'Buscar',
-      filter: 'Filtrar',
-      back: 'Atrás',
-      next: 'Siguiente',
-      previous: 'Anterior',
-      confirm: 'Confirmar',
-      logout: 'Cerrar sesión',
-      tomorrow: 'Mañana',
-      refresh: 'Actualizar',
-    },
+    common: commonEs,
     notifications: {
       types: {
         holiday_request: 'Solicitudes',
@@ -2411,34 +2313,7 @@ export const translations = {
         deleteNotification: 'Eliminar notificación',
       },
     },
-    auth: {
-      login: {
-        title: 'Iniciar sesión',
-        subtitle: 'Sistema de gestión de vacaciones {{companyName}}',
-        email: 'Correo electrónico',
-        password: 'Contraseña',
-        submit: 'Iniciar sesión',
-        forgotPassword: '¿Olvidaste tu contraseña?',
-        noAccount: '¿No tienes una cuenta?',
-        register: 'Registrarse',
-        invalidCredentials: 'Correo o contraseña inválidos',
-        accountPending: 'Tu cuenta está pendiente de aprobación',
-      },
-      register: {
-        title: 'Registro',
-        subtitle: 'Crea tu cuenta {{companyName}}',
-        name: 'Nombre completo',
-        email: 'Correo corporativo',
-        password: 'Contraseña',
-        confirmPassword: 'Confirmar contraseña',
-        submit: 'Registrarse',
-        hasAccount: '¿Ya tienes una cuenta?',
-        login: 'Iniciar sesión',
-        emailDomain: 'Usa tu correo @ominiaservice.net',
-        passwordMismatch: 'Las contraseñas no coinciden',
-        registrationSuccess: '¡Registro completado! Espera la aprobación del administrador',
-      },
-    },
+    auth: authEs,
     dashboard: {
       welcome: {
         title: 'Bienvenido, {{name}}',
