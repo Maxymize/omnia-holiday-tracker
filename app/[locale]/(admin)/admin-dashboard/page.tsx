@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useProfile } from '@/lib/hooks/useProfile';
 import { useAdminData } from '@/lib/hooks/useAdminData';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n/provider';
 import { ResponsiveCalendar, CalendarLegend } from '@/components/calendar/responsive-calendar';
 import { AdminSidebar } from '@/components/dashboard/admin-sidebar';
 import { EmployeeManagement } from '@/components/admin/employee-management';
@@ -16,6 +17,7 @@ import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
 import { RecentActivities } from '@/components/admin/recent-activities';
 import { NotificationHeader } from '@/components/ui/notification-header';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ProfileEditModal } from '@/components/profile/profile-edit-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -53,6 +55,7 @@ export default function AdminDashboard() {
   const { user, loading: authLoading, isAuthenticated, isAdmin } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const router = useRouter();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<AdminTabType>('overview');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -192,18 +195,25 @@ export default function AdminDashboard() {
       <div className="lg:pl-80">
         {/* Header con Notifiche Personalizzabile */}
         <CustomizableHeader style={{ minHeight: '112px' }}>
-          <NotificationHeader
-            activities={activities}
-            loading={activitiesLoading}
-            onMarkAsRead={() => {
-              // Le notifiche vengono marcate come lette automaticamente
-              console.log('Notifiche marcate come lette');
-            }}
-            onDeleteNotification={async (id: string) => {
-              // Elimina singola notifica
-              await handleDeleteActivities([id]);
-            }}
-          />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex-grow">
+              <NotificationHeader
+                activities={activities}
+                loading={activitiesLoading}
+                onMarkAsRead={() => {
+                  // Le notifiche vengono marcate come lette automaticamente
+                  console.log('Notifiche marcate come lette');
+                }}
+                onDeleteNotification={async (id: string) => {
+                  // Elimina singola notifica
+                  await handleDeleteActivities([id]);
+                }}
+              />
+            </div>
+            <div className="flex items-center space-x-4 ml-4">
+              <LanguageSwitcher className="text-sm" />
+            </div>
+          </div>
         </CustomizableHeader>
 
         <div className="px-4 py-6 lg:px-8">
@@ -218,7 +228,7 @@ export default function AdminDashboard() {
                     onClick={clearError}
                     className="ml-2 underline hover:no-underline"
                   >
-                    Nascondi
+                    {t('admin.dashboard.hideError')}
                   </button>
                 </AlertDescription>
               </Alert>
@@ -231,10 +241,10 @@ export default function AdminDashboard() {
               {/* Admin Overview Header */}
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-6 text-white">
                 <h2 className="text-xl font-bold">
-                  Pannello di Controllo
+                  {t('admin.dashboard.title')}
                 </h2>
                 <p className="mt-1 text-purple-100">
-                  Panoramica delle attività e statistiche del sistema
+                  {t('admin.dashboard.subtitle')}
                 </p>
               </div>
 
@@ -246,13 +256,13 @@ export default function AdminDashboard() {
                   onClick={() => handleTabChange('employees')}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Dipendenti Totali</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('admin.dashboard.totalEmployees')}</CardTitle>
                     <Users className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-blue-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.totalEmployees || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      {adminStats?.activeEmployees || 0} attivi
+                      {adminStats?.activeEmployees || 0} {t('admin.dashboard.activeEmployees')}
                     </p>
                   </CardContent>
                 </Card>
@@ -263,13 +273,13 @@ export default function AdminDashboard() {
                   onClick={() => handleTabChange('requests')}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Richieste Pendenti</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('admin.dashboard.pendingRequests')}</CardTitle>
                     <Clock className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-amber-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.pendingHolidayRequests || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      Richiedono approvazione
+                      {t('admin.dashboard.requireApproval')}
                     </p>
                   </CardContent>
                 </Card>
@@ -280,13 +290,13 @@ export default function AdminDashboard() {
                   onClick={() => handleTabChange('calendar')}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Ferie Questo Mese</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('admin.dashboard.holidaysThisMonth')}</CardTitle>
                     <Calendar className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-green-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.holidaysThisMonth || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      Giorni totali utilizzati
+                      {t('admin.dashboard.totalDaysUsed')}
                     </p>
                   </CardContent>
                 </Card>
@@ -297,13 +307,13 @@ export default function AdminDashboard() {
                   onClick={() => handleTabChange('employees')}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Nuovi Registrati</CardTitle>
+                    <CardTitle className="text-sm font-medium">{t('admin.dashboard.newRegistrations')}</CardTitle>
                     <UserCheck className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-purple-600" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{adminStats?.pendingEmployees || 0}</div>
                     <p className="text-xs text-muted-foreground">
-                      In attesa approvazione
+                      {t('admin.dashboard.pendingApproval')}
                     </p>
                   </CardContent>
                 </Card>
@@ -327,24 +337,24 @@ export default function AdminDashboard() {
                 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Statistiche Calendario</CardTitle>
+                    <CardTitle className="text-sm">{t('admin.dashboard.calendarStats')}</CardTitle>
                   </CardHeader>
                   <CardContent className="py-2">
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                       <div className="flex justify-between text-xs">
-                        <span>Dipendenti totali</span>
+                        <span>{t('admin.dashboard.totalEmployeesCount')}</span>
                         <span className="font-medium">{adminStats?.totalEmployees || 0}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>Richieste pendenti</span>
+                        <span>{t('admin.dashboard.pendingRequestsCount')}</span>
                         <span className="font-medium">{adminStats?.pendingHolidayRequests || 0}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>In ferie oggi</span>
+                        <span>{t('admin.dashboard.onHolidayToday')}</span>
                         <span className="font-medium">{adminStats?.employeesOnHolidayToday || 0}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>Dipartimenti</span>
+                        <span>{t('admin.dashboard.departmentsCount')}</span>
                         <span className="font-medium">{adminStats?.departmentCount || 0}</span>
                       </div>
                     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,6 +72,8 @@ export function RecentActivities({
   onDeleteActivities,
   onRefresh
 }: RecentActivitiesProps) {
+  const { t } = useTranslation();
+
   // Stati per gestione UI
   const [selectedActivities, setSelectedActivities] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,25 +89,25 @@ export function RecentActivities({
     switch (type) {
       case 'holiday_request':
         return {
-          label: 'Richiesta Ferie',
+          label: t('admin.activities.holidayRequest'),
           icon: FileText,
           badgeClass: 'bg-blue-100 text-blue-800',
         };
       case 'employee_registration':
         return {
-          label: 'Registrazione Dipendente',
+          label: t('admin.activities.employeeRegistration'),
           icon: UserCheck,
           badgeClass: 'bg-purple-100 text-purple-800',
         };
       case 'holiday_approved':
         return {
-          label: 'Ferie Approvate',
+          label: t('admin.activities.holidayApproved'),
           icon: CheckCircle,
           badgeClass: 'bg-green-100 text-green-800',
         };
       case 'holiday_rejected':
         return {
-          label: 'Ferie Rifiutate',
+          label: t('admin.activities.holidayRejected'),
           icon: XCircle,
           badgeClass: 'bg-red-100 text-red-800',
         };
@@ -115,7 +118,7 @@ export function RecentActivities({
           badgeClass: 'bg-gray-100 text-gray-800',
         };
     }
-  }, []);
+  }, [t]);
 
   // Filtro e ordinamento delle attività
   const filteredAndSortedActivities = useMemo(() => {
@@ -208,6 +211,52 @@ export function RecentActivities({
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   }, [totalPages]);
 
+  // Utility per tradurre titoli e descrizioni delle attività
+  const translateActivityContent = useCallback((activity: Activity) => {
+    let translatedTitle = activity.title;
+    let translatedDescription = activity.description;
+
+    // Traduci i titoli
+    if (activity.title.startsWith('Richiesta ferie -')) {
+      const userName = activity.title.replace('Richiesta ferie - ', '');
+      translatedTitle = `${t('admin.activities.holidayRequest')} - ${userName}`;
+    } else if (activity.title.includes('Ferie approvate -')) {
+      const userName = activity.title.replace('Ferie approvate - ', '');
+      translatedTitle = `${t('admin.activities.holidayApproved')} - ${userName}`;
+    } else if (activity.title.includes('Ferie rifiutate -') || activity.title.includes('Ferie respinte -')) {
+      const userName = activity.title.replace(/Ferie (rifiutate|respinte) - /, '');
+      translatedTitle = `${t('admin.activities.holidayRejected')} - ${userName}`;
+    } else if (activity.title.startsWith('Nuovo dipendente registrato -')) {
+      const userName = activity.title.replace('Nuovo dipendente registrato - ', '');
+      translatedTitle = `${t('admin.activities.employeeRegistration')} - ${userName}`;
+    }
+
+    // Traduci le descrizioni
+    if (activity.description.includes('Richiesta ferie dal')) {
+      // Esempio: "Richiesta ferie dal 2025-10-28 al 2025-10-29 (2 giorni lavorativi)"
+      const match = activity.description.match(/Richiesta ferie dal ([\d-]+) al ([\d-]+) \((\d+) giorni? lavorativ[io]\)/);
+      if (match) {
+        const [, startDate, endDate, workingDays] = match;
+        const daysText = parseInt(workingDays) === 1 ? t('admin.activities.workingDay') : t('admin.activities.workingDays');
+        translatedDescription = `${t('admin.activities.holidayRequestFrom')} ${startDate} ${t('admin.activities.to')} ${endDate} (${workingDays} ${daysText})`;
+      }
+    } else if (activity.description.includes('Le ferie dal')) {
+      // Esempio: "Le ferie dal 2025-10-28 al 2025-10-29 sono state approvate/rifiutate"
+      const match = activity.description.match(/Le ferie dal ([\d-]+) al ([\d-]+) sono state (approvate|rifiutate)/);
+      if (match) {
+        const [, startDate, endDate, action] = match;
+        const actionText = action === 'approvate' ? t('admin.activities.holidayApproved').toLowerCase() : t('admin.activities.holidayRejected').toLowerCase();
+        translatedDescription = `Holidays ${t('admin.activities.from')} ${startDate} ${t('admin.activities.to')} ${endDate} were ${actionText}`;
+      }
+    }
+
+    return {
+      ...activity,
+      title: translatedTitle,
+      description: translatedDescription
+    };
+  }, [t]);
+
   // Utility per formattare la data
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -218,13 +267,13 @@ export function RecentActivities({
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
 
     if (diffMinutes < 60) {
-      return diffMinutes <= 1 ? 'Proprio ora' : `${diffMinutes} minuti fa`;
+      return diffMinutes <= 1 ? t('admin.activities.justNow') : `${diffMinutes} ${t('admin.activities.minutesAgo')}`;
     } else if (diffHours < 24) {
-      return diffHours === 1 ? '1 ora fa' : `${diffHours} ore fa`;
+      return diffHours === 1 ? `1 ${t('admin.activities.hourAgo')}` : `${diffHours} ${t('admin.activities.hoursAgo')}`;
     } else if (diffDays === 1) {
-      return 'Ieri';
+      return t('admin.activities.dayAgo');
     } else if (diffDays < 7) {
-      return `${diffDays} giorni fa`;
+      return `${diffDays} ${t('admin.activities.daysAgo')}`;
     } else {
       return date.toLocaleDateString('it-IT', {
         day: 'numeric',
@@ -232,7 +281,7 @@ export function RecentActivities({
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
       });
     }
-  }, []);
+  }, [t]);
 
   // Loading skeleton
   if (loading && activities.length === 0) {
@@ -277,11 +326,11 @@ export function RecentActivities({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <Activity className="h-6 w-6" />
-            <span>Attività Recenti</span>
+            <span>{t('admin.activities.title')}</span>
           </h2>
           <p className="text-gray-600">
-            {filteredAndSortedActivities.length} attività totali
-            {selectedActivities.size > 0 && ` • ${selectedActivities.size} selezionate`}
+            {filteredAndSortedActivities.length} {t('admin.activities.totalActivities')}
+            {selectedActivities.size > 0 && ` • ${selectedActivities.size} ${t('admin.activities.selected')}`}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -293,7 +342,7 @@ export function RecentActivities({
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Elimina ({selectedActivities.size})
+              {t('admin.activities.delete')} ({selectedActivities.size})
             </Button>
           )}
           <Button 
@@ -302,7 +351,7 @@ export function RecentActivities({
             size="sm"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Aggiorna
+            {t('admin.activities.refresh')}
           </Button>
         </div>
       </div>
@@ -316,7 +365,7 @@ export function RecentActivities({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Cerca per titolo, descrizione, utente..."
+                  placeholder={t('admin.activities.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -341,7 +390,7 @@ export function RecentActivities({
                   <SelectValue placeholder="Tipo attività" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti i tipi</SelectItem>
+                  <SelectItem value="all">{t('admin.activities.allTypes')}</SelectItem>
                   <SelectItem value="holiday_request">Richieste Ferie</SelectItem>
                   <SelectItem value="employee_registration">Registrazioni</SelectItem>
                   <SelectItem value="holiday_approved">Ferie Approvate</SelectItem>
@@ -359,7 +408,7 @@ export function RecentActivities({
                 ) : (
                   <ArrowUp className="h-4 w-4 mr-2" />
                 )}
-                {sortOrder === 'newest' ? 'Più recenti' : 'Più vecchie'}
+                {sortOrder === 'newest' ? t('admin.activities.mostRecent') : 'Più vecchie'}
               </Button>
             </div>
           </div>
@@ -403,13 +452,13 @@ export function RecentActivities({
                     />
                     <span className="text-sm font-medium text-gray-700">
                       {selectedActivities.size > 0 
-                        ? `${selectedActivities.size} di ${paginatedActivities.length} selezionate`
-                        : 'Seleziona tutto'
+                        ? `${selectedActivities.size} ${t('admin.activities.selectedOf')} ${paginatedActivities.length} ${t('admin.activities.selected')}`
+                        : t('admin.activities.selectAll')
                       }
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <span>Mostra per pagina:</span>
+                    <span>{t('admin.activities.showPerPage')}</span>
                     <Select
                       value={pageSize.toString()}
                       onValueChange={(value) => {
@@ -435,6 +484,7 @@ export function RecentActivities({
               {/* Lista attività */}
               <div className="space-y-2">
                 {paginatedActivities.map((activity) => {
+                  const translatedActivity = translateActivityContent(activity);
                   const typeInfo = getActivityTypeInfo(activity.type);
                   const IconComponent = typeInfo.icon;
                   const isSelected = selectedActivities.has(activity.id);
@@ -463,10 +513,10 @@ export function RecentActivities({
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-gray-900 truncate">
-                              {activity.title}
+                              {translatedActivity.title}
                             </h3>
                             <p className="text-sm text-gray-600 line-clamp-2">
-                              {activity.description}
+                              {translatedActivity.description}
                             </p>
                             <div className="flex items-center space-x-2 mt-2 text-xs text-gray-500">
                               <User className="h-3 w-3" />
@@ -552,11 +602,11 @@ export function RecentActivities({
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
-              <span>Conferma Eliminazione</span>
+              <span>{t('admin.activities.confirmDelete')}</span>
             </DialogTitle>
             <DialogDescription>
-              Sei sicuro di voler eliminare {selectedActivities.size} attività selezionate? 
-              Questa azione non può essere annullata.
+              {t('admin.activities.deleteConfirmation').replace('{count}', selectedActivities.size.toString())} {' '}
+              {t('admin.activities.deleteWarning')}
             </DialogDescription>
           </DialogHeader>
           
@@ -564,8 +614,7 @@ export function RecentActivities({
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Le attività eliminate non potranno essere recuperate. 
-                Considera se è necessario conservare questi dati per scopi di audit o conformità.
+                {t('admin.activities.deleteAuditWarning')}
               </AlertDescription>
             </Alert>
           </div>
@@ -576,7 +625,7 @@ export function RecentActivities({
               onClick={() => setShowDeleteDialog(false)}
               disabled={deleteLoading}
             >
-              Annulla
+              {t('admin.activities.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -586,12 +635,12 @@ export function RecentActivities({
               {deleteLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Eliminazione...
+                  {t('admin.activities.deleting')}
                 </>
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Elimina Attività
+                  {t('admin.activities.deleteActivities')}
                 </>
               )}
             </Button>

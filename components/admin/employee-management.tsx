@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +56,7 @@ export function EmployeeManagement({
   onRejectEmployee, 
   onRefresh 
 }: EmployeeManagementProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'employee'>('all');
@@ -385,13 +387,13 @@ export function EmployeeManagement({
   const getStatusBadge = (status: Employee['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-800">Attivo</Badge>;
+        return <Badge className="bg-green-100 text-green-800">{t('dashboard.profile.status.active')}</Badge>;
       case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800">In attesa</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t('dashboard.profile.status.pending')}</Badge>;
       case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800">Inattivo</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">{t('dashboard.profile.status.inactive')}</Badge>;
       default:
-        return <Badge variant="outline">Sconosciuto</Badge>;
+        return <Badge variant="outline">{t('admin.employees.unknown')}</Badge>;
     }
   };
 
@@ -404,7 +406,7 @@ export function EmployeeManagement({
     ) : (
       <Badge variant="outline" className="bg-blue-100 text-blue-800">
         <Users className="h-3 w-3 mr-1" />
-        Dipendente
+        {t('dashboard.profile.role.employee')}
       </Badge>
     );
   };
@@ -444,15 +446,15 @@ export function EmployeeManagement({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <Users className="h-6 w-6" />
-            <span>Gestione Dipendenti</span>
+            <span>{t('admin.employees.management')}</span>
           </h2>
           <p className="text-gray-600">
-            {employees.length} dipendenti totali • {activeEmployees.length} attivi • {pendingEmployees.length} in attesa
+            {employees.length} {t('admin.employees.totalEmployees').toLowerCase()} • {activeEmployees.length} {t('admin.employees.activeStatus').toLowerCase()} • {pendingEmployees.length} {t('admin.employees.pendingStatus').toLowerCase()}
           </p>
         </div>
         <Button onClick={onRefresh} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Aggiorna
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -473,7 +475,7 @@ export function EmployeeManagement({
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Dipendenti Totali</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.totalEmployees')}</p>
                 <p className="text-2xl font-bold text-blue-600">{employees.length}</p>
               </div>
             </div>
@@ -487,7 +489,7 @@ export function EmployeeManagement({
                 <Clock className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">In Attesa</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.pendingApproval')}</p>
                 <p className="text-2xl font-bold text-amber-600">{pendingEmployees.length}</p>
               </div>
             </div>
@@ -501,7 +503,7 @@ export function EmployeeManagement({
                 <CalendarCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Disponibili</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.availableDays')}</p>
                 <p className="text-2xl font-bold text-green-600">{totalAvailable}</p>
               </div>
             </div>
@@ -515,7 +517,7 @@ export function EmployeeManagement({
                 <CheckCircle className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Goduti</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.takenDays')}</p>
                 <p className="text-2xl font-bold text-blue-600">{totalTaken}</p>
               </div>
             </div>
@@ -529,7 +531,7 @@ export function EmployeeManagement({
                 <CalendarDays className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Prenotati</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.bookedDays')}</p>
                 <p className="text-2xl font-bold text-purple-600">{totalBooked}</p>
               </div>
             </div>
@@ -543,7 +545,7 @@ export function EmployeeManagement({
                 <Hourglass className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">In Approvazione</p>
+                <p className="text-sm text-gray-600">{t('admin.employees.pendingApproval')}</p>
                 <p className="text-2xl font-bold text-amber-600">{totalPending}</p>
               </div>
             </div>
@@ -559,7 +561,7 @@ export function EmployeeManagement({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Cerca per nome, email o dipartimento..."
+                  placeholder={t('admin.employees.searchPlaceholderFull')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -569,13 +571,13 @@ export function EmployeeManagement({
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Stato" />
+                  <SelectValue placeholder={t('admin.employees.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti gli stati</SelectItem>
-                  <SelectItem value="active">Attivi</SelectItem>
-                  <SelectItem value="pending">In attesa</SelectItem>
-                  <SelectItem value="inactive">Inattivi</SelectItem>
+                  <SelectItem value="all">{t('admin.employees.allStatuses')}</SelectItem>
+                  <SelectItem value="active">{t('admin.employees.activeStatus')}</SelectItem>
+                  <SelectItem value="pending">{t('admin.employees.pendingStatus')}</SelectItem>
+                  <SelectItem value="inactive">{t('admin.employees.inactiveStatus')}</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -584,9 +586,9 @@ export function EmployeeManagement({
                   <SelectValue placeholder="Ruolo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti i ruoli</SelectItem>
-                  <SelectItem value="employee">Dipendenti</SelectItem>
-                  <SelectItem value="admin">Amministratori</SelectItem>
+                  <SelectItem value="all">{t('admin.employees.allRoles')}</SelectItem>
+                  <SelectItem value="employee">{t('admin.employees.employees')}</SelectItem>
+                  <SelectItem value="admin">{t('admin.employees.administrators')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -599,12 +601,12 @@ export function EmployeeManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Dipendente</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead>Ruolo</TableHead>
-                  <TableHead>Dipartimento</TableHead>
-                  <TableHead>Ferie</TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
+                  <TableHead>{t('admin.employees.employee')}</TableHead>
+                  <TableHead>{t('admin.employees.status')}</TableHead>
+                  <TableHead>{t('admin.employees.role')}</TableHead>
+                  <TableHead>{t('admin.employees.department')}</TableHead>
+                  <TableHead>{t('admin.employees.holidays')}</TableHead>
+                  <TableHead className="text-right">{t('admin.employees.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -647,7 +649,7 @@ export function EmployeeManagement({
                             <span className="text-sm">{employee.departmentName}</span>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">Nessun dipartimento</span>
+                          <span className="text-sm text-gray-400">{t('admin.employees.noDepartment')}</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -656,22 +658,22 @@ export function EmployeeManagement({
                           <div className="flex items-center space-x-1">
                             <CalendarCheck className="h-3 w-3 text-green-600" />
                             <span className="font-medium text-green-700">{employee.availableDays || (employee.holidayAllowance - (employee.holidaysUsed || 0))}</span>
-                            <span className="text-gray-600">disponibili</span>
+                            <span className="text-gray-600">{t('admin.employees.available')}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <CheckCircle className="h-3 w-3 text-blue-600" />
                             <span className="font-medium text-blue-700">{employee.takenDays || 0}</span>
-                            <span className="text-gray-600">goduti</span>
+                            <span className="text-gray-600">{t('admin.employees.taken')}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <CalendarDays className="h-3 w-3 text-purple-600" />
                             <span className="font-medium text-purple-700">{employee.bookedDays || 0}</span>
-                            <span className="text-gray-600">prenotati</span>
+                            <span className="text-gray-600">{t('admin.employees.booked')}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <Hourglass className="h-3 w-3 text-amber-600" />
                             <span className="font-medium text-amber-700">{employee.pendingDays || 0}</span>
-                            <span className="text-gray-600">in attesa</span>
+                            <span className="text-gray-600">{t('admin.employees.pendingDays')}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -703,7 +705,7 @@ export function EmployeeManagement({
                             </>
                           )}
                           
-                          {/* Per dipendenti attivi/approvati: consenti di rifiutare */}
+                          {/* For active/approved employees: allow reject */}
                           {employee.status === 'active' && (
                             <Button
                               size="sm"
@@ -753,7 +755,7 @@ export function EmployeeManagement({
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-md">
                               <DialogHeader>
-                                <DialogTitle>Dettagli Dipendente</DialogTitle>
+                                <DialogTitle>{t('admin.employees.detailsTitle')}</DialogTitle>
                               </DialogHeader>
                               {selectedEmployee && (
                                 <div className="space-y-4">
@@ -778,53 +780,53 @@ export function EmployeeManagement({
                                   
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <label className="font-medium text-gray-700">Stato</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.status')}</label>
                                       <div className="mt-1">{getStatusBadge(selectedEmployee.status)}</div>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Ruolo</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.role')}</label>
                                       <div className="mt-1">{getRoleBadge(selectedEmployee.role)}</div>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Dipartimento</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.department')}</label>
                                       <p className="mt-1 text-gray-900">
-                                        {selectedEmployee.departmentName || 'Nessuno'}
+                                        {selectedEmployee.departmentName || t('admin.employees.none')}
                                       </p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Registrato il</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.registeredOn')}</label>
                                       <p className="mt-1 text-gray-900">
                                         {new Date(selectedEmployee.createdAt).toLocaleDateString('it-IT')}
                                       </p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Giorni di ferie</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.holidayDays')}</label>
                                       <p className="mt-1 text-gray-900">
-                                        {selectedEmployee.holidayAllowance} all&apos;anno
+                                        {selectedEmployee.holidayAllowance} {t('admin.employees.perYear')}
                                       </p>
                                     </div>
                                     <div className="col-span-2">
-                                      <label className="font-medium text-gray-700">Stato ferie</label>
+                                      <label className="font-medium text-gray-700">{t('admin.employees.holidayStatus')}</label>
                                       <div className="mt-1 grid grid-cols-2 gap-2 text-sm">
                                         <div className="flex items-center space-x-2">
                                           <CalendarCheck className="h-4 w-4 text-green-600" />
                                           <span className="font-medium text-green-700">{selectedEmployee.availableDays || (selectedEmployee.holidayAllowance - (selectedEmployee.holidaysUsed || 0))}</span>
-                                          <span className="text-gray-600">disponibili</span>
+                                          <span className="text-gray-600">{t('admin.employees.available')}</span>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                           <CheckCircle className="h-4 w-4 text-blue-600" />
                                           <span className="font-medium text-blue-700">{selectedEmployee.takenDays || 0}</span>
-                                          <span className="text-gray-600">già goduti</span>
+                                          <span className="text-gray-600">{t('admin.employees.alreadyTaken')}</span>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                           <CalendarDays className="h-4 w-4 text-purple-600" />
                                           <span className="font-medium text-purple-700">{selectedEmployee.bookedDays || 0}</span>
-                                          <span className="text-gray-600">prenotati</span>
+                                          <span className="text-gray-600">{t('admin.employees.booked')}</span>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                           <Hourglass className="h-4 w-4 text-amber-600" />
                                           <span className="font-medium text-amber-700">{selectedEmployee.pendingDays || 0}</span>
-                                          <span className="text-gray-600">in attesa</span>
+                                          <span className="text-gray-600">{t('admin.employees.pendingDays')}</span>
                                         </div>
                                       </div>
                                     </div>
@@ -851,7 +853,7 @@ export function EmployeeManagement({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Conferma Cambio Stato
+              {t('admin.employees.statusChangeModal.title')}
             </DialogTitle>
           </DialogHeader>
           {confirmDialog.employee && (
@@ -859,43 +861,39 @@ export function EmployeeManagement({
               <div className="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <AlertTriangle className="h-6 w-6 text-amber-600" />
                 <div>
-                  <h4 className="font-medium text-amber-900">Attenzione: Cambio di Stato</h4>
+                  <h4 className="font-medium text-amber-900">{t('admin.employees.statusChangeModal.warningTitle')}</h4>
                   <p className="text-sm text-amber-700">
-                    Stai per modificare lo stato di un dipendente già processato.
+                    {t('admin.employees.statusChangeDescription')}
                   </p>
                 </div>
               </div>
               
               <div className="space-y-3">
                 <div>
-                  <label className="font-medium text-gray-700">Dipendente:</label>
+                  <label className="font-medium text-gray-700">{t('admin.employees.statusChangeModal.employee')}</label>
                   <p className="text-gray-900">{confirmDialog.employee.name}</p>
                   <p className="text-sm text-gray-600">{confirmDialog.employee.email}</p>
                 </div>
                 
                 <div>
-                  <label className="font-medium text-gray-700">Stato attuale:</label>
+                  <label className="font-medium text-gray-700">{t('admin.employees.currentStatus')}</label>
                   <div className="mt-1">{getStatusBadge(confirmDialog.employee.status)}</div>
                 </div>
                 
                 <div>
-                  <label className="font-medium text-gray-700">Nuovo stato:</label>
+                  <label className="font-medium text-gray-700">{t('admin.employees.statusChangeModal.newStatus')}</label>
                   <div className="mt-1">
                     {confirmDialog.action === 'approve' ? (
-                      <Badge className="bg-green-100 text-green-800">Approvato</Badge>
+                      <Badge className="bg-green-100 text-green-800">{t('admin.employees.statusChangeModal.active')}</Badge>
                     ) : (
-                      <Badge className="bg-red-100 text-red-800">Rifiutato</Badge>
+                      <Badge className="bg-red-100 text-red-800">{t('admin.employees.statusChangeModal.rejected')}</Badge>
                     )}
                   </div>
                 </div>
               </div>
 
               <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                <strong>Nota:</strong> Questa azione cambierà lo stato del dipendente. 
-                {confirmDialog.action === 'approve' 
-                  ? ' Il dipendente potrà accedere al sistema e richiedere ferie.' 
-                  : ' Il dipendente non potrà più accedere al sistema.'
-                }
+                {t('admin.employees.statusChangeModal.note')}
               </div>
             </div>
           )}
@@ -904,7 +902,7 @@ export function EmployeeManagement({
               variant="outline" 
               onClick={() => setConfirmDialog({ isOpen: false, employee: null, action: 'approve' })}
             >
-              Annulla
+              {t('admin.employees.statusChangeModal.cancel')}
             </Button>
             <Button 
               onClick={handleConfirmAction}
@@ -913,7 +911,7 @@ export function EmployeeManagement({
                 : 'bg-red-600 hover:bg-red-700'
               }
             >
-              {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
+              {confirmDialog.action === 'approve' ? t('admin.employees.statusChangeModal.confirmActivate') : t('admin.employees.statusChangeModal.confirmReject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -923,7 +921,7 @@ export function EmployeeManagement({
       <Dialog open={showDepartmentDialog} onOpenChange={setShowDepartmentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assegna Dipartimento</DialogTitle>
+            <DialogTitle>{t('admin.employees.assignDepartment')}</DialogTitle>
           </DialogHeader>
           {assigningEmployee && (
             <div className="space-y-4">
@@ -944,16 +942,16 @@ export function EmployeeManagement({
               </div>
 
               <div>
-                <Label htmlFor="department-select">Dipartimento</Label>
+                <Label htmlFor="department-select">{t('admin.employees.department')}</Label>
                 <Select 
                   value={selectedDepartment} 
                   onValueChange={setSelectedDepartment}
                 >
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Seleziona un dipartimento" />
+                    <SelectValue placeholder={t('admin.employees.selectDepartment')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Nessun dipartimento</SelectItem>
+                    <SelectItem value="none">{t('admin.employees.noDepartment')}</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name} {dept.location && `(${dept.location})`}
@@ -964,7 +962,7 @@ export function EmployeeManagement({
               </div>
 
               <p className="text-sm text-gray-600">
-                Dipartimento attuale: {assigningEmployee.departmentName || 'Nessuno'}
+                {t('admin.employees.currentDepartment')} {assigningEmployee.departmentName || t('admin.employees.none')}
               </p>
             </div>
           )}
@@ -974,13 +972,13 @@ export function EmployeeManagement({
               onClick={() => setShowDepartmentDialog(false)}
               disabled={assignLoading}
             >
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleAssignDepartment}
               disabled={assignLoading}
             >
-              {assignLoading ? 'Assegnando...' : 'Assegna Dipartimento'}
+              {assignLoading ? t('admin.employees.assigning') : t('admin.employees.assignDepartment')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1035,7 +1033,7 @@ export function EmployeeManagement({
                     placeholder="Inserisci il nuovo numero di giorni"
                   />
                   <div className="text-sm text-gray-500 mt-1">
-                    Inserisci un valore tra 0 e 365 giorni
+                    {t('admin.employees.valueBetween')}
                   </div>
                 </div>
 
@@ -1073,7 +1071,7 @@ export function EmployeeManagement({
               onClick={() => setShowAllowanceDialog(false)}
               disabled={allowanceLoading}
             >
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleUpdateAllowance}
@@ -1090,7 +1088,7 @@ export function EmployeeManagement({
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Modifica Dipendente</DialogTitle>
+            <DialogTitle>{t('admin.employees.editTitle')}</DialogTitle>
           </DialogHeader>
           {editingEmployeeUnified && (
             <div className="space-y-6">
@@ -1113,16 +1111,16 @@ export function EmployeeManagement({
               <div className="space-y-4">
                 {/* Department Assignment */}
                 <div>
-                  <Label htmlFor="edit-department-select">Dipartimento</Label>
+                  <Label htmlFor="edit-department-select">{t('admin.employees.department')}</Label>
                   <Select 
                     value={editDepartment} 
                     onValueChange={setEditDepartment}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Seleziona un dipartimento" />
+                      <SelectValue placeholder={t('admin.employees.selectDepartment')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nessun dipartimento</SelectItem>
+                      <SelectItem value="none">{t('admin.employees.noDepartment')}</SelectItem>
                       {departments.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name} {dept.location && `(${dept.location})`}
@@ -1131,15 +1129,15 @@ export function EmployeeManagement({
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-600 mt-1">
-                    Dipartimento attuale: {editingEmployeeUnified.departmentName || 'Nessuno'}
+                    {t('admin.employees.currentDepartment')} {editingEmployeeUnified.departmentName || t('admin.employees.none')}
                   </p>
                 </div>
 
                 {/* Role Management */}
                 <div>
-                  <Label htmlFor="edit-role">Ruolo</Label>
+                  <Label htmlFor="edit-role">{t('admin.employees.role')}</Label>
                   <div className="mt-1 p-3 bg-gray-100 rounded-lg mb-2">
-                    <span className="font-medium">Ruolo attuale: {editingEmployeeUnified.role === 'admin' ? 'Amministratore' : 'Dipendente'}</span>
+                    <span className="font-medium">{t('admin.employees.currentRole')} {editingEmployeeUnified.role === 'admin' ? t('dashboard.profile.role.admin') : t('dashboard.profile.role.employee')}</span>
                     {editingEmployeeUnified.email === 'max.giurastante@omniaservices.net' && (
                       <div className="text-sm text-purple-600 mt-1 flex items-center">
                         <Shield className="h-3 w-3 mr-1" />
@@ -1154,28 +1152,28 @@ export function EmployeeManagement({
                     disabled={editingEmployeeUnified.email === 'max.giurastante@omniaservices.net'}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Seleziona un ruolo" />
+                      <SelectValue placeholder={t('admin.employees.selectRole')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="employee">Dipendente</SelectItem>
-                      <SelectItem value="admin">Amministratore</SelectItem>
+                      <SelectItem value="employee">{t('dashboard.profile.role.employee')}</SelectItem>
+                      <SelectItem value="admin">{t('dashboard.profile.role.admin')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="text-sm text-gray-500 mt-1">
                     {editingEmployeeUnified.email === 'max.giurastante@omniaservices.net' 
                       ? 'Il Super Amministratore non può essere modificato' 
-                      : 'Gli amministratori hanno accesso completo al sistema'}
+                      : t('admin.employees.adminFullAccess')}
                   </div>
                 </div>
 
                 {/* Vacation Allowance */}
                 <div>
-                  <Label htmlFor="edit-allowance">Giorni di ferie annuali</Label>
+                  <Label htmlFor="edit-allowance">{t('admin.employees.holidayDays')}</Label>
                   <div className="mt-1 p-3 bg-gray-100 rounded-lg mb-2">
-                    <span className="font-medium">{editingEmployeeUnified.holidayAllowance} giorni attuali</span>
+                    <span className="font-medium">{editingEmployeeUnified.holidayAllowance} {t('admin.employees.currentDays')}</span>
                     <div className="text-sm text-gray-600 mt-1">
-                      Utilizzati: {editingEmployeeUnified.holidaysUsed} • 
-                      Rimanenti: {(editingEmployeeUnified.holidayAllowance || 0) - (editingEmployeeUnified.holidaysUsed || 0)}
+                      {t('admin.employees.used')}: {editingEmployeeUnified.holidaysUsed} • 
+                      {t('admin.employees.remaining')}: {(editingEmployeeUnified.holidayAllowance || 0) - (editingEmployeeUnified.holidaysUsed || 0)}
                     </div>
                   </div>
                   
@@ -1189,19 +1187,19 @@ export function EmployeeManagement({
                     placeholder="Inserisci il nuovo numero di giorni"
                   />
                   <div className="text-sm text-gray-500 mt-1">
-                    Inserisci un valore tra 0 e 365 giorni
+                    {t('admin.employees.valueBetween')}
                   </div>
                 </div>
 
                 {/* Reason for changes */}
                 <div>
-                  <Label htmlFor="edit-reason">Motivo delle modifiche (opzionale)</Label>
+                  <Label htmlFor="edit-reason">{t('admin.employees.reasonForChanges')}</Label>
                   <Input
                     id="edit-reason"
                     value={editReason}
                     onChange={(e) => setEditReason(e.target.value)}
                     className="mt-1"
-                    placeholder="Es: Cambio di dipartimento, aumento contrattuale..."
+                    placeholder={t('admin.employees.reasonPlaceholder')}
                   />
                 </div>
 
@@ -1219,15 +1217,15 @@ export function EmployeeManagement({
                     <div className="text-sm text-blue-700 mt-1 space-y-1">
                       {editDepartment !== (editingEmployeeUnified.departmentId || '') && (
                         <div>
-                          Dipartimento: {editingEmployeeUnified.departmentName || 'Nessuno'} → {
-                            editDepartment === 'none' ? 'Nessuno' : 
-                            departments.find(d => d.id === editDepartment)?.name || 'Sconosciuto'
+                          {t('admin.employees.department')}: {editingEmployeeUnified.departmentName || t('admin.employees.none')} → {
+                            editDepartment === 'none' ? t('admin.employees.none') : 
+                            departments.find(d => d.id === editDepartment)?.name || t('admin.employees.unknown')
                           }
                         </div>
                       )}
                       {editRole !== editingEmployeeUnified.role && (
                         <div>
-                          Ruolo: {editingEmployeeUnified.role === 'admin' ? 'Amministratore' : 'Dipendente'} → {editRole === 'admin' ? 'Amministratore' : 'Dipendente'}
+                          {t('admin.employees.role')}: {editingEmployeeUnified.role === 'admin' ? t('admin.employees.administrator') : t('admin.employees.employeeRole')} → {editRole === 'admin' ? t('admin.employees.administrator') : t('admin.employees.employeeRole')}
                         </div>
                       )}
                       {editAllowance !== editingEmployeeUnified.holidayAllowance && (
@@ -1248,7 +1246,7 @@ export function EmployeeManagement({
               onClick={() => setShowEditDialog(false)}
               disabled={editLoading}
             >
-              Annulla
+              {t('common.cancel')}
             </Button>
             <Button 
               onClick={handleUnifiedEdit}
@@ -1259,7 +1257,7 @@ export function EmployeeManagement({
               )}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {editLoading ? 'Salvando...' : 'Salva Modifiche'}
+              {editLoading ? t('admin.employees.saving') : t('admin.employees.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>

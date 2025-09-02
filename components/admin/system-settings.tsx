@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, memo } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 // Removed MagicToggle - using status buttons instead
@@ -60,36 +61,40 @@ const SettingCard = ({
   </Card>
 );
 
-const StatusButton = ({ enabled, onToggle, disabled }: StatusButtonProps) => (
-  <div className="flex items-center space-x-2">
-    <Button
-      variant={enabled ? "default" : "outline"}
-      size="sm"
-      onClick={() => onToggle(true)}
-      disabled={Boolean(disabled) || Boolean(enabled)}
-      className={`${enabled 
-        ? 'bg-green-600 hover:bg-green-700 text-white' 
-        : 'hover:bg-green-50 hover:text-green-700 hover:border-green-200'
-      }`}
-    >
-      <CheckCircle className="h-3 w-3 mr-1" />
-      Abilitato
-    </Button>
-    <Button
-      variant={!enabled ? "default" : "outline"}
-      size="sm"
-      onClick={() => onToggle(false)}
-      disabled={Boolean(disabled) || Boolean(!enabled)}
-      className={`${!enabled 
-        ? 'bg-red-600 hover:bg-red-700 text-white' 
-        : 'hover:bg-red-50 hover:text-red-700 hover:border-red-200'
-      }`}
-    >
-      <AlertTriangle className="h-3 w-3 mr-1" />
-      Disabilitato
-    </Button>
-  </div>
-);
+const StatusButton = ({ enabled, onToggle, disabled }: StatusButtonProps) => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="flex items-center space-x-2">
+      <Button
+        variant={enabled ? "default" : "outline"}
+        size="sm"
+        onClick={() => onToggle(true)}
+        disabled={Boolean(disabled) || Boolean(enabled)}
+        className={`${enabled 
+          ? 'bg-green-600 hover:bg-green-700 text-white' 
+          : 'hover:bg-green-50 hover:text-green-700 hover:border-green-200'
+        }`}
+      >
+        <CheckCircle className="h-3 w-3 mr-1" />
+        {t('admin.settings.statusButtons.enabled')}
+      </Button>
+      <Button
+        variant={!enabled ? "default" : "outline"}
+        size="sm"
+        onClick={() => onToggle(false)}
+        disabled={Boolean(disabled) || Boolean(!enabled)}
+        className={`${!enabled 
+          ? 'bg-red-600 hover:bg-red-700 text-white' 
+          : 'hover:bg-red-50 hover:text-red-700 hover:border-red-200'
+        }`}
+      >
+        <AlertTriangle className="h-3 w-3 mr-1" />
+        {t('admin.settings.statusButtons.disabled')}
+      </Button>
+    </div>
+  );
+};
 
 interface SystemSettingsProps {
   settings: Partial<SystemSettings>;
@@ -106,6 +111,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
   onUpdateSetting, 
   onRefresh 
 }: SystemSettingsProps) {
+  const { t } = useTranslation();
   const [localSettings, setLocalSettings] = useState<Partial<SystemSettings>>({});
   const [saveLoading, setSaveLoading] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -182,15 +188,15 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <Settings className="h-6 w-6" />
-            <span>Impostazioni Sistema</span>
+            <span>{t('admin.settings.title')}</span>
           </h2>
           <p className="text-gray-600">
-            Configura il comportamento del sistema e le preferenze per tutti gli utenti
+            {t('admin.settings.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onRefresh} disabled={Boolean(loading)}>
-            Aggiorna
+            {t('admin.settings.refresh')}
           </Button>
           {hasChanges && (
             <Button 
@@ -199,7 +205,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
               className="bg-green-600 hover:bg-green-700"
             >
               <Save className="h-4 w-4 mr-2" />
-              {saveLoading === 'all' ? 'Salvando...' : 'Salva Tutte'}
+              {saveLoading === 'all' ? t('admin.settings.saving') : t('admin.settings.saveAll')}
             </Button>
           )}
         </div>
@@ -218,7 +224,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Hai modifiche non salvate. Clicca &quot;Salva Tutte&quot; per applicare tutte le modifiche.
+            {t('admin.settings.alerts.hasChanges')}
           </AlertDescription>
         </Alert>
       )}
@@ -236,13 +242,13 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
 
         {/* Holiday Visibility Settings */}
         <SettingCard
-          title="Visibilità Ferie"
-          description="Controlla chi può vedere le ferie degli altri dipendenti"
+          title={t('admin.settings.visibility.title')}
+          description={t('admin.settings.visibility.description')}
           icon={Eye}
         >
           <div className="space-y-4">
             <div>
-              <Label htmlFor="visibility-mode">Modalità Visibilità</Label>
+              <Label htmlFor="visibility-mode">{t('admin.settings.visibility.mode')}</Label>
               <Select
                 value={localSettings['holidays.visibility_mode'] || 'admin_only'}
                 onValueChange={(value) => handleSettingChange('holidays.visibility_mode', value)}
@@ -251,21 +257,21 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all_see_all">Tutti vedono tutto</SelectItem>
-                  <SelectItem value="department_only">Solo il dipartimento</SelectItem>
-                  <SelectItem value="admin_only">Solo amministratori</SelectItem>
+                  <SelectItem value="all_see_all">{t('admin.settings.visibility.allSeeAll')}</SelectItem>
+                  <SelectItem value="department_only">{t('admin.settings.visibility.departmentOnly')}</SelectItem>
+                  <SelectItem value="admin_only">{t('admin.settings.visibility.adminOnly')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
-                Chi può vedere le ferie degli altri dipendenti nel calendario
+                {t('admin.settings.visibility.modeDescription')}
               </p>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="show-names">Mostra Nomi</Label>
+                <Label htmlFor="show-names">{t('admin.settings.visibility.showNames')}</Label>
                 <p className="text-xs text-gray-500">
-                  Mostra i nomi dei dipendenti negli eventi del calendario
+                  {t('admin.settings.visibility.showNamesDescription')}
                 </p>
               </div>
               <StatusButton
@@ -276,9 +282,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="show-details">Mostra Dettagli</Label>
+                <Label htmlFor="show-details">{t('admin.settings.visibility.showDetails')}</Label>
                 <p className="text-xs text-gray-500">
-                  Mostra dettagli delle ferie (tipo, note) negli eventi
+                  {t('admin.settings.visibility.showDetailsDescription')}
                 </p>
               </div>
               <StatusButton
@@ -297,20 +303,20 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
               )}
               className="w-full"
             >
-              {saveLoading === 'holidays.visibility_mode' ? 'Salvando...' : 'Salva Visibilità'}
+              {saveLoading === 'holidays.visibility_mode' ? t('admin.settings.saving') : t('admin.settings.visibility.save')}
             </Button>
           </div>
         </SettingCard>
 
         {/* Approval Settings */}
         <SettingCard
-          title="Approvazioni"
-          description="Gestisci come vengono approvate le richieste di ferie"
+          title={t('admin.settings.approval.title')}
+          description={t('admin.settings.approval.description')}
           icon={CheckCircle}
         >
           <div className="space-y-4">
             <div>
-              <Label htmlFor="approval-mode">Modalità Approvazione</Label>
+              <Label htmlFor="approval-mode">{t('admin.settings.approval.mode')}</Label>
               <Select
                 value={localSettings['holidays.approval_mode'] || 'manual'}
                 onValueChange={(value) => handleSettingChange('holidays.approval_mode', value)}
@@ -319,17 +325,17 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manual">Approvazione manuale</SelectItem>
-                  <SelectItem value="auto">Approvazione automatica</SelectItem>
+                  <SelectItem value="manual">{t('admin.settings.approval.manual')}</SelectItem>
+                  <SelectItem value="auto">{t('admin.settings.approval.auto')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
-                Come vengono gestite le richieste di ferie
+                {t('admin.settings.approval.modeDescription')}
               </p>
             </div>
 
             <div>
-              <Label htmlFor="advance-notice">Giorni di Preavviso</Label>
+              <Label htmlFor="advance-notice">{t('admin.settings.approval.advanceNotice')}</Label>
               <Input
                 id="advance-notice"
                 type="number"
@@ -340,12 +346,12 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Giorni minimi di preavviso richiesti per le ferie
+                {t('admin.settings.approval.advanceNoticeDescription')}
               </p>
             </div>
 
             <div>
-              <Label htmlFor="max-consecutive">Giorni Consecutivi Massimi</Label>
+              <Label htmlFor="max-consecutive">{t('admin.settings.approval.maxConsecutive')}</Label>
               <Input
                 id="max-consecutive"
                 type="number"
@@ -356,7 +362,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Numero massimo di giorni consecutivi di ferie
+                {t('admin.settings.approval.maxConsecutiveDescription')}
               </p>
             </div>
 
@@ -370,23 +376,23 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
               )}
               className="w-full"
             >
-              {saveLoading === 'holidays.approval_mode' ? 'Salvando...' : 'Salva Approvazioni'}
+              {saveLoading === 'holidays.approval_mode' ? t('admin.settings.saving') : t('admin.settings.approval.save')}
             </Button>
           </div>
         </SettingCard>
 
         {/* System Settings */}
         <SettingCard
-          title="Sistema"
-          description="Configurazioni generali del sistema"
+          title={t('admin.settings.system.title')}
+          description={t('admin.settings.system.description')}
           icon={Shield}
         >
           <div className="space-y-4">
             <div className="space-y-3">
               <div>
-                <Label htmlFor="registration-enabled">Registrazione</Label>
+                <Label htmlFor="registration-enabled">{t('admin.settings.system.registration')}</Label>
                 <p className="text-xs text-gray-500">
-                  Permetti a nuovi dipendenti di registrarsi
+                  {t('admin.settings.system.registrationDescription')}
                 </p>
               </div>
               <StatusButton
@@ -397,9 +403,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="domain-restriction">Limitazione Domini Email</Label>
+                <Label htmlFor="domain-restriction">{t('admin.settings.system.domainRestriction')}</Label>
                 <p className="text-xs text-gray-500">
-                  Limita registrazioni solo ai domini OmniaGroup (omniaservices.net, omniaelectronics.com)
+                  {t('admin.settings.system.domainRestrictionDescription')}
                 </p>
               </div>
               <StatusButton
@@ -438,23 +444,23 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
               )}
               className="w-full"
             >
-              {saveLoading === 'all' ? 'Salvando...' : 'Salva Sistema'}
+              {saveLoading === 'all' ? t('admin.settings.saving') : t('admin.settings.system.save')}
             </Button>
           </div>
         </SettingCard>
 
         {/* Department Settings */}
         <SettingCard
-          title="Dipartimenti"
-          description="Gestisci l'organizzazione dei dipartimenti"
+          title={t('admin.settings.departments.title')}
+          description={t('admin.settings.departments.description')}
           icon={Users}
         >
           <div className="space-y-4">
             <div className="space-y-3">
               <div>
-                <Label htmlFor="dept-visibility">Visibilità Dipartimenti</Label>
+                <Label htmlFor="dept-visibility">{t('admin.settings.departments.visibility')}</Label>
                 <p className="text-xs text-gray-500">
-                  I dipendenti possono vedere i colleghi del loro dipartimento
+                  {t('admin.settings.departments.visibilityDescription')}
                 </p>
               </div>
               <StatusButton
@@ -465,9 +471,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="cross-dept">Vista Inter-Dipartimentale</Label>
+                <Label htmlFor="cross-dept">{t('admin.settings.departments.crossDepartment')}</Label>
                 <p className="text-xs text-gray-500">
-                  Permetti ai dipendenti di vedere altri dipartimenti
+                  {t('admin.settings.departments.crossDepartmentDescription')}
                 </p>
               </div>
               <StatusButton
@@ -487,7 +493,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
               )}
               className="w-full"
             >
-              {saveLoading === 'departments.visibility_enabled' ? 'Salvando...' : 'Salva Dipartimenti'}
+              {saveLoading === 'departments.visibility_enabled' ? t('admin.settings.saving') : t('admin.settings.departments.save')}
             </Button>
           </div>
         </SettingCard>
@@ -496,17 +502,17 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
       {/* Notification Settings */}
       <div className="mt-6">
         <SettingCard
-          title="Notifiche"
-          description="Configura come vengono inviate le notifiche agli utenti"
+          title={t('admin.settings.notifications.title')}
+          description={t('admin.settings.notifications.description')}
           icon={Bell}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="email-notifications">Email</Label>
+                  <Label htmlFor="email-notifications">{t('admin.settings.notifications.email')}</Label>
                   <p className="text-xs text-gray-500">
-                    Invia notifiche via email per approvazioni e aggiornamenti
+                    {t('admin.settings.notifications.emailDescription')}
                   </p>
                 </div>
                 <StatusButton
@@ -517,9 +523,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="browser-notifications">Notifiche Browser</Label>
+                  <Label htmlFor="browser-notifications">{t('admin.settings.notifications.browser')}</Label>
                   <p className="text-xs text-gray-500">
-                    Mostra notifiche nel browser per eventi importanti
+                    {t('admin.settings.notifications.browserDescription')}
                   </p>
                 </div>
                 <StatusButton
@@ -532,9 +538,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
             <div className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="manager-reminders">Promemoria Manager</Label>
+                  <Label htmlFor="manager-reminders">{t('admin.settings.notifications.managerReminders')}</Label>
                   <p className="text-xs text-gray-500">
-                    Invia promemoria ai manager per richieste pendenti
+                    {t('admin.settings.notifications.managerRemindersDescription')}
                   </p>
                 </div>
                 <StatusButton
@@ -555,7 +561,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                 )}
                 className="w-full"
               >
-                {saveLoading === 'notifications.email_enabled' ? 'Salvando...' : 'Salva Notifiche'}
+                {saveLoading === 'notifications.email_enabled' ? t('admin.settings.saving') : t('admin.settings.notifications.save')}
               </Button>
             </div>
           </div>

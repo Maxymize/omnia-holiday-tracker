@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,7 @@ interface LogoCustomizationProps {
 }
 
 export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
+  const { t } = useTranslation();
   const { logoSettings: globalLogoSettings, loading: globalLoading, refreshLogoSettings } = useLogoSettings();
   
   const [logoSettings, setLogoSettings] = useState<LogoSettings>({
@@ -68,18 +70,18 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
       });
 
       if (!response.ok) {
-        throw new Error(`Errore ${response.status}: ${response.statusText}`);
+        throw new Error(`${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
       if (result.success) {
         setLogoSettings(result.data);
       } else {
-        throw new Error(result.error || 'Errore sconosciuto');
+        throw new Error(result.error || t('admin.settings.logoCustomization.unknownError'));
       }
     } catch (error) {
       console.error('Error fetching logo settings:', error);
-      setError(error instanceof Error ? error.message : 'Errore nel caricamento delle impostazioni');
+      setError(error instanceof Error ? error.message : t('admin.settings.logoCustomization.errors.loadingError'));
     } finally {
       setLoading(false);
     }
@@ -107,14 +109,14 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
     // Validate file type
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Formato file non supportato. Sono accettati solo PNG e JPG.');
+      setError(t('admin.settings.logoCustomization.errors.unsupportedFormat'));
       return;
     }
 
     // Validate file size (2MB max)
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      setError('File troppo grande. La dimensione massima è 2MB.');
+      setError(t('admin.settings.logoCustomization.errors.fileTooLarge'));
       return;
     }
 
@@ -141,7 +143,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
 
       if (!response.ok) {
         const errorResult = await response.json();
-        throw new Error(errorResult.error || `Errore ${response.status}: ${response.statusText}`);
+        throw new Error(errorResult.error || `${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -152,13 +154,13 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
           logo_type: 'image',
           logo_url: result.data.url
         }));
-        setSuccess('Logo caricato con successo!');
+        setSuccess(t('admin.settings.logoCustomization.uploadSuccess'));
       } else {
-        throw new Error(result.error || 'Errore sconosciuto durante il caricamento');
+        throw new Error(result.error || t('admin.settings.logoCustomization.errors.unknownError'));
       }
     } catch (error) {
       console.error('Error uploading logo:', error);
-      setError(error instanceof Error ? error.message : 'Errore durante il caricamento del logo');
+      setError(error instanceof Error ? error.message : t('admin.settings.logoCustomization.errors.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -171,13 +173,13 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
 
     // Validation
     if (logoSettings.logo_type === 'text' && !logoSettings.brand_text.trim()) {
-      setError('Il testo del brand è richiesto quando si usa la modalità testo.');
+      setError(t('admin.settings.logoCustomization.errors.textRequired'));
       setSaving(false);
       return;
     }
 
     if (logoSettings.logo_type === 'image' && !logoSettings.logo_url) {
-      setError('È necessario caricare un logo quando si usa la modalità immagine.');
+      setError(t('admin.settings.logoCustomization.errors.imageRequired'));
       setSaving(false);
       return;
     }
@@ -195,22 +197,22 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
 
       if (!response.ok) {
         const errorResult = await response.json();
-        throw new Error(errorResult.error || `Errore ${response.status}: ${response.statusText}`);
+        throw new Error(errorResult.error || `${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
       if (result.success) {
-        setSuccess('Impostazioni logo salvate con successo!');
+        setSuccess(t('admin.settings.logoCustomization.saveSuccess'));
         // Refresh the page to update header
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       } else {
-        throw new Error(result.error || 'Errore sconosciuto durante il salvataggio');
+        throw new Error(result.error || t('admin.settings.logoCustomization.errors.unknownError'));
       }
     } catch (error) {
       console.error('Error saving logo settings:', error);
-      setError(error instanceof Error ? error.message : 'Errore durante il salvataggio delle impostazioni');
+      setError(error instanceof Error ? error.message : t('admin.settings.logoCustomization.errors.saveError'));
     } finally {
       setSaving(false);
     }
@@ -250,7 +252,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <ImageIcon className="h-5 w-5" />
-            <span>Personalizzazione Logo</span>
+            <span>{t('admin.settings.logoCustomization.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -269,10 +271,10 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2 text-lg">
           <ImageIcon className="h-5 w-5" />
-          <span>Personalizzazione Logo</span>
+          <span>{t('admin.settings.logoCustomization.title')}</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Personalizza il logo nell&apos;header della piattaforma caricando un&apos;immagine o usando un testo
+          {t('admin.settings.logoCustomization.description')}
         </p>
       </CardHeader>
       
@@ -294,7 +296,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
 
         {/* Logo Type Selection */}
         <div className="space-y-3">
-          <Label>Tipo di Logo</Label>
+          <Label>{t('admin.settings.logoCustomization.logoType')}</Label>
           <RadioGroup
             value={logoSettings.logo_type}
             onValueChange={handleLogoTypeChange}
@@ -304,14 +306,14 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
               <RadioGroupItem value="image" id="image" className="scale-75" />
               <Label htmlFor="image" className="flex items-center space-x-1 cursor-pointer text-sm">
                 <ImageIcon className="h-4 w-4" />
-                <span>Immagine</span>
+                <span>{t('admin.settings.logoCustomization.image')}</span>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="text" id="text" className="scale-75" />
               <Label htmlFor="text" className="flex items-center space-x-1 cursor-pointer text-sm">
                 <Type className="h-4 w-4" />
-                <span>Testo</span>
+                <span>{t('admin.settings.logoCustomization.text')}</span>
               </Label>
             </div>
           </RadioGroup>
@@ -320,12 +322,12 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
         {/* Image Upload Section */}
         {logoSettings.logo_type === 'image' && (
           <div className="space-y-4">
-            <Label>Carica Logo (PNG o JPG, max 2MB)</Label>
+            <Label>{t('admin.settings.logoCustomization.uploadLabel')}</Label>
             
             {/* Current Logo Preview */}
             {logoSettings.logo_url && (
               <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="text-sm text-gray-600 mb-2">Logo attuale:</div>
+                <div className="text-sm text-gray-600 mb-2">{t('admin.settings.logoCustomization.currentLogo')}</div>
                 <Image
                   src={logoSettings.logo_url}
                   alt="Current Logo"
@@ -350,10 +352,10 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
             >
               <Upload className={`h-12 w-12 mx-auto mb-4 ${dragOver ? 'text-blue-500' : 'text-gray-400'}`} />
               <p className={`text-lg font-medium mb-2 ${dragOver ? 'text-blue-700' : 'text-gray-700'}`}>
-                {uploading ? 'Caricamento in corso...' : 'Trascina un file qui o clicca per selezionare'}
+                {uploading ? t('admin.settings.logoCustomization.uploading') : t('admin.settings.logoCustomization.dragDrop')}
               </p>
               <p className="text-sm text-gray-500">
-                PNG o JPG, dimensione massima 2MB
+                {t('admin.settings.logoCustomization.fileFormat')}
               </p>
               <input
                 ref={fileInputRef}
@@ -370,18 +372,18 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
         {logoSettings.logo_type === 'text' && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="brand-text">Testo del Brand</Label>
+              <Label htmlFor="brand-text">{t('admin.settings.logoCustomization.brandText')}</Label>
               <Input
                 id="brand-text"
                 type="text"
                 value={logoSettings.brand_text}
                 onChange={(e) => handleBrandTextChange(e.target.value)}
-                placeholder="Es. Omnia Holiday Tracker"
+                placeholder={t('admin.settings.logoCustomization.brandTextPlaceholder')}
                 maxLength={100}
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Massimo 100 caratteri. Apparirà come testo grande e in grassetto nell&apos;header.
+                {t('admin.settings.logoCustomization.brandTextHelp')}
               </p>
             </div>
             
@@ -390,7 +392,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
               <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
                 <div className="text-sm text-gray-600 mb-2 flex items-center">
                   <Eye className="h-4 w-4 mr-1" />
-                  Anteprima:
+                  {t('admin.settings.logoCustomization.preview')}
                 </div>
                 <div className="text-2xl font-bold text-gray-900">
                   {logoSettings.brand_text}
@@ -408,7 +410,7 @@ export function LogoCustomization({ className = "" }: LogoCustomizationProps) {
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salva Impostazioni Logo'}
+            {saving ? t('admin.settings.logoCustomization.saving') : t('admin.settings.logoCustomization.save')}
           </Button>
         </div>
       </CardContent>

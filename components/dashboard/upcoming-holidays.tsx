@@ -78,7 +78,7 @@ export function UpcomingHolidays({
   };
 
   const getTypeLabel = (type: Holiday['type']) => {
-    return t(`holidays.request.types.${type}`);
+    return t(`dashboard.calendar.legendDetails.${type}`);
   };
 
   const formatDateInfo = (startDate: string, endDate: string) => {
@@ -147,7 +147,7 @@ export function UpcomingHolidays({
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Prossime ferie</span>
+            <span>{t('admin.myRequests.upcoming.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -173,7 +173,7 @@ export function UpcomingHolidays({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Prossime ferie</span>
+            <span>{t('admin.myRequests.upcoming.title')}</span>
           </CardTitle>
           
           {showTeam && (
@@ -286,7 +286,7 @@ export function UpcomingHolidays({
                       </Badge>
                       {holiday.status === 'pending' && (
                         <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800">
-                          In attesa
+                          {t('admin.myRequests.badges.pending')}
                         </Badge>
                       )}
                     </div>
@@ -305,9 +305,9 @@ export function UpcomingHolidays({
                         "font-medium",
                         holiday.status === 'approved' ? "text-green-600" : "text-amber-600"
                       )}>
-                        {holiday.status === 'approved' ? 'Approvato' : 
-                         holiday.status === 'pending' ? 'In attesa' : 
-                         holiday.status === 'rejected' ? 'Rifiutato' : holiday.status}
+                        {holiday.status === 'approved' ? t('admin.myRequests.statuses.approved') : 
+                         holiday.status === 'pending' ? t('admin.myRequests.badges.pending') : 
+                         holiday.status === 'rejected' ? t('admin.myRequests.statuses.rejected') : holiday.status}
                       </span>
                       {showTeam && (
                         <>

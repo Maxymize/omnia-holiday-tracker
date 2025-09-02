@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,8 @@ interface LeaveTypeSettingsProps {
 }
 
 export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
+  const { t } = useTranslation();
+  
   // State management
   const [allowances, setAllowances] = useState<LeaveTypeAllowances>({
     'leave_types.vacation_allowance': 20,
@@ -93,12 +96,12 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
         setOriginalAllowances(loadedAllowances);
         setErrors({});
       } else {
-        toast.error('Errore', 'Impossibile caricare le impostazioni');
+        toast.error(t('common.error'), t('admin.settings.leaveTypeSettings.errors.loadingError'));
         console.error('Load settings error:', result.error);
       }
     } catch (error) {
       console.error('Load settings error:', error);
-      toast.error('Errore di Connessione', 'Errore durante il caricamento delle impostazioni');
+      toast.error(t('admin.settings.leaveTypeSettings.errors.connectionError'), t('admin.settings.leaveTypeSettings.errors.connectionErrorDesc'));
     } finally {
       setLoading(false);
     }
@@ -108,15 +111,15 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
     if (key === 'leave_types.sick_allowance') {
       // Sick days can be -1 (unlimited) or any positive number
       if (value < -1) {
-        return 'I giorni di malattia devono essere -1 (illimitati) o un numero positivo';
+        return t('admin.settings.leaveTypeSettings.errors.sickDaysValidation');
       }
     } else {
       // Vacation and personal days must be positive
       if (value < 1) {
-        return 'Il valore deve essere almeno 1 giorno';
+        return t('admin.settings.leaveTypeSettings.errors.minValue');
       }
       if (value > 365) {
-        return 'Il valore non può superare 365 giorni';
+        return t('admin.settings.leaveTypeSettings.errors.maxValue');
       }
     }
     return null;
@@ -154,7 +157,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
 
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
-        toast.error('Errore di Validazione', 'Correggi gli errori prima di salvare');
+        toast.error(t('admin.settings.leaveTypeSettings.errors.validationError'), t('admin.settings.leaveTypeSettings.errors.validationErrorDesc'));
         return;
       }
 
@@ -172,7 +175,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
         }));
 
       if (settingsToUpdate.length === 0) {
-        toast.info('Nessuna Modifica', 'Non ci sono modifiche da salvare');
+        toast.info(t('admin.settings.leaveTypeSettings.alerts.noChanges'), t('admin.settings.leaveTypeSettings.alerts.noChangesDesc'));
         return;
       }
 
@@ -193,16 +196,16 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
         setErrors({});
         
         toast.success(
-          'Impostazioni Salvate', 
-          `Aggiornati ${settingsToUpdate.length} tipi di permesso`
+          t('admin.settings.leaveTypeSettings.alerts.settingsSaved'), 
+          t('admin.settings.leaveTypeSettings.alerts.settingsSavedDesc', { count: String(settingsToUpdate.length) })
         );
       } else {
-        toast.error('Errore di Salvataggio', result.error || 'Impossibile salvare le impostazioni');
+        toast.error(t('admin.settings.leaveTypeSettings.errors.saveError'), result.error || t('admin.settings.leaveTypeSettings.errors.saveErrorDesc'));
         console.error('Save settings error:', result.error);
       }
     } catch (error) {
       console.error('Save settings error:', error);
-      toast.error('Errore di Connessione', 'Errore durante il salvataggio delle impostazioni');
+      toast.error(t('admin.settings.leaveTypeSettings.errors.connectionError'), t('admin.settings.leaveTypeSettings.errors.connectionErrorDesc'));
     } finally {
       setSaving(false);
     }
@@ -212,11 +215,11 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
     setAllowances({ ...originalAllowances });
     setErrors({});
     setHasChanges(false);
-    toast.info('Modifiche Annullate', 'Ripristinati i valori originali');
+    toast.info(t('admin.settings.leaveTypeSettings.alerts.changesDiscarded'), t('admin.settings.leaveTypeSettings.alerts.changesDiscardedDesc'));
   };
 
   const formatSickDaysDisplay = (days: number): string => {
-    return days === -1 ? 'Illimitati' : `${days} giorni`;
+    return days === -1 ? t('admin.settings.leaveTypeSettings.sick.unlimited') : `${days} giorni`;
   };
 
   if (loading) {
@@ -244,10 +247,10 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
       <CardHeader>
         <CardTitle className="flex items-center space-x-2 text-xl">
           <Calendar className="h-6 w-6 text-blue-600" />
-          <span>Configurazione Tipi di Permesso</span>
+          <span>{t('admin.settings.leaveTypeSettings.title')}</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Configura i giorni di permesso annuali per categoria. Queste impostazioni si applicano a tutti i dipendenti.
+{t('admin.settings.leaveTypeSettings.description')}
         </p>
       </CardHeader>
       
@@ -257,7 +260,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Hai modifiche non salvate. Clicca &quot;Salva Impostazioni&quot; per applicarle a tutto il sistema.
+{t('admin.settings.leaveTypeSettings.alerts.hasChanges')}
             </AlertDescription>
           </Alert>
         )}
@@ -268,11 +271,11 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             <div className="flex items-center space-x-2">
               <User className="h-5 w-5 text-green-600" />
               <Label className="text-base font-semibold text-green-900">
-                Giorni di Ferie (Vacation Days)
+{t('admin.settings.leaveTypeSettings.vacation.title')}
               </Label>
             </div>
             <p className="text-sm text-green-700 ml-7">
-              Giorni di ferie annuali standard per tutti i dipendenti
+{t('admin.settings.leaveTypeSettings.vacation.description')}
             </p>
             
             <div className="ml-7 space-y-2">
@@ -292,7 +295,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
                 </p>
               )}
               <p className="text-xs text-green-600">
-                Valore attuale: {allowances['leave_types.vacation_allowance']} giorni all&apos;anno
+{t('admin.settings.leaveTypeSettings.vacation.currentValue', { days: String(allowances['leave_types.vacation_allowance']) })}
               </p>
             </div>
           </div>
@@ -304,11 +307,11 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-blue-600" />
               <Label className="text-base font-semibold text-blue-900">
-                Giorni di Permesso (Personal Days)
+{t('admin.settings.leaveTypeSettings.personal.title')}
               </Label>
             </div>
             <p className="text-sm text-blue-700 ml-7">
-              Giorni di permesso personale annuali (ROL, permessi retribuiti, ecc.)
+{t('admin.settings.leaveTypeSettings.personal.description')}
             </p>
             
             <div className="ml-7 space-y-2">
@@ -328,7 +331,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
                 </p>
               )}
               <p className="text-xs text-blue-600">
-                Valore attuale: {allowances['leave_types.personal_allowance']} giorni all&apos;anno
+{t('admin.settings.leaveTypeSettings.personal.currentValue', { days: String(allowances['leave_types.personal_allowance']) })}
               </p>
             </div>
           </div>
@@ -340,11 +343,11 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             <div className="flex items-center space-x-2">
               <Heart className="h-5 w-5 text-red-600" />
               <Label className="text-base font-semibold text-red-900">
-                Giorni di Malattia (Sick Days)
+{t('admin.settings.leaveTypeSettings.sick.title')}
               </Label>
             </div>
             <p className="text-sm text-red-700 ml-7">
-              Giorni di malattia annuali. Usa -1 per giorni illimitati (con documentazione medica)
+{t('admin.settings.leaveTypeSettings.sick.description')}
             </p>
             
             <div className="ml-7 space-y-2">
@@ -364,7 +367,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
                   onClick={() => handleAllowanceChange('leave_types.sick_allowance', '-1')}
                   className="text-xs"
                 >
-                  Imposta Illimitato
+{t('admin.settings.leaveTypeSettings.sick.setUnlimited')}
                 </Button>
               </div>
               
@@ -377,10 +380,10 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
               
               <div className="text-xs text-red-600 space-y-1">
                 <p>
-                  Valore attuale: {formatSickDaysDisplay(allowances['leave_types.sick_allowance'])}
+{t('admin.settings.leaveTypeSettings.sick.currentValue', { display: String(formatSickDaysDisplay(allowances['leave_types.sick_allowance'])) })}
                 </p>
                 <p className="italic">
-                  Nota: -1 = illimitato con documentazione medica; numeri positivi = limite annuale
+{t('admin.settings.leaveTypeSettings.sick.note')}
                 </p>
               </div>
             </div>
@@ -394,20 +397,18 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
           <div className="flex items-center space-x-2">
             <Users className="h-5 w-5 text-amber-600" />
             <Label className="text-base font-semibold text-amber-900">
-              Applica Impostazioni a Tutti i Dipendenti
+{t('admin.settings.leaveTypeSettings.applyToAll.title')}
             </Label>
           </div>
           
           <p className="text-sm text-amber-700">
-            Applica le nuove configurazioni dei giorni di permesso a tutti i dipendenti esistenti nel sistema.
+{t('admin.settings.leaveTypeSettings.applyToAll.description')}
           </p>
 
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              <strong>Attenzione:</strong> Questa azione aggiornerà i giorni di permesso per tutti i dipendenti esistenti
-              con i nuovi valori configurati. I dipendenti che hanno già utilizzato giorni di permesso manterranno
-              il loro utilizzo corrente.
+{t('admin.settings.leaveTypeSettings.applyToAll.warning')}
             </AlertDescription>
           </Alert>
 
@@ -437,22 +438,22 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
                 
                 if (result.success) {
                   toast.success(
-                    'Applicazione Completata',
-                    `Aggiornati ${result.updatedEmployees || 0} dipendenti con le nuove impostazioni`
+                    t('admin.settings.leaveTypeSettings.alerts.applicationCompleted'),
+                    t('admin.settings.leaveTypeSettings.alerts.applicationCompletedDesc', { count: result.updatedEmployees || 0 })
                   );
                 } else {
-                  toast.error('Errore di Applicazione', result.error || 'Impossibile applicare le impostazioni');
+                  toast.error(t('admin.settings.leaveTypeSettings.errors.applicationError'), result.error || t('admin.settings.leaveTypeSettings.errors.applicationErrorDesc'));
                 }
               } catch (error) {
                 console.error('Apply to all employees error:', error);
-                toast.error('Errore di Connessione', 'Errore durante l&apos;applicazione delle impostazioni');
+                toast.error(t('admin.settings.leaveTypeSettings.errors.connectionError'), t('admin.settings.leaveTypeSettings.errors.connectionErrorDesc'));
               }
             }}
             disabled={saving || !hasChanges}
             className="w-full sm:w-auto border-amber-300 text-amber-700 hover:bg-amber-100"
           >
             <Users className="h-4 w-4 mr-2" />
-            Applica a Tutti i Dipendenti
+{t('admin.settings.leaveTypeSettings.applyToAll.button')}
           </Button>
         </div>
 
@@ -464,7 +465,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             className="flex-1 bg-green-600 hover:bg-green-700"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salva Impostazioni'}
+{saving ? t('admin.settings.leaveTypeSettings.actions.saving') : t('admin.settings.leaveTypeSettings.actions.save')}
           </Button>
           
           <Button
@@ -474,7 +475,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             className="flex-1"
           >
             <RotateCcw className="h-4 w-4 mr-2" />
-            Annulla Modifiche
+{t('admin.settings.leaveTypeSettings.actions.cancel')}
           </Button>
           
           <Button
@@ -483,7 +484,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             disabled={saving}
             className="sm:w-auto"
           >
-            Ricarica
+{t('admin.settings.leaveTypeSettings.actions.reload')}
           </Button>
         </div>
 
@@ -491,12 +492,16 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Come funziona:</strong>
+<strong>{t('admin.settings.leaveTypeSettings.help.title')}</strong>
             <ul className="mt-2 space-y-1 list-disc list-inside">
-              <li>Le modifiche si applicano a tutti i dipendenti del sistema</li>
-              <li>I dipendenti esistenti manterranno i loro giorni rimanenti</li>
-              <li>Le nuove configurazioni si applicano dal prossimo rinnovo annuale</li>
-              <li>I giorni di malattia illimitati (-1) richiedono documentazione medica</li>
+              {[
+                t('admin.settings.leaveTypeSettings.help.items.0') || 'Le modifiche si applicano a tutti i dipendenti del sistema',
+                t('admin.settings.leaveTypeSettings.help.items.1') || 'I dipendenti esistenti manterranno i loro giorni rimanenti', 
+                t('admin.settings.leaveTypeSettings.help.items.2') || 'Le nuove configurazioni si applicano dal prossimo rinnovo annuale',
+                t('admin.settings.leaveTypeSettings.help.items.3') || 'I giorni di malattia illimitati (-1) richiedono documentazione medica'
+              ].map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </AlertDescription>
         </Alert>

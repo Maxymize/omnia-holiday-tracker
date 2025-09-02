@@ -325,7 +325,7 @@ export function IntegratedCalendar({
       'timeline': 'Timeline',
       'dayGridMonth': t('dashboard.calendar.monthView'),
       'timeGridWeek': t('dashboard.calendar.weekView'),
-      'list': 'Lista'
+      'list': t('dashboard.calendar.views.list')
     }
 
     return (
@@ -631,7 +631,7 @@ export function IntegratedCalendar({
       month: t('dashboard.calendar.monthView'),
       week: t('dashboard.calendar.weekView'),
       day: t('dashboard.calendar.dayView'),
-      list: 'Lista'
+      list: t('dashboard.calendar.views.list')
     }
   }
 
@@ -752,10 +752,10 @@ export function IntegratedCalendar({
                       
                       const tooltipContent = `
                         ${employeeName}
-                        ${t(`holidays.request.types.${type}`)}
+                        ${t(`dashboard.calendar.legendDetails.${type}`)}
                         ${startDate} - ${endDate}
                         ${workingDays} ${workingDays === 1 ? 'giorno' : 'giorni'}
-                        Stato: ${t(`dashboard.calendar.legend.${status}`)}
+                        Stato: ${t(`dashboard.calendar.legendDetails.${status}`)}
                         ${notes ? `Note: ${notes}` : ''}
                       `.trim();
                       
@@ -776,9 +776,9 @@ export function IntegratedCalendar({
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
-            <DialogTitle>{t('holidays.request.title')}</DialogTitle>
+            <DialogTitle>{t('dashboard.holidays.request.title')}</DialogTitle>
             <DialogDescription>
-              Compila il modulo per richiedere un nuovo periodo di ferie
+              {t('holidays.request.modalDescription')}
             </DialogDescription>
           </DialogHeader>
           <MultiStepHolidayRequest
@@ -813,9 +813,9 @@ export function IntegratedCalendar({
       <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Dettagli Ferie</DialogTitle>
+            <DialogTitle>{t('dashboard.calendar.dialogs.holidayDetails.title')}</DialogTitle>
             <DialogDescription>
-              Informazioni complete sulla richiesta di ferie selezionata
+              {t('dashboard.calendar.dialogs.holidayDetails.description')}
             </DialogDescription>
           </DialogHeader>
           {selectedEvent && (
@@ -829,7 +829,7 @@ export function IntegratedCalendar({
                 <div className="flex-1">
                   <h3 className="font-medium">{selectedEvent.resource.userName}</h3>
                   <p className="text-sm text-gray-600">
-                    {t(`holidays.request.types.${selectedEvent.resource.type}`)}
+                    {t(`dashboard.calendar.legendDetails.${selectedEvent.resource.type}`)}
                   </p>
                 </div>
                 <StatusBadge status={selectedEvent.resource.status} />
@@ -869,7 +869,7 @@ export function IntegratedCalendar({
               Ferie del {dayEventsDialog && format(dayEventsDialog.date, 'dd MMMM yyyy', { locale: getDateFnsLocale() })}
             </DialogTitle>
             <DialogDescription>
-              Elenco completo di tutti i dipendenti in ferie in questa data
+              {t('dashboard.calendar.dialogs.dayEvents.description')}
             </DialogDescription>
           </DialogHeader>
           {dayEventsDialog && (
@@ -891,7 +891,7 @@ export function IntegratedCalendar({
                   <div className="flex-1">
                     <h4 className="font-medium text-sm">{event.resource.userName}</h4>
                     <p className="text-xs text-gray-600">
-                      {t(`holidays.request.types.${event.resource.type}`)}
+                      {t(`dashboard.calendar.legendDetails.${event.resource.type}`)}
                     </p>
                   </div>
                   <div className="flex-shrink-0">

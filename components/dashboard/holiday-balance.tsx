@@ -31,10 +31,12 @@ interface LeaveTypeCardProps {
 }
 
 function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
+  const { t } = useTranslation();
+  
   // Theme configuration for each leave type
   const themeConfig = {
     vacation: {
-      label: 'Ferie',
+      label: t('admin.myRequests.stats.vacation'),
       icon: Plane,
       emoji: '🏖️',
       bgColor: 'bg-emerald-50',
@@ -44,7 +46,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
       textColor: 'text-emerald-800'
     },
     personal: {
-      label: 'Permessi',
+      label: t('admin.myRequests.stats.personal'),
       icon: Heart,
       emoji: '👤',
       bgColor: 'bg-blue-50',
@@ -54,7 +56,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
       textColor: 'text-blue-800'
     },
     sick: {
-      label: 'Malattia',
+      label: t('admin.myRequests.stats.sick'),
       icon: Stethoscope,
       emoji: '🏥',
       bgColor: 'bg-red-50',
@@ -77,15 +79,15 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
   // Determine status badge
   const getStatusBadge = () => {
     if (isUnlimited) {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">Illimitati</Badge>;
+      return <Badge variant="outline" className="bg-gray-100 text-gray-600 text-xs">{t('admin.myRequests.badges.unlimited')}</Badge>;
     }
     
     if (stats.availableDays <= 2) {
-      return <Badge variant="destructive" className="text-xs">Attenzione</Badge>;
+      return <Badge variant="destructive" className="text-xs">{t('admin.myRequests.badges.warning')}</Badge>;
     } else if (stats.availableDays <= 5) {
-      return <Badge variant="secondary" className="text-xs">Limitati</Badge>;
+      return <Badge variant="secondary" className="text-xs">{t('admin.myRequests.badges.limited')}</Badge>;
     } else {
-      return <Badge variant="default" className="text-xs">Disponibili</Badge>;
+      return <Badge variant="default" className="text-xs">{t('admin.myRequests.badges.available')}</Badge>;
     }
   };
 
@@ -112,7 +114,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
             {isUnlimited ? <Infinity className="h-5 w-5 mx-auto" /> : stats.availableDays}
           </div>
           <div className="text-xs text-gray-600">
-            {isUnlimited ? 'giorni disponibili' : `disponibili su ${stats.allowance}`}
+            {isUnlimited ? t('admin.myRequests.badges.daysAvailable') : `${t('admin.myRequests.badges.availableOf')} ${stats.allowance}`}
           </div>
         </div>
         
@@ -136,7 +138,7 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
         
         <div className="text-center">
           <div className={cn("text-lg font-bold", theme.textColor)}>{stats.usedDays}</div>
-          <div className="text-xs text-gray-600">utilizzati</div>
+          <div className="text-xs text-gray-600">{t('admin.myRequests.badges.used')}</div>
         </div>
       </div>
 
@@ -144,15 +146,15 @@ function LeaveTypeCard({ type, stats, className }: LeaveTypeCardProps) {
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div className="text-center">
           <div className={cn("font-medium", theme.textColor)}>{stats.approvedRequests}</div>
-          <div className="text-gray-600">Approvate</div>
+          <div className="text-gray-600">{t('admin.myRequests.badges.approved')}</div>
         </div>
         <div className="text-center">
           <div className={cn("font-medium", theme.textColor)}>{stats.pendingRequests}</div>
-          <div className="text-gray-600">In attesa</div>
+          <div className="text-gray-600">{t('admin.myRequests.badges.pending')}</div>
         </div>
         <div className="text-center">
           <div className={cn("font-medium", theme.textColor)}>{stats.upcomingRequests}</div>
-          <div className="text-gray-600">Prossime</div>
+          <div className="text-gray-600">{t('admin.myRequests.badges.upcoming')}</div>
         </div>
       </div>
     </div>
@@ -190,12 +192,12 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Saldo Permessi</span>
+            <span>{t('admin.myRequests.systems.permissionsBalance')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
-            <p className="text-gray-600">Nessun dato disponibile</p>
+            <p className="text-gray-600">{t('admin.myRequests.systems.noDataAvailable')}</p>
           </div>
         </CardContent>
       </Card>
@@ -213,10 +215,10 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5" />
-              <span>Saldo Permessi {stats.year || new Date().getFullYear()}</span>
+              <span>{t('admin.myRequests.systems.permissionsBalance')} {stats.year || new Date().getFullYear()}</span>
             </div>
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Sistema Flessibile
+              {t('admin.myRequests.systems.flexibleSystem')}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -251,15 +253,15 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
             <div className="grid grid-cols-3 gap-4 text-center text-sm">
               <div>
                 <div className="font-bold text-gray-900">{stats.totalRequests}</div>
-                <div className="text-gray-600">Richieste Totali</div>
+                <div className="text-gray-600">{t('admin.myRequests.badges.totalRequests')}</div>
               </div>
               <div>
                 <div className="font-bold text-green-600">{stats.approvedRequests}</div>
-                <div className="text-gray-600">Approvate</div>
+                <div className="text-gray-600">{t('admin.myRequests.badges.approved')}</div>
               </div>
               <div>
                 <div className="font-bold text-amber-600">{stats.pendingRequests}</div>
-                <div className="text-gray-600">In Attesa</div>
+                <div className="text-gray-600">{t('admin.myRequests.badges.pending')}</div>
               </div>
             </div>
           </div>
@@ -287,10 +289,10 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Calendar className="h-5 w-5" />
-            <span>Saldo Ferie {new Date().getFullYear()}</span>
+            <span>{t('admin.myRequests.systems.permissionsBalance')} {new Date().getFullYear()}</span>
           </div>
           <Badge variant="outline" className="bg-gray-50 text-gray-600">
-            Sistema Tradizionale
+            {t('admin.myRequests.systems.traditionalSystem')}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -300,7 +302,7 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
         <div className="flex items-center justify-between mb-2">
           <div className="text-center">
             <div className={cn("text-2xl font-bold", getRemainingDaysColor())}>{remainingDays}</div>
-            <div className="text-xs text-gray-600">giorni disponibili su {totalAllowance}</div>
+            <div className="text-xs text-gray-600">{t('admin.myRequests.badges.daysAvailable')} su {totalAllowance}</div>
           </div>
           
           {/* Usage Progress - Compact */}
@@ -328,17 +330,17 @@ export function HolidayBalance({ stats, user, loading = false, className }: Holi
           <div className="flex items-center space-x-1">
             <CheckCircle className="h-3 w-3 text-green-600" />
             <span className="font-medium">{stats.approvedRequests}</span>
-            <span className="text-gray-600">Approvate</span>
+            <span className="text-gray-600">{t('admin.myRequests.badges.approved')}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="h-3 w-3 text-amber-600" />
             <span className="font-medium">{stats.pendingRequests}</span>
-            <span className="text-gray-600">In attesa</span>
+            <span className="text-gray-600">{t('admin.myRequests.badges.pending')}</span>
           </div>
           <div className="flex items-center space-x-1">
             <TrendingUp className="h-3 w-3 text-blue-600" />
             <span className="font-medium">{stats.upcomingHolidays}</span>
-            <span className="text-gray-600">Prossime</span>
+            <span className="text-gray-600">{t('admin.myRequests.badges.upcoming')}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Calendar className="h-3 w-3 text-gray-600" />

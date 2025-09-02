@@ -117,14 +117,14 @@ export function HolidayHistoryTable({
             bValue = b.workingDays;
             break;
           case 'tipo':
-            // Ordine alfabetico: Ferie, Malattia, Personale
-            const typeOrder = { vacation: 'Ferie', sick: 'Malattia', personal: 'Personale' };
+            // Use translation keys for type sorting
+            const typeOrder = { vacation: t('holidayHistory.types.vacation'), sick: t('holidayHistory.types.sick'), personal: t('holidayHistory.types.personal') };
             aValue = typeOrder[a.type];
             bValue = typeOrder[b.type];
             break;
           case 'stato':
-            // Ordine alfabetico: Approvata, In attesa, Rifiutata, Annullata
-            const statusOrder = { approved: 'Approvata', pending: 'In attesa', rejected: 'Rifiutata', cancelled: 'Annullata' };
+            // Use translation keys for status sorting
+            const statusOrder = { approved: t('holidayHistory.statuses.approved'), pending: t('holidayHistory.statuses.pending'), rejected: t('holidayHistory.statuses.rejected'), cancelled: t('holidayHistory.statuses.cancelled') };
             aValue = statusOrder[a.status];
             bValue = statusOrder[b.status];
             break;
@@ -160,7 +160,7 @@ export function HolidayHistoryTable({
   };
 
   const getTypeLabel = (type: Holiday['type']) => {
-    return t(`holidays.request.types.${type}`);
+    return t(`dashboard.calendar.legendDetails.${type}`);
   };
 
   const formatDateRange = (startDate: string, endDate: string) => {
@@ -215,7 +215,7 @@ export function HolidayHistoryTable({
         body: JSON.stringify({
           holidayId: holiday.id,
           action: 'reject',
-          notes: 'Annullata dal dipendente'
+          notes: t('holidayHistory.messages.cancelNote')
         }),
       });
 
@@ -230,9 +230,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Cancel request error:', error);
-      toast.error(locale === 'it' ? 'Errore nell\'annullamento della richiesta' : 
-                 locale === 'es' ? 'Error al cancelar la solicitud' : 
-                 'Failed to cancel request');
+      toast.error(t('holidayHistory.messages.cancelError'));
     }
   };
 
@@ -298,9 +296,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Download certificate error:', error);
-      toast.error(locale === 'it' ? 'Errore nel download del certificato' : 
-                 locale === 'es' ? 'Error al descargar el certificado' : 
-                 'Failed to download certificate');
+      toast.error(t('holidayHistory.messages.downloadError'));
     } finally {
       setDownloadingFiles(prev => {
         const next = new Set(prev);
@@ -353,9 +349,7 @@ export function HolidayHistoryTable({
       }
     } catch (error) {
       console.error('Delete request error:', error);
-      toast.error(locale === 'it' ? 'Errore nell\'eliminazione della richiesta' : 
-                 locale === 'es' ? 'Error al eliminar la solicitud' : 
-                 'Failed to delete request');
+      toast.error(t('holidayHistory.messages.deleteError'));
     } finally {
       setIsDeleting(false);
     }
@@ -430,43 +424,43 @@ export function HolidayHistoryTable({
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Stato" />
+                  <SelectValue placeholder={t('holidayHistory.filters.status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {locale === 'it' ? 'Tutti gli stati' : locale === 'es' ? 'Todos los estados' : 'All statuses'}
+{t('holidayHistory.filters.allStatuses')}
                   </SelectItem>
                   <SelectItem value="pending">
-                    {locale === 'it' ? 'In attesa' : locale === 'es' ? 'Pendiente' : 'Pending'}
+{t('holidayHistory.statuses.pending')}
                   </SelectItem>
                   <SelectItem value="approved">
-                    {locale === 'it' ? 'Approvate' : locale === 'es' ? 'Aprobadas' : 'Approved'}
+{t('holidayHistory.statuses.approved')}
                   </SelectItem>
                   <SelectItem value="rejected">
-                    {locale === 'it' ? 'Rifiutate' : locale === 'es' ? 'Rechazadas' : 'Rejected'}
+{t('holidayHistory.statuses.rejected')}
                   </SelectItem>
                   <SelectItem value="cancelled">
-                    {locale === 'it' ? 'Annullate' : locale === 'es' ? 'Canceladas' : 'Cancelled'}
+{t('holidayHistory.statuses.cancelled')}
                   </SelectItem>
                 </SelectContent>
               </Select>
               
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Tipo" />
+                  <SelectValue placeholder={t('holidayHistory.filters.type')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {locale === 'it' ? 'Tutti i tipi' : locale === 'es' ? 'Todos los tipos' : 'All types'}
+{t('holidayHistory.filters.allTypes')}
                   </SelectItem>
                   <SelectItem value="vacation">
-                    {t('holidays.request.types.vacation')}
+                    {t('dashboard.calendar.legendDetails.vacation')}
                   </SelectItem>
                   <SelectItem value="sick">
-                    {t('holidays.request.types.sick')}
+                    {t('dashboard.calendar.legendDetails.sick')}
                   </SelectItem>
                   <SelectItem value="personal">
-                    {t('holidays.request.types.personal')}
+                    {t('dashboard.calendar.legendDetails.personal')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -509,7 +503,7 @@ export function HolidayHistoryTable({
                     </div>
                     <div>
                       <span className="text-gray-600">
-                        {locale === 'it' ? 'Giorni lavorativi' : locale === 'es' ? 'Días laborables' : 'Working days'}: 
+{t('holidayHistory.columns.workingDays')}: 
                       </span>
                       <span className="font-medium">{formatWorkingDays(holiday.workingDays)}</span>
                     </div>
@@ -581,7 +575,7 @@ export function HolidayHistoryTable({
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
-                        {locale === 'it' ? 'Elimina' : locale === 'es' ? 'Eliminar' : 'Delete'}
+{t('holidayHistory.actions.delete')}
                       </Button>
                     </div>
                   )}
@@ -621,7 +615,7 @@ export function HolidayHistoryTable({
                           onClick={() => handleSort('giorni')}
                           title="Ordina per giorni"
                         >
-                          <span>{locale === 'it' ? 'Giorni' : locale === 'es' ? 'Días' : 'Days'}</span>
+                          <span>{t('holidayHistory.columns.days')}</span>
                           {getSortIcon('giorni')}
                         </button>
                       </TableHead>
@@ -655,7 +649,7 @@ export function HolidayHistoryTable({
                     {filteredAndSortedHolidays.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={showActions ? 7 : 6} className="text-center py-8 text-gray-500">
-                          {locale === 'it' ? 'Nessuna richiesta trovata' : locale === 'es' ? 'No se encontraron solicitudes' : 'No requests found'}
+{t('holidayHistory.messages.noRequests')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -748,7 +742,7 @@ export function HolidayHistoryTable({
                                   disabled={isDeleting}
                                 >
                                   <Trash2 className="h-3 w-3 mr-1" />
-                                  {locale === 'it' ? 'Elimina' : locale === 'es' ? 'Eliminar' : 'Delete'}
+          {t('holidayHistory.actions.delete')}
                                 </Button>
                               </div>
                             </TableCell>

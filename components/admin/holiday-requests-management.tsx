@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ export function HolidayRequestsManagement({
   onDeleteRequest,
   onRefresh 
 }: HolidayRequestsManagementProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'vacation' | 'sick' | 'personal'>('all');
@@ -122,14 +124,14 @@ export function HolidayRequestsManagement({
             bValue = new Date(b.startDate).getTime();
             break;
           case 'tipo':
-            // Ordine alfabetico: Ferie, Malattia, Personale
-            const typeOrder = { vacation: 'Ferie', sick: 'Malattia', personal: 'Personale' };
+            // Ordine alfabetico con traduzioni
+            const typeOrder = { vacation: t('admin.requests.types.vacation'), sick: t('admin.requests.types.sick'), personal: t('admin.requests.types.personal') };
             aValue = typeOrder[a.type];
             bValue = typeOrder[b.type];
             break;
           case 'stato':
-            // Ordine alfabetico: Approvata, In attesa, Rifiutata, Cancellata
-            const statusOrder = { approved: 'Approvata', pending: 'In attesa', rejected: 'Rifiutata', cancelled: 'Cancellata' };
+            // Ordine alfabetico con traduzioni
+            const statusOrder = { approved: t('admin.requests.statuses.approved'), pending: t('admin.requests.statuses.pending'), rejected: t('admin.requests.statuses.rejected'), cancelled: 'Cancellata' };
             aValue = statusOrder[a.status];
             bValue = statusOrder[b.status];
             break;
@@ -227,7 +229,7 @@ export function HolidayRequestsManagement({
     try {
       const success = action === 'approve' 
         ? await onApproveRequest(request.id)
-        : await onRejectRequest(request.id, 'Stato cambiato dall\'amministratore');
+        : await onRejectRequest(request.id, t('admin.requests.statusChangedByAdmin'));
 
       if (success) {
         onRefresh();
@@ -269,11 +271,11 @@ export function HolidayRequestsManagement({
   const getStatusBadge = (status: PendingHolidayRequest['status']) => {
     switch (status) {
       case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800">In attesa</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t('admin.requests.statuses.pending')}</Badge>;
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approvata</Badge>;
+        return <Badge className="bg-green-100 text-green-800">{t('admin.requests.statuses.approved')}</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rifiutata</Badge>;
+        return <Badge className="bg-red-100 text-red-800">{t('admin.requests.statuses.rejected')}</Badge>;
       default:
         return <Badge variant="outline">Sconosciuto</Badge>;
     }
@@ -282,11 +284,11 @@ export function HolidayRequestsManagement({
   const getTypeBadge = (type: PendingHolidayRequest['type']) => {
     switch (type) {
       case 'vacation':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">🏖️ Ferie</Badge>;
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800">🏖️ {t('admin.requests.types.vacation')}</Badge>;
       case 'sick':
-        return <Badge variant="outline" className="bg-red-100 text-red-800">🏥 Malattia</Badge>;
+        return <Badge variant="outline" className="bg-red-100 text-red-800">🏥 {t('admin.requests.types.sick')}</Badge>;
       case 'personal':
-        return <Badge variant="outline" className="bg-purple-100 text-purple-800">👤 Personale</Badge>;
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800">👤 {t('admin.requests.types.personal')}</Badge>;
       default:
         return <Badge variant="outline">Altro</Badge>;
     }
@@ -344,15 +346,15 @@ export function HolidayRequestsManagement({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <FileText className="h-6 w-6" />
-            <span>Gestione Richieste di Ferie</span>
+            <span>{t('admin.requests.management')}</span>
           </h2>
           <p className="text-gray-600">
-            {requests.length} richieste totali • {pendingRequests.length} in attesa • {approvedRequests.length} approvate
+            {requests.length} {t('admin.requests.totalRequests')} • {pendingRequests.length} {t('admin.requests.pending')} • {approvedRequests.length} {t('admin.requests.approved')}
           </p>
         </div>
         <Button onClick={onRefresh} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Aggiorna
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -373,7 +375,7 @@ export function HolidayRequestsManagement({
                 <Clock className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">In Attesa</p>
+                <p className="text-sm text-gray-600">{t('admin.requests.pending')}</p>
                 <p className="text-2xl font-bold text-amber-600">{pendingRequests.length}</p>
               </div>
             </div>
@@ -387,7 +389,7 @@ export function HolidayRequestsManagement({
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Approvate</p>
+                <p className="text-sm text-gray-600">{t('admin.requests.approved')}</p>
                 <p className="text-2xl font-bold text-green-600">{approvedRequests.length}</p>
               </div>
             </div>
@@ -401,7 +403,7 @@ export function HolidayRequestsManagement({
                 <XCircle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Rifiutate</p>
+                <p className="text-sm text-gray-600">{t('admin.requests.rejected')}</p>
                 <p className="text-2xl font-bold text-red-600">{rejectedRequests.length}</p>
               </div>
             </div>
@@ -415,7 +417,7 @@ export function HolidayRequestsManagement({
                 <FileText className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Totali</p>
+                <p className="text-sm text-gray-600">{t('admin.requests.total')}</p>
                 <p className="text-2xl font-bold text-blue-600">{requests.length}</p>
               </div>
             </div>
@@ -431,7 +433,7 @@ export function HolidayRequestsManagement({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Cerca per dipendente, email o dipartimento..."
+                  placeholder={t('admin.requests.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -441,25 +443,25 @@ export function HolidayRequestsManagement({
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Stato" />
+                  <SelectValue placeholder={t('admin.requests.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti gli stati</SelectItem>
-                  <SelectItem value="pending">In attesa</SelectItem>
-                  <SelectItem value="approved">Approvate</SelectItem>
-                  <SelectItem value="rejected">Rifiutate</SelectItem>
+                  <SelectItem value="all">{t('admin.requests.allStatuses')}</SelectItem>
+                  <SelectItem value="pending">{t('admin.requests.pending')}</SelectItem>
+                  <SelectItem value="approved">{t('admin.requests.approved')}</SelectItem>
+                  <SelectItem value="rejected">{t('admin.requests.rejected')}</SelectItem>
                 </SelectContent>
               </Select>
               
               <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Tipo" />
+                  <SelectValue placeholder={t('admin.requests.type')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti i tipi</SelectItem>
-                  <SelectItem value="vacation">Ferie</SelectItem>
-                  <SelectItem value="sick">Malattia</SelectItem>
-                  <SelectItem value="personal">Personale</SelectItem>
+                  <SelectItem value="all">{t('admin.requests.allTypes')}</SelectItem>
+                  <SelectItem value="vacation">{t('admin.requests.types.vacation')}</SelectItem>
+                  <SelectItem value="sick">{t('admin.requests.types.sick')}</SelectItem>
+                  <SelectItem value="personal">{t('admin.requests.types.personal')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -472,14 +474,14 @@ export function HolidayRequestsManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Dipendente</TableHead>
+                  <TableHead>{t('admin.requests.employee')}</TableHead>
                   <TableHead>
                     <button 
                       className="flex items-center space-x-1 hover:bg-gray-100 p-1 rounded transition-colors"
                       onClick={() => handleSort('richiesta')}
                       title="Ordina per data richiesta"
                     >
-                      <span>Richiesta</span>
+                      <span>{t('admin.requests.request')}</span>
                       {getSortIcon('richiesta')}
                     </button>
                   </TableHead>
@@ -489,7 +491,7 @@ export function HolidayRequestsManagement({
                       onClick={() => handleSort('periodo')}
                       title="Ordina per periodo"
                     >
-                      <span>Periodo</span>
+                      <span>{t('admin.requests.period')}</span>
                       {getSortIcon('periodo')}
                     </button>
                   </TableHead>
@@ -499,7 +501,7 @@ export function HolidayRequestsManagement({
                       onClick={() => handleSort('giorni')}
                       title="Ordina per giorni"
                     >
-                      <span>Giorni</span>
+                      <span>{t('admin.requests.days')}</span>
                       {getSortIcon('giorni')}
                     </button>
                   </TableHead>
@@ -509,7 +511,7 @@ export function HolidayRequestsManagement({
                       onClick={() => handleSort('tipo')}
                       title="Ordina per tipo"
                     >
-                      <span>Tipo</span>
+                      <span>{t('admin.requests.type')}</span>
                       {getSortIcon('tipo')}
                     </button>
                   </TableHead>
@@ -519,18 +521,18 @@ export function HolidayRequestsManagement({
                       onClick={() => handleSort('stato')}
                       title="Ordina per stato"
                     >
-                      <span>Stato</span>
+                      <span>{t('admin.requests.status')}</span>
                       {getSortIcon('stato')}
                     </button>
                   </TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
+                  <TableHead className="text-right">{t('admin.requests.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAndSortedRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      {loading ? 'Caricamento richieste...' : 'Nessuna richiesta trovata'}
+                      {loading ? t('admin.requests.loadingRequests') : t('admin.requests.noRequestsFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -567,7 +569,7 @@ export function HolidayRequestsManagement({
                           </div>
                           <div className="text-gray-600 flex items-center space-x-1">
                             <Calendar className="h-3 w-3" />
-                            <span>{request.workingDays} giorni lavorativi</span>
+                            <span>{request.workingDays} {t('admin.requests.workingDays').toLowerCase()}</span>
                           </div>
                         </div>
                       </TableCell>
@@ -663,7 +665,7 @@ export function HolidayRequestsManagement({
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Dettagli Richiesta di Ferie</DialogTitle>
+                                <DialogTitle>{t('admin.requests.detailsModal.title')}</DialogTitle>
                               </DialogHeader>
                               {selectedRequest && (
                                 <div className="space-y-4">
@@ -687,25 +689,25 @@ export function HolidayRequestsManagement({
                                   
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <label className="font-medium text-gray-700">Periodo</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.period')}</label>
                                       <p className="mt-1 text-gray-900">
                                         {formatDateRange(selectedRequest.startDate, selectedRequest.endDate)}
                                       </p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Giorni lavorativi</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.workingDays')}</label>
                                       <p className="mt-1 text-gray-900">{selectedRequest.workingDays}</p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Tipo</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.type')}</label>
                                       <div className="mt-1">{getTypeBadge(selectedRequest.type)}</div>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Stato</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.status')}</label>
                                       <div className="mt-1">{getStatusBadge(selectedRequest.status)}</div>
                                     </div>
                                     <div className="col-span-2">
-                                      <label className="font-medium text-gray-700">Data richiesta</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.detailsModal.requestDate')}</label>
                                       <p className="mt-1 text-gray-900">
                                         {formatDate(selectedRequest.createdAt)}
                                       </p>
@@ -714,7 +716,7 @@ export function HolidayRequestsManagement({
 
                                   {selectedRequest.notes && (
                                     <div>
-                                      <label className="font-medium text-gray-700">Note</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.detailsModal.notes')}</label>
                                       <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
                                         {selectedRequest.notes}
                                       </div>
@@ -849,19 +851,19 @@ export function HolidayRequestsManagement({
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rifiuta Richiesta di Ferie</DialogTitle>
+            <DialogTitle>{t('admin.requests.rejectRequest')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Stai per rifiutare la richiesta di ferie di <strong>{requestToReject?.employeeName}</strong>.
-              Puoi aggiungere una motivazione (opzionale).
+              {t('admin.requests.rejectModal.message')} <strong>{requestToReject?.employeeName}</strong>.
+              {' '}{t('admin.requests.rejectModal.optionalMessage')}
             </p>
             <div>
-              <label className="text-sm font-medium text-gray-700">Motivazione (opzionale)</label>
+              <label className="text-sm font-medium text-gray-700">{t('admin.requests.rejectModal.reasonLabel')}</label>
               <Textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Inserisci il motivo del rifiuto..."
+                placeholder={t('admin.requests.rejectModal.reasonPlaceholder')}
                 className="mt-1"
                 rows={3}
               />
@@ -873,14 +875,14 @@ export function HolidayRequestsManagement({
               onClick={() => setShowRejectDialog(false)}
               disabled={actionLoading === requestToReject?.id}
             >
-              Annulla
+              {t('admin.requests.rejectModal.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleRejectConfirm}
               disabled={actionLoading === requestToReject?.id}
             >
-              {actionLoading === requestToReject?.id ? 'Rifiutando...' : 'Rifiuta Richiesta'}
+              {actionLoading === requestToReject?.id ? t('admin.requests.rejecting') : t('admin.requests.rejectRequestButton')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -893,7 +895,7 @@ export function HolidayRequestsManagement({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Conferma Cambio Stato Richiesta
+              {t('admin.requests.confirmStatusChange')}
             </DialogTitle>
           </DialogHeader>
           {confirmDialog.request && (
@@ -901,32 +903,32 @@ export function HolidayRequestsManagement({
               <div className="flex items-center space-x-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                 <AlertTriangle className="h-6 w-6 text-amber-600" />
                 <div>
-                  <h4 className="font-medium text-amber-900">Attenzione: Cambio di Stato</h4>
+                  <h4 className="font-medium text-amber-900">{t('admin.requests.statusChangeWarning')}</h4>
                   <p className="text-sm text-amber-700">
-                    Stai per modificare lo stato di una richiesta già processata.
+                    {t('admin.requests.statusChangeDescription')}
                   </p>
                 </div>
               </div>
               
               <div className="space-y-3">
                 <div>
-                  <label className="font-medium text-gray-700">Dipendente:</label>
+                  <label className="font-medium text-gray-700">{t('admin.requests.employee')}:</label>
                   <p className="text-gray-900">{confirmDialog.request.employeeName}</p>
                   <p className="text-sm text-gray-600">{confirmDialog.request.employeeEmail}</p>
                 </div>
                 
                 <div>
-                  <label className="font-medium text-gray-700">Periodo richiesto:</label>
+                  <label className="font-medium text-gray-700">{t('admin.requests.requestedPeriod')}</label>
                   <p className="text-gray-900">
                     {formatDate(confirmDialog.request.startDate)} - {formatDate(confirmDialog.request.endDate)}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {confirmDialog.request.workingDays} giorni lavorativi • {confirmDialog.request.type === 'vacation' ? '🏖️ Ferie' : confirmDialog.request.type === 'sick' ? '🏥 Malattia' : '📅 Permesso'}
+                    {confirmDialog.request.workingDays} {t('admin.requests.workingDays').toLowerCase()} • {confirmDialog.request.type === 'vacation' ? '🏖️ ' + t('admin.requests.types.vacation') : confirmDialog.request.type === 'sick' ? '🏥 ' + t('admin.requests.types.sick') : '📅 ' + t('admin.requests.types.personal')}
                   </p>
                 </div>
                 
                 <div>
-                  <label className="font-medium text-gray-700">Stato attuale:</label>
+                  <label className="font-medium text-gray-700">{t('admin.requests.currentStatus')}</label>
                   <div className="mt-1">{getStatusBadge(confirmDialog.request.status)}</div>
                 </div>
                 
@@ -934,19 +936,19 @@ export function HolidayRequestsManagement({
                   <label className="font-medium text-gray-700">Nuovo stato:</label>
                   <div className="mt-1">
                     {confirmDialog.action === 'approve' ? (
-                      <Badge className="bg-green-100 text-green-800">Approvata</Badge>
+                      <Badge className="bg-green-100 text-green-800">{t('admin.requests.statuses.approved')}</Badge>
                     ) : (
-                      <Badge className="bg-red-100 text-red-800">Rifiutata</Badge>
+                      <Badge className="bg-red-100 text-red-800">{t('admin.requests.statuses.rejected')}</Badge>
                     )}
                   </div>
                 </div>
               </div>
 
               <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                <strong>Nota:</strong> Questa azione cambierà lo stato della richiesta di ferie. 
+                <strong>{t('admin.requests.statusChangeNote')}</strong>
                 {confirmDialog.action === 'approve' 
-                  ? ' I giorni di ferie verranno nuovamente allocati al dipendente.' 
-                  : ' I giorni di ferie verranno restituiti al dipendente se precedentemente approvati.'
+                  ? t('admin.requests.statusChangeNoteApprove')
+                  : t('admin.requests.statusChangeNoteReject')
                 }
               </div>
             </div>
@@ -956,7 +958,7 @@ export function HolidayRequestsManagement({
               variant="outline" 
               onClick={() => setConfirmDialog({ isOpen: false, request: null, action: 'approve' })}
             >
-              Annulla
+              {t('admin.requests.cancel')}
             </Button>
             <Button 
               onClick={handleConfirmAction}
@@ -965,7 +967,7 @@ export function HolidayRequestsManagement({
                 : 'bg-red-600 hover:bg-red-700'
               }
             >
-              {confirmDialog.action === 'approve' ? 'Conferma Approvazione' : 'Conferma Rifiuto'}
+              {confirmDialog.action === 'approve' ? t('admin.requests.confirmApproval') : t('admin.requests.confirmRejection')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -976,7 +978,7 @@ export function HolidayRequestsManagement({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-red-600">
-              Conferma Eliminazione
+              {t('admin.requests.deleteModal.title')}
             </DialogTitle>
           </DialogHeader>
           
@@ -986,9 +988,9 @@ export function HolidayRequestsManagement({
                 <div className="flex items-center space-x-3">
                   <AlertTriangle className="h-6 w-6 text-red-600" />
                   <div>
-                    <h4 className="font-medium text-red-900">Attenzione</h4>
+                    <h4 className="font-medium text-red-900">{t('admin.requests.deleteModal.warning')}</h4>
                     <p className="text-sm text-red-700">
-                      Sei sicuro di voler eliminare questa richiesta ferie di <strong>{requestToDelete.employeeName}</strong>? L&apos;operazione non può essere annullata.
+                      {t('admin.requests.deleteModal.message')} <strong>{requestToDelete.employeeName}</strong>? {t('admin.requests.deleteModal.cannotBeUndone')}
                     </p>
                   </div>
                 </div>
@@ -996,28 +998,28 @@ export function HolidayRequestsManagement({
               
               <div className="bg-gray-50 rounded-lg p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Dipendente:</span>
+                  <span className="text-sm font-medium text-gray-700">{t('admin.requests.employee')}:</span>
                   <div>
                     <div className="text-sm font-medium">{requestToDelete.employeeName}</div>
                     <div className="text-xs text-gray-600">{requestToDelete.employeeEmail}</div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Periodo:</span>
+                  <span className="text-sm font-medium text-gray-700">{t('admin.requests.period')}:</span>
                   <span className="text-sm">
                     {formatDateRange(requestToDelete.startDate, requestToDelete.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Giorni:</span>
-                  <span className="text-sm">{requestToDelete.workingDays} giorni lavorativi</span>
+                  <span className="text-sm font-medium text-gray-700">{t('admin.requests.days')}:</span>
+                  <span className="text-sm">{requestToDelete.workingDays} {t('admin.requests.workingDays').toLowerCase()}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Tipo:</span>
+                  <span className="text-sm font-medium text-gray-700">{t('admin.requests.type')}:</span>
                   {getTypeBadge(requestToDelete.type)}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Stato:</span>
+                  <span className="text-sm font-medium text-gray-700">{t('admin.requests.status')}:</span>
                   {getStatusBadge(requestToDelete.status)}
                 </div>
               </div>
@@ -1030,7 +1032,7 @@ export function HolidayRequestsManagement({
               onClick={closeDeleteDialog}
               disabled={isDeleting}
             >
-              Annulla
+              {t('admin.requests.deleteModal.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1041,12 +1043,12 @@ export function HolidayRequestsManagement({
               {isDeleting ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                  <span>Eliminando...</span>
+                  <span>{t('admin.requests.deleteModal.deleting')}</span>
                 </div>
               ) : (
                 <div className="flex items-center space-x-1">
                   <Trash2 className="h-4 w-4" />
-                  <span>Elimina</span>
+                  <span>{t('admin.requests.deleteModal.delete')}</span>
                 </div>
               )}
             </Button>

@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PWAInstallBanner } from '@/components/ui/pwa-install-banner';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { Holiday } from '@/lib/hooks/useHolidays';
 import { format } from 'date-fns';
 import { it, enUS, es } from 'date-fns/locale';
@@ -214,7 +215,12 @@ function EmployeeDashboardContent() {
       {/* Main Content */}
       <div className="lg:pl-80">
         {/* Header con Logo Personalizzabile */}
-        <CustomizableHeader style={{ minHeight: '92px' }} />
+        <CustomizableHeader style={{ minHeight: '92px' }}>
+          <div className="flex items-center space-x-4">
+            <LanguageSwitcher className="text-sm" />
+            <PWAInstallBanner />
+          </div>
+        </CustomizableHeader>
 
         <div className="px-4 py-6 lg:px-8">
           {/* Header */}
@@ -223,7 +229,7 @@ function EmployeeDashboardContent() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <h1 className="text-xl sm:text-2xl font-bold truncate">
-                    {t('dashboard.welcome.title', { name: user.name || 'Dipendente' })}
+                    {t('dashboard.welcome.title', { name: user.name || t('dashboard.profile.role.employee') })}
                   </h1>
                   <div className="mt-2 space-y-1">
                     <p className="text-blue-100 text-sm sm:text-base">
@@ -454,7 +460,7 @@ function EmployeeDashboardContent() {
           {activeTab === 'requests' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Le Mie Richieste</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.navigation.requests')}</h2>
                 <Button onClick={handleCreateRequest}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nuova Richiesta
@@ -473,7 +479,7 @@ function EmployeeDashboardContent() {
 
           {activeTab === 'profile' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Profilo Dipendente</h2>
+              <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.profile.title')}</h2>
               
               {/* Profile Information */}
               <Card>
@@ -490,7 +496,7 @@ function EmployeeDashboardContent() {
                       className="text-xs"
                     >
                       <UserCog className="h-4 w-4 mr-1" />
-                      Modifica Profilo
+                      {t('dashboard.profile.editButton')}
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -509,7 +515,7 @@ function EmployeeDashboardContent() {
                       <h3 className="text-lg font-semibold text-gray-900">{user.name}</h3>
                       <p className="text-gray-600">{user.email}</p>
                       <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                        {user.status === 'active' ? 'Attivo' : 'In attesa'}
+                        {user.status === 'active' ? t('dashboard.profile.status.active') : t('dashboard.profile.status.pending')}
                       </Badge>
                     </div>
                   </div>
@@ -518,7 +524,7 @@ function EmployeeDashboardContent() {
                     <div>
                       <label className="text-sm font-medium text-gray-700">Ruolo</label>
                       <p className="text-sm text-gray-900 mt-1">
-                        {user.role === 'admin' ? 'Amministratore' : 'Dipendente'}
+                        {user.role === 'admin' ? t('dashboard.profile.role.admin') : t('dashboard.profile.role.employee')}
                       </p>
                     </div>
                     <div>
@@ -547,7 +553,7 @@ function EmployeeDashboardContent() {
                       <div className="flex items-center space-x-2 mt-1">
                         <Building2 className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
-                          {profile?.departmentName || user.departmentName || 'Non assegnato'}
+                          {profile?.departmentName || user.departmentName || t('dashboard.profile.fields.department')}
                         </span>
                       </div>
                     </div>
@@ -556,7 +562,7 @@ function EmployeeDashboardContent() {
                       <div className="flex items-center space-x-2 mt-1">
                         <Phone className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
-                          {user.phone || 'Non inserito'}
+                          {user.phone || t('dashboard.profile.fields.phone')}
                         </span>
                       </div>
                     </div>
@@ -565,7 +571,7 @@ function EmployeeDashboardContent() {
                       <div className="flex items-center space-x-2 mt-1">
                         <UserCog className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-900">
-                          {user.jobTitle || 'Non specificata'}
+                          {user.jobTitle || t('dashboard.profile.fields.jobTitle')}
                         </span>
                       </div>
                     </div>
@@ -605,9 +611,9 @@ function EmployeeDashboardContent() {
                 <div>
                   <h3 className="font-semibold text-gray-900">{getTypeLabel(selectedHoliday.type)}</h3>
                   <p className="text-sm text-gray-600">
-                    {selectedHoliday.status === 'approved' ? 'Approvata' : 
-                     selectedHoliday.status === 'pending' ? 'In attesa di approvazione' : 
-                     selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                    {selectedHoliday.status === 'approved' ? t('dashboard.holidays.statusDetails.approved') : 
+                     selectedHoliday.status === 'pending' ? t('dashboard.holidays.statusDetails.pending') : 
+                     selectedHoliday.status === 'rejected' ? t('dashboard.holidays.statusDetails.rejected') : selectedHoliday.status}
                   </p>
                 </div>
               </div>
@@ -643,9 +649,9 @@ function EmployeeDashboardContent() {
                       selectedHoliday.status === 'pending' ? 'bg-amber-100 text-amber-800' :
                       'bg-red-100 text-red-800'
                     }>
-                      {selectedHoliday.status === 'approved' ? 'Approvata' : 
-                       selectedHoliday.status === 'pending' ? 'In attesa' : 
-                       selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                      {selectedHoliday.status === 'approved' ? t('dashboard.holidays.statusDetails.approved') : 
+                       selectedHoliday.status === 'pending' ? t('dashboard.holidays.statusDetails.pendingShort') : 
+                       selectedHoliday.status === 'rejected' ? t('dashboard.holidays.statusDetails.rejected') : selectedHoliday.status}
                     </Badge>
                   </div>
                 </div>
@@ -712,11 +718,11 @@ function EmployeeDashboardContent() {
                                   
                                   window.URL.revokeObjectURL(url);
                                 } else {
-                                  alert('Errore durante il download del certificato');
+                                  alert(t('dashboard.holidays.downloadError'));
                                 }
                               } catch (error) {
                                 console.error('Download error:', error);
-                                alert('Errore durante il download del certificato');
+                                alert(t('dashboard.holidays.downloadError'));
                               }
                             }
                           }}

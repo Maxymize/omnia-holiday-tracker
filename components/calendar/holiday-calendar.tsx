@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon } from "lucide-react"
+import { useTranslation } from "@/lib/i18n/provider"
 
 // Initialize localizer
 moment.locale("it")
@@ -56,6 +57,7 @@ export function HolidayCalendar({
   onAddHoliday,
 }: HolidayCalendarProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date())
+  const { t } = useTranslation()
 
   // Custom event style getter
   const eventStyleGetter = (event: HolidayEvent) => {
@@ -150,7 +152,7 @@ export function HolidayCalendar({
             size="sm"
             onClick={() => onNavigate("TODAY")}
           >
-            Oggi
+            {t('bigCalendar.today')}
           </Button>
           <Button
             variant="outline"
@@ -174,7 +176,7 @@ export function HolidayCalendar({
               className="rounded-r-none"
               onClick={() => onView(Views.MONTH)}
             >
-              Mese
+              {t('bigCalendar.month')}
             </Button>
             <Button
               variant={currentView === Views.WEEK ? "default" : "ghost"}
@@ -182,7 +184,7 @@ export function HolidayCalendar({
               className="rounded-none border-x-0"
               onClick={() => onView(Views.WEEK)}
             >
-              Settimana
+              {t('bigCalendar.week')}
             </Button>
             <Button
               variant={currentView === Views.AGENDA ? "default" : "ghost"}
@@ -190,14 +192,14 @@ export function HolidayCalendar({
               className="rounded-l-none"
               onClick={() => onView(Views.AGENDA)}
             >
-              Timeline
+              {t('bigCalendar.agenda')}
             </Button>
           </div>
           
           {showAddButton && (
             <Button onClick={onAddHoliday} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Nuova Richiesta
+              {t('dashboard.calendar.addHoliday')}
             </Button>
           )}
         </div>
@@ -205,21 +207,21 @@ export function HolidayCalendar({
     )
   }
 
-  // Italian messages for the calendar
+  // Messages for the calendar using translations
   const messages = {
-    allDay: "Tutto il giorno",
-    previous: "Precedente",
-    next: "Successivo",
-    today: "Oggi",
-    month: "Mese",
-    week: "Settimana", 
-    day: "Giorno",
-    agenda: "Timeline",
-    date: "Data",
-    time: "Ora",
-    event: "Evento",
-    noEventsInRange: "Nessun permesso in questo periodo",
-    showMore: (total: number) => `+ Altri ${total}`,
+    allDay: t('bigCalendar.allDay'),
+    previous: t('bigCalendar.previous'),
+    next: t('bigCalendar.next'),
+    today: t('bigCalendar.today'),
+    month: t('bigCalendar.month'),
+    week: t('bigCalendar.week'), 
+    day: t('bigCalendar.day'),
+    agenda: t('bigCalendar.agenda'),
+    date: t('bigCalendar.date'),
+    time: t('bigCalendar.time'),
+    event: t('bigCalendar.event'),
+    noEventsInRange: t('bigCalendar.noEventsInRange'),
+    showMore: (total: number) => `+ ${total} ${total > 1 ? 'altri' : 'altro'}`,
   }
 
   return (
@@ -270,31 +272,33 @@ export function HolidayCalendar({
 
 // Legend component to show what colors mean
 export function CalendarLegend() {
+  const { t } = useTranslation()
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm">Legenda</CardTitle>
+        <CardTitle className="text-sm">{t('dashboard.calendar.legend')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-green-100 border-2 border-green-600 rounded"></div>
-          <span className="text-sm">Ferie Approvate</span>
+          <span className="text-sm">{t('dashboard.calendar.legendDetails.vacation')}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-yellow-100 border-2 border-yellow-600 rounded"></div>
-          <span className="text-sm">Malattia Approvata</span>
+          <span className="text-sm">{t('dashboard.calendar.legendDetails.sick')}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-blue-100 border-2 border-blue-600 rounded"></div>
-          <span className="text-sm">Permesso Personale</span>
+          <span className="text-sm">{t('dashboard.calendar.legendDetails.personal')}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-orange-50 border-2 border-orange-600 rounded"></div>
-          <span className="text-sm">In Attesa di Approvazione</span>
+          <span className="text-sm">{t('dashboard.calendar.legendDetails.pending')}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-red-50 border-2 border-red-600 rounded"></div>
-          <span className="text-sm">Rifiutato</span>
+          <span className="text-sm">{t('dashboard.calendar.legendDetails.rejected')}</span>
         </div>
       </CardContent>
     </Card>

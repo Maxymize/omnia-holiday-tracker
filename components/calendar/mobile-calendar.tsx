@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "@/lib/i18n/provider"
 import { format, parseISO, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, eachWeekOfInterval, startOfWeek, endOfWeek } from "date-fns"
 import { it, enUS, es } from "date-fns/locale"
 import { motion, AnimatePresence } from "framer-motion"
@@ -61,7 +62,7 @@ export function MobileCalendar({
   defaultView = 'timeline'
 }: MobileCalendarProps) {
   const { user, isAuthenticated, isAdmin } = useAuth()
-  const { t, locale } = useI18n()
+  const { t, locale } = useTranslation()
   
   // State management
   const [events, setEvents] = useState<HolidayEvent[]>([])
@@ -129,7 +130,7 @@ export function MobileCalendar({
       if (data.success) {
         const transformedEvents: HolidayEvent[] = data.data.holidays.map((holiday: any) => ({
           id: holiday.id,
-          title: `${holiday.employeeName} - ${t(`holidays.request.types.${holiday.type}`)}`,
+          title: `${holiday.employeeName} - ${t(`dashboard.calendar.legendDetails.${holiday.type}`)}`,
           start: parseISO(holiday.startDate),
           end: parseISO(holiday.endDate),
           resource: {
@@ -322,8 +323,8 @@ export function MobileCalendar({
           <div className="flex sticky top-0 bg-white border-b-2 border-gray-300 z-20">
             {/* Employee names column header - STICKY */}
             <div className="sticky left-0 z-30 flex-shrink-0 w-40 p-2 bg-gray-50 border-r-2 border-gray-300 shadow-sm">
-              <div className="text-xs font-semibold text-gray-700">Team Members</div>
-              <div className="text-xs text-gray-500">{uniqueEmployees.length} dipendenti</div>
+              <div className="text-xs font-semibold text-gray-700">{t('dashboard.calendar.teamMembers')}</div>
+              <div className="text-xs text-gray-500">{uniqueEmployees.length} {t('dashboard.calendar.employees')}</div>
             </div>
             
             {/* Day headers */}
@@ -411,7 +412,7 @@ export function MobileCalendar({
           {/* Empty state */}
           {uniqueEmployees.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              Nessun dipendente trovato
+              {t('dashboard.calendar.noEmployeesFound')}
             </div>
           )}
         </div>
@@ -503,7 +504,7 @@ export function MobileCalendar({
               <StatusBadge status={event.resource.status} />
             </div>
             <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Tipo:</strong> {t(`holidays.request.types.${event.resource.type}`)}</p>
+              <p><strong>Tipo:</strong> {t(`dashboard.calendar.legendDetails.${event.resource.type}`)}</p>
               <p><strong>Periodo:</strong> {format(event.start, 'dd/MM/yyyy')} - {format(event.end, 'dd/MM/yyyy')}</p>
               <p><strong>Giorni:</strong> {event.resource.workingDays}</p>
               {event.resource.notes && (
@@ -513,7 +514,7 @@ export function MobileCalendar({
           </div>
         )) : (
           <div className="text-center py-8 text-gray-500">
-            Nessuna ferie trovata
+            {t('dashboard.calendar.noHolidaysFound')}
           </div>
         )}
       </div>
@@ -525,10 +526,10 @@ export function MobileCalendar({
     <div className="w-full overflow-hidden mb-3">
       <div className="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-lg">
         {[
-          { key: 'timeline' as const, label: 'Timeline', icon: CalendarIcon },
-          { key: 'monthly' as const, label: 'Mese', icon: CalendarIcon },
-          { key: 'weekly' as const, label: 'Sett.', icon: CalendarIcon },
-          { key: 'list' as const, label: 'Lista', icon: CalendarIcon }
+          { key: 'timeline' as const, label: t('dashboard.calendar.views.timeline'), icon: CalendarIcon },
+          { key: 'monthly' as const, label: t('dashboard.calendar.views.monthly'), icon: CalendarIcon },
+          { key: 'weekly' as const, label: t('dashboard.calendar.views.weekly'), icon: CalendarIcon },
+          { key: 'list' as const, label: t('dashboard.calendar.views.list'), icon: CalendarIcon }
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -690,7 +691,7 @@ export function MobileCalendar({
                     className="h-7 text-xs px-1 min-w-0 truncate flex-shrink-0"
                   >
                     <Users className="h-3 w-3 mr-0.5 flex-shrink-0" />
-                    <span className="truncate">Team</span>
+                    <span className="truncate">{t('dashboard.calendar.viewModes.team')}</span>
                   </Button>
                 )}
                 {isAdmin && (
@@ -749,7 +750,7 @@ export function MobileCalendar({
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
         <DialogContent className="max-w-full mx-2 max-h-[95vh] overflow-y-auto">
           <DialogHeader className="pb-4">
-            <DialogTitle>{t('holidays.request.title')}</DialogTitle>
+            <DialogTitle>{t('dashboard.holidays.request.title')}</DialogTitle>
           </DialogHeader>
           <MultiStepHolidayRequest
             defaultValues={{
@@ -787,7 +788,7 @@ export function MobileCalendar({
 
                 if (!response.ok) {
                   const errorData = await response.json()
-                  throw new Error(errorData.error || 'Errore durante la creazione della richiesta')
+                  throw new Error(errorData.error || t('dashboard.calendar.requestCreationError'))
                 }
 
                 // Success - close dialog and refresh data
@@ -827,7 +828,7 @@ export function MobileCalendar({
                     <StatusBadge status={event.resource.status} />
                   </div>
                   <div className="text-xs text-gray-600 space-y-1">
-                    <p><strong>Tipo:</strong> {t(`holidays.request.types.${event.resource.type}`)}</p>
+                    <p><strong>Tipo:</strong> {t(`dashboard.calendar.legendDetails.${event.resource.type}`)}</p>
                     <p><strong>Periodo:</strong> {format(event.start, 'dd/MM/yyyy')} - {format(event.end, 'dd/MM/yyyy')}</p>
                     <p><strong>Giorni:</strong> {event.resource.workingDays}</p>
                     {event.resource.notes && (
@@ -850,7 +851,7 @@ export function MobileCalendar({
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Aggiungi Richiesta
+{t('dashboard.calendar.addHoliday')}
               </Button>
             </div>
           )}

@@ -122,7 +122,7 @@ export function HolidayEventDetails({
                   <span className="text-xl">{getTypeIcon(event.resource.type)}</span>
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">
-                  {t(`holidays.request.types.${event.resource.type}`)}
+                  {t(`dashboard.calendar.legendDetails.${event.resource.type}`)}
                 </p>
               </div>
             </div>
@@ -320,7 +320,7 @@ export function CompactHolidayEventDetails({
           <span className="text-lg">{getTypeIcon(event.resource.type)}</span>
           <h4 className="font-medium text-sm">{event.resource.userName}</h4>
           <Badge variant="secondary" className="text-xs">
-            {t(`holidays.request.types.${event.resource.type}`)}
+            {t(`dashboard.calendar.legendDetails.${event.resource.type}`)}
           </Badge>
         </div>
         <StatusBadge status={event.resource.status} />

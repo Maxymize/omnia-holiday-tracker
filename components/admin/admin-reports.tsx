@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,6 +35,7 @@ interface AdminReportsProps {
 }
 
 export function AdminReports({ employees, requests, loading, error }: AdminReportsProps) {
+  const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
 
@@ -100,7 +102,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
     const deptMap = new Map();
     
     employees.forEach(emp => {
-      const dept = emp.departmentName || 'Nessun dipartimento';
+      const dept = emp.departmentName || t('admin.reports.departments.noDepartment');
       if (!deptMap.has(dept)) {
         deptMap.set(dept, {
           name: dept,
@@ -118,7 +120,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
     });
 
     requests.forEach(req => {
-      const dept = req.department || 'Nessun dipartimento';
+      const dept = req.department || t('admin.reports.departments.noDepartment');
       if (deptMap.has(dept)) {
         deptMap.get(dept).requests++;
       }
@@ -151,9 +153,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
   };
 
   const getUtilizationLabel = (rate: number) => {
-    if (rate < 30) return 'Basso';
-    if (rate < 70) return 'Medio';
-    return 'Alto';
+    if (rate < 30) return t('admin.reports.performance.low');
+    if (rate < 70) return t('admin.reports.performance.optimal');
+    return t('admin.reports.performance.high');
   };
 
   if (loading && employees.length === 0) {
@@ -178,10 +180,10 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <BarChart3 className="h-6 w-6" />
-            <span>Report e Analisi</span>
+            <span>{t('admin.reports.title')}</span>
           </h2>
           <p className="text-gray-600">
-            Statistiche dettagliate sull&apos;utilizzo delle ferie e le performance dei dipendenti
+            {t('admin.reports.subtitle')}
           </p>
         </div>
         <div className="flex gap-2">
@@ -190,14 +192,14 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="month">Questo mese</SelectItem>
-              <SelectItem value="quarter">Trimestre</SelectItem>
-              <SelectItem value="year">Anno</SelectItem>
+              <SelectItem value="month">{t('admin.reports.actions.month')}</SelectItem>
+              <SelectItem value="quarter">{t('admin.reports.actions.quarter')}</SelectItem>
+              <SelectItem value="year">{t('admin.reports.actions.year')}</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Esporta
+            {t('admin.reports.actions.export')}
           </Button>
         </div>
       </div>
@@ -211,10 +213,10 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <Users className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Dipendenti Attivi</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.stats.activeEmployees')}</p>
                 <p className="text-2xl font-bold text-blue-600">{statistics.activeEmployees}</p>
                 <p className="text-xs text-gray-500">
-                  {statistics.pendingEmployees} in attesa
+                  {statistics.pendingEmployees} {t('admin.reports.departments.pending').toLowerCase()}
                 </p>
               </div>
             </div>
@@ -228,9 +230,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <CalendarCheck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Disponibili</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.stats.availableDays')}</p>
                 <p className="text-2xl font-bold text-green-600">{statistics.totalAvailable}</p>
-                <p className="text-xs text-gray-500">per nuove richieste</p>
+                <p className="text-xs text-gray-500">{t('admin.reports.stats.requestsLabel')}</p>
               </div>
             </div>
           </CardContent>
@@ -243,9 +245,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <CheckCircle className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Goduti</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.stats.usedDays')}</p>
                 <p className="text-2xl font-bold text-blue-600">{statistics.totalTaken}</p>
-                <p className="text-xs text-gray-500">già trascorsi</p>
+                <p className="text-xs text-gray-500">{t('admin.reports.stats.daysLabel')}</p>
               </div>
             </div>
           </CardContent>
@@ -258,9 +260,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <CalendarDays className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Giorni Prenotati</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.stats.totalHolidays')}</p>
                 <p className="text-2xl font-bold text-purple-600">{statistics.totalBooked}</p>
-                <p className="text-xs text-gray-500">futuri approvati</p>
+                <p className="text-xs text-gray-500">{t('admin.reports.requestStatus.approved').toLowerCase()}</p>
               </div>
             </div>
           </CardContent>
@@ -273,9 +275,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <Hourglass className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">In Approvazione</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.stats.pendingRequests')}</p>
                 <p className="text-2xl font-bold text-amber-600">{statistics.totalPending}</p>
-                <p className="text-xs text-gray-500">giorni pendenti</p>
+                <p className="text-xs text-gray-500">{t('admin.reports.stats.daysLabel')} {t('admin.reports.requestStatus.pending').toLowerCase()}</p>
               </div>
             </div>
           </CardContent>
@@ -288,12 +290,12 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                 <TrendingUp className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Tasso Utilizzo</p>
+                <p className="text-sm text-gray-600">{t('admin.reports.performance.usageRate')}</p>
                 <p className="text-2xl font-bold text-green-600">
                   {safeNumber(statistics.utilizationRate).toFixed(1)}%
                 </p>
                 <p className="text-xs text-gray-500">
-                  Media: {safeNumber(statistics.averageHolidaysUsed).toFixed(1)} giorni
+                  {t('admin.reports.stats.average')}: {safeNumber(statistics.averageHolidaysUsed).toFixed(1)} {t('admin.reports.departments.days')}
                 </p>
               </div>
             </div>
@@ -307,7 +309,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Building2 className="h-5 w-5" />
-              <span>Analisi per Dipartimento</span>
+              <span>{t('admin.reports.departments.title')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -318,7 +320,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                     <div>
                       <h4 className="font-medium text-gray-900">{dept.name}</h4>
                       <p className="text-sm text-gray-600">
-                        {dept.employeeCount} dipendenti • {dept.requests} richieste
+                        {dept.employeeCount} {t('admin.reports.departments.employees').toLowerCase()} • {dept.requests} {t('admin.reports.departments.requests')}
                       </p>
                     </div>
                     <Badge className={getUtilizationColor(dept.utilizationRate)}>
@@ -327,8 +329,8 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                   </div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span>Utilizzo ferie</span>
-                      <span>{dept.holidaysUsed} / {dept.holidaysAllowed} giorni</span>
+                      <span>{t('admin.reports.departments.holidayUsage')}</span>
+                      <span>{dept.holidaysUsed} / {dept.holidaysAllowed} {t('admin.reports.departments.days')}</span>
                     </div>
                     <Progress value={safeNumber(dept.utilizationRate)} className="h-2" />
                   </div>
@@ -343,7 +345,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <PieChart className="h-5 w-5" />
-              <span>Stato Richieste</span>
+              <span>{t('admin.reports.requestStatus.title')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -356,7 +358,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                   <div className="text-2xl font-bold text-green-600">
                     {statistics.approvedRequests}
                   </div>
-                  <div className="text-sm text-gray-600">Approvate</div>
+                  <div className="text-sm text-gray-600">{t('admin.reports.requestStatus.approved')}</div>
                 </div>
                 
                 <div className="p-3 bg-amber-50 rounded-lg">
@@ -366,7 +368,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                   <div className="text-2xl font-bold text-amber-600">
                     {statistics.pendingRequests}
                   </div>
-                  <div className="text-sm text-gray-600">In attesa</div>
+                  <div className="text-sm text-gray-600">{t('admin.reports.requestStatus.pending')}</div>
                 </div>
                 
                 <div className="p-3 bg-red-50 rounded-lg">
@@ -376,13 +378,13 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                   <div className="text-2xl font-bold text-red-600">
                     {statistics.rejectedRequests}
                   </div>
-                  <div className="text-sm text-gray-600">Rifiutate</div>
+                  <div className="text-sm text-gray-600">{t('admin.reports.requestStatus.rejected')}</div>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Tasso di approvazione</span>
+                  <span>{t('admin.reports.departments.approvalRate')}</span>
                   <span>{safeNumber(statistics.approvalRate).toFixed(1)}%</span>
                 </div>
                 <Progress value={safeNumber(statistics.approvalRate)} className="h-2" />
@@ -395,9 +397,9 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
       {/* Employee Performance Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Performance Dipendenti</CardTitle>
+          <CardTitle>{t('admin.reports.performance.title')}</CardTitle>
           <p className="text-sm text-gray-600">
-            Utilizzo delle ferie per dipendente (ordinato per tasso di utilizzo)
+            {t('admin.reports.performance.subtitle')}
           </p>
         </CardHeader>
         <CardContent>
@@ -405,11 +407,11 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Dipendente</TableHead>
-                  <TableHead>Dipartimento</TableHead>
-                  <TableHead>Stato Ferie</TableHead>
-                  <TableHead>Tasso Utilizzo</TableHead>
-                  <TableHead>Richieste</TableHead>
+                  <TableHead>{t('admin.reports.performance.employee')}</TableHead>
+                  <TableHead>{t('admin.reports.performance.department')}</TableHead>
+                  <TableHead>{t('admin.reports.performance.status')}</TableHead>
+                  <TableHead>{t('admin.reports.performance.usageRate')}</TableHead>
+                  <TableHead>{t('admin.reports.stats.requestsLabel')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -423,7 +425,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {employee.departmentName || 'Nessuno'}
+                        {employee.departmentName || t('admin.reports.departments.noDepartment')}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -431,22 +433,22 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
                         <div className="flex items-center space-x-1">
                           <CalendarCheck className="h-3 w-3 text-green-600" />
                           <span className="font-medium text-green-700">{employee.availableDays || (employee.holidayAllowance - employee.holidaysUsed)}</span>
-                          <span className="text-gray-600">disp.</span>
+                          <span className="text-gray-600">{t('admin.reports.departments.available')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <CheckCircle className="h-3 w-3 text-blue-600" />
                           <span className="font-medium text-blue-700">{employee.takenDays || 0}</span>
-                          <span className="text-gray-600">goduti</span>
+                          <span className="text-gray-600">{t('admin.reports.departments.taken')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <CalendarDays className="h-3 w-3 text-purple-600" />
                           <span className="font-medium text-purple-700">{employee.bookedDays || 0}</span>
-                          <span className="text-gray-600">pren.</span>
+                          <span className="text-gray-600">{t('admin.reports.departments.booked')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Hourglass className="h-3 w-3 text-amber-600" />
                           <span className="font-medium text-amber-700">{employee.pendingDays || 0}</span>
-                          <span className="text-gray-600">att.</span>
+                          <span className="text-gray-600">{t('admin.reports.departments.pendingShort')}</span>
                         </div>
                       </div>
                     </TableCell>
@@ -472,7 +474,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           {employeePerformance.length > 10 && (
             <div className="mt-4 text-center">
               <Button variant="outline" size="sm">
-                Visualizza tutti ({employeePerformance.length})
+                {t('admin.reports.performance.viewAll')} ({employeePerformance.length})
               </Button>
             </div>
           )}

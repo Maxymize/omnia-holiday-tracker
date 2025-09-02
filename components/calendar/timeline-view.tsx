@@ -329,7 +329,7 @@ export function TimelineView({
           {/* Team Members Header - Compact */}
           <div className="w-40 border-r bg-gray-50 p-2 flex flex-col justify-center">
             <h3 className="font-semibold text-gray-900 text-xs">Team</h3>
-            <p className="text-xs text-gray-600">{employees.length} membri</p>
+            <p className="text-xs text-gray-600">{employees.length} {t('dashboard.calendar.members')}</p>
           </div>
           
           {/* Days Header - Constrained */}
@@ -527,7 +527,7 @@ export function TimelineView({
                 </div>
                 <div>
                   <label className="font-medium text-gray-700">Type:</label>
-                  <p>{t(`holidays.request.types.${selectedEvent.resource.type}`)}</p>
+                  <p>{t(`dashboard.calendar.legendDetails.${selectedEvent.resource.type}`)}</p>
                 </div>
                 <div>
                   <label className="font-medium text-gray-700">Status:</label>

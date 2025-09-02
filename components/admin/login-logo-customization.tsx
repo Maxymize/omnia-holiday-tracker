@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface LoginLogoCustomizationProps {
 }
 
 export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizationProps) {
+  const { t } = useTranslation();
   const [loginLogoSettings, setLoginLogoSettings] = useState<LoginLogoSettings>({
     login_logo_type: 'text',
     login_logo_url: null,
@@ -64,7 +66,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
       });
 
       if (!response.ok) {
-        throw new Error(`Errore ${response.status}: ${response.statusText}`);
+        throw new Error(`${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -76,11 +78,11 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
           login_brand_text: result.data.login_brand_text || 'Omnia Holiday Tracker'
         });
       } else {
-        throw new Error(result.error || 'Errore sconosciuto');
+        throw new Error(result.error || t('admin.settings.loginLogoCustomization.unknownError'));
       }
     } catch (error) {
       console.error('Error fetching login logo settings:', error);
-      setError(error instanceof Error ? error.message : 'Errore nel caricamento delle impostazioni');
+      setError(error instanceof Error ? error.message : t('admin.settings.loginLogoCustomization.errors.loadingError'));
     } finally {
       setLoading(false);
     }
@@ -108,14 +110,14 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
     // Validate file type
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Formato file non supportato. Sono accettati solo PNG e JPG.');
+      setError(t('admin.settings.loginLogoCustomization.errors.unsupportedFormat'));
       return;
     }
 
     // Validate file size (2MB max)
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      setError('File troppo grande. La dimensione massima è 2MB.');
+      setError(t('admin.settings.loginLogoCustomization.errors.fileTooLarge'));
       return;
     }
 
@@ -142,7 +144,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
 
       if (!response.ok) {
         const errorResult = await response.json();
-        throw new Error(errorResult.error || `Errore ${response.status}: ${response.statusText}`);
+        throw new Error(errorResult.error || `${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -153,13 +155,13 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
           login_logo_type: 'image',
           login_logo_url: result.data.url
         }));
-        setSuccess('Logo di login caricato con successo!');
+        setSuccess(t('admin.settings.loginLogoCustomization.uploadSuccess'));
       } else {
-        throw new Error(result.error || 'Errore sconosciuto durante il caricamento');
+        throw new Error(result.error || t('admin.settings.loginLogoCustomization.errors.unknownError'));
       }
     } catch (error) {
       console.error('Error uploading login logo:', error);
-      setError(error instanceof Error ? error.message : 'Errore durante il caricamento del logo');
+      setError(error instanceof Error ? error.message : t('admin.settings.loginLogoCustomization.errors.uploadError'));
     } finally {
       setUploading(false);
     }
@@ -172,13 +174,13 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
 
     // Validation
     if (loginLogoSettings.login_logo_type === 'text' && !loginLogoSettings.login_brand_text.trim()) {
-      setError('Il testo del brand è richiesto quando si usa la modalità testo.');
+      setError(t('admin.settings.loginLogoCustomization.errors.textRequired'));
       setSaving(false);
       return;
     }
 
     if (loginLogoSettings.login_logo_type === 'image' && !loginLogoSettings.login_logo_url) {
-      setError('È necessario caricare un logo quando si usa la modalità immagine.');
+      setError(t('admin.settings.loginLogoCustomization.errors.imageRequired'));
       setSaving(false);
       return;
     }
@@ -196,18 +198,18 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
 
       if (!response.ok) {
         const errorResult = await response.json();
-        throw new Error(errorResult.error || `Errore ${response.status}: ${response.statusText}`);
+        throw new Error(errorResult.error || `${'Error'} ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
       if (result.success) {
-        setSuccess('Impostazioni logo di login salvate con successo!');
+        setSuccess(t('admin.settings.loginLogoCustomization.saveSuccess'));
       } else {
-        throw new Error(result.error || 'Errore sconosciuto durante il salvataggio');
+        throw new Error(result.error || t('admin.settings.loginLogoCustomization.errors.unknownError'));
       }
     } catch (error) {
       console.error('Error saving login logo settings:', error);
-      setError(error instanceof Error ? error.message : 'Errore durante il salvataggio delle impostazioni');
+      setError(error instanceof Error ? error.message : t('admin.settings.loginLogoCustomization.errors.saveError'));
     } finally {
       setSaving(false);
     }
@@ -247,7 +249,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <ImageIcon className="h-5 w-5" />
-            <span>Personalizzazione Logo Pagina di Login</span>
+            <span>{t('admin.settings.loginLogoCustomization.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -266,10 +268,10 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
       <CardHeader>
         <CardTitle className="flex items-center space-x-2 text-lg">
           <ImageIcon className="h-5 w-5" />
-          <span>Personalizzazione Logo Pagina di Login</span>
+          <span>{t('admin.settings.loginLogoCustomization.title')}</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Personalizza il logo che apparirà nella pagina di login caricando un&apos;immagine o usando un testo
+          {t('admin.settings.loginLogoCustomization.description')}
         </p>
       </CardHeader>
       
@@ -291,7 +293,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
 
         {/* Logo Type Selection */}
         <div className="space-y-3">
-          <Label>Tipo di Logo</Label>
+          <Label>{t('admin.settings.loginLogoCustomization.logoType')}</Label>
           <RadioGroup
             value={loginLogoSettings.login_logo_type}
             onValueChange={handleLogoTypeChange}
@@ -301,14 +303,14 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
               <RadioGroupItem value="image" id="login-image" className="scale-75" />
               <Label htmlFor="login-image" className="flex items-center space-x-1 cursor-pointer text-sm">
                 <ImageIcon className="h-4 w-4" />
-                <span>Immagine</span>
+                <span>{t('admin.settings.loginLogoCustomization.image')}</span>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="text" id="login-text" className="scale-75" />
               <Label htmlFor="login-text" className="flex items-center space-x-1 cursor-pointer text-sm">
                 <Type className="h-4 w-4" />
-                <span>Testo</span>
+                <span>{t('admin.settings.loginLogoCustomization.text')}</span>
               </Label>
             </div>
           </RadioGroup>
@@ -317,12 +319,12 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
         {/* Image Upload Section */}
         {loginLogoSettings.login_logo_type === 'image' && (
           <div className="space-y-4">
-            <Label>Carica Logo (PNG o JPG, max 2MB)</Label>
+            <Label>{t('admin.settings.loginLogoCustomization.uploadLabel')}</Label>
             
             {/* Current Logo Preview */}
             {loginLogoSettings.login_logo_url && (
               <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
-                <div className="text-sm text-gray-600 mb-2">Logo attuale:</div>
+                <div className="text-sm text-gray-600 mb-2">{t('admin.settings.loginLogoCustomization.currentLogo')}</div>
                 <Image
                   src={loginLogoSettings.login_logo_url}
                   alt="Current Login Logo"
@@ -347,10 +349,10 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
             >
               <Upload className={`h-12 w-12 mx-auto mb-4 ${dragOver ? 'text-blue-500' : 'text-gray-400'}`} />
               <p className={`text-lg font-medium mb-2 ${dragOver ? 'text-blue-700' : 'text-gray-700'}`}>
-                {uploading ? 'Caricamento in corso...' : 'Trascina un file qui o clicca per selezionare'}
+                {uploading ? t('admin.settings.loginLogoCustomization.uploading') : t('admin.settings.loginLogoCustomization.dragDrop')}
               </p>
               <p className="text-sm text-gray-500">
-                PNG o JPG, dimensione massima 2MB
+                {t('admin.settings.loginLogoCustomization.fileFormat')}
               </p>
               <input
                 ref={fileInputRef}
@@ -367,18 +369,18 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
         {loginLogoSettings.login_logo_type === 'text' && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="login-brand-text">Testo del Brand</Label>
+              <Label htmlFor="login-brand-text">{t('admin.settings.loginLogoCustomization.brandText')}</Label>
               <Input
                 id="login-brand-text"
                 type="text"
                 value={loginLogoSettings.login_brand_text}
                 onChange={(e) => handleBrandTextChange(e.target.value)}
-                placeholder="Es. Omnia Holiday Tracker"
+                placeholder={t('admin.settings.loginLogoCustomization.brandTextPlaceholder')}
                 maxLength={100}
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Massimo 100 caratteri. Apparirà come testo nella pagina di login.
+                {t('admin.settings.loginLogoCustomization.brandTextHelp')}
               </p>
             </div>
             
@@ -387,7 +389,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
               <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
                 <div className="text-sm text-gray-600 mb-2 flex items-center">
                   <Eye className="h-4 w-4 mr-1" />
-                  Anteprima:
+                  {t('admin.settings.loginLogoCustomization.preview')}
                 </div>
                 <div className="text-xl font-bold text-gray-900 text-center">
                   {loginLogoSettings.login_brand_text}
@@ -405,7 +407,7 @@ export function LoginLogoCustomization({ className = "" }: LoginLogoCustomizatio
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salva Impostazioni Logo Login'}
+            {saving ? t('admin.settings.loginLogoCustomization.saving') : t('admin.settings.loginLogoCustomization.save')}
           </Button>
         </div>
       </CardContent>

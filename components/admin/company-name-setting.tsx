@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ interface CompanyNameSettingProps {
 }
 
 export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(initialValue || 'OmniaGroup');
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -52,32 +54,32 @@ export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingP
       <CardHeader>
         <CardTitle className="flex items-center space-x-2 text-lg">
           <Building2 className="h-5 w-5" />
-          <span>Nome Azienda</span>
+          <span>{t('admin.settings.companyName.title')}</span>
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Configura il nome dell&apos;azienda che apparirà in tutta la piattaforma
+          {t('admin.settings.companyName.description')}
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="company-name">Nome Azienda</Label>
+          <Label htmlFor="company-name">{t('admin.settings.companyName.title')}</Label>
           <Input
             ref={inputRef}
             id="company-name"
             value={value}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder="Es. OmniaGroup, Acme Corp, etc."
+            placeholder={t('admin.settings.companyName.examplePlaceholder')}
             className="mt-1"
             maxLength={50}
           />
           <p className="text-xs text-gray-500 mt-1">
-            Questo nome apparirà in tutti i messaggi, policy e riferimenti aziendali
+            {t('admin.settings.companyName.helpText')}
           </p>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t">
           <span className="text-sm text-gray-500">
-            Modifica in sospeso: {hasChanges ? 'Sì' : 'No'}
+            {t('admin.settings.companyName.pendingChanges')} {hasChanges ? t('admin.settings.companyName.yes') : t('admin.settings.companyName.no')}
           </span>
           <Button
             size="sm"
@@ -86,7 +88,7 @@ export function CompanyNameSetting({ initialValue, onSave }: CompanyNameSettingP
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Save className="h-3 w-3 mr-1" />
-            {saving ? 'Salvando...' : 'Salva'}
+            {saving ? t('admin.settings.companyName.saving') : t('admin.settings.companyName.save')}
           </Button>
         </div>
       </CardContent>

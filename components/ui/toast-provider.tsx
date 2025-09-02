@@ -5,6 +5,7 @@ import { useToasts, Toast } from "@/lib/utils/toast"
 import { AlertCircle, CheckCircle, AlertTriangle, Info, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/provider"
 
 const toastVariants = {
   success: "bg-green-50 border-green-200 text-green-800",
@@ -27,6 +28,7 @@ interface ToastItemProps {
 
 function ToastItem({ toast, onRemove }: ToastItemProps) {
   const Icon = iconVariants[toast.type]
+  const { t } = useTranslation()
 
   React.useEffect(() => {
     if (toast.duration && toast.duration > 0) {
@@ -59,7 +61,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       <button
         onClick={() => onRemove(toast.id)}
         className="flex-shrink-0 p-1 hover:bg-black/10 rounded transition-colors"
-        aria-label="Chiudi notifica"
+        aria-label={t('notifications.actions.closeNotification')}
       >
         <X className="h-4 w-4" />
       </button>

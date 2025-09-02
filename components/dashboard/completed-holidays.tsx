@@ -71,7 +71,7 @@ export function CompletedHolidays({
   };
 
   const getTypeLabel = (type: Holiday['type']) => {
-    return t(`holidays.request.types.${type}`);
+    return t(`dashboard.calendar.legendDetails.${type}`);
   };
 
   const formatCompletedDate = (startDate: string, endDate: string) => {

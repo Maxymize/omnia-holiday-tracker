@@ -6,6 +6,7 @@ import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { LanguageSelector } from "@/components/layout/language-selector"
+import { useTranslation } from "@/lib/i18n/provider"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,8 @@ export function DashboardHeader({
   notifications = 0,
   className,
 }: DashboardHeaderProps) {
+  const { t } = useTranslation()
+  
   return (
     <header className={`flex items-center justify-between px-4 py-3 bg-background border-b ${className}`}>
       {/* Left side - Logo and menu toggle */}
@@ -105,7 +108,7 @@ export function DashboardHeader({
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium">{user.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {user.role === "admin" ? "Amministratore" : "Dipendente"}
+                    {user.role === "admin" ? t('roles.admin') : t('roles.employee')}
                   </p>
                 </div>
               </div>

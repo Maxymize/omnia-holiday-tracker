@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils/cn"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation } from "@/lib/i18n/provider"
 
 const statusBadgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -37,20 +38,22 @@ export interface StatusBadgeProps
 
 const StatusBadge = React.forwardRef<HTMLDivElement, StatusBadgeProps>(
   ({ className, status, size, children, ...props }, ref) => {
+    const { t } = useTranslation()
+    
     const getStatusLabel = (status: string) => {
       switch (status) {
         case "pending":
-          return "In Attesa"
+          return t('statusBadge.pending')
         case "approved":
-          return "Approvato"
+          return t('holidayHistory.statuses.approved')
         case "rejected":
-          return "Rifiutato"
+          return t('holidayHistory.statuses.rejected')
         case "cancelled":
-          return "Annullato"
+          return t('holidayHistory.statuses.cancelled')
         case "active":
-          return "Attivo"
+          return t('statusBadge.active')
         case "inactive":
-          return "Inattivo"
+          return t('statusBadge.inactive')
         default:
           return status
       }

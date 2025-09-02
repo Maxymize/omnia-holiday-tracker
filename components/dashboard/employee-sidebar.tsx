@@ -55,27 +55,27 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
 
   const navigationItems = [
     {
-      label: 'Dashboard',
+      label: t('dashboard.navigation.dashboard'),
       href: `/${locale}/employee-dashboard`,
       icon: Home,
-      description: 'Panoramica generale'
+      description: t('dashboard.navigation.overviewDesc')
     },
     {
-      label: 'Calendario',
+      label: t('dashboard.navigation.calendar'),
       href: `/${locale}/employee-dashboard?tab=calendar`,
       icon: Calendar,
       description: 'Visualizza calendario ferie',
       badge: holidayStats?.upcomingHolidays
     },
     {
-      label: 'Le Mie Richieste',
+      label: t('dashboard.navigation.requests'),
       href: `/${locale}/employee-dashboard?tab=requests`,
       icon: FileText,
       description: 'Storico richieste ferie',
       badge: holidayStats?.pendingRequests
     },
     {
-      label: 'Profilo',
+      label: t('dashboard.navigation.profile'),
       href: `/${locale}/employee-dashboard?tab=profile`,
       icon: User,
       description: 'Informazioni personali'
@@ -162,7 +162,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
                 className="w-full justify-start mt-2 text-xs h-7 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300"
               >
                 <UserCog className="h-3 w-3 mr-1.5" />
-                <span>Modifica Profilo</span>
+                <span>{t('dashboard.profile.editButton')}</span>
               </Button>
             )}
           </div>
@@ -250,7 +250,7 @@ export function EmployeeSidebar({ holidayStats, onEditProfile, className }: Empl
             }}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Esci
+            {t('dashboard.navigation.logout')}
           </Button>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n/provider';
 import { useHolidays } from '@/lib/hooks/useHolidays';
 import { MultiStepHolidayRequest } from '@/components/forms/multi-step-holiday-request';
 import { HolidayBalance } from '@/components/dashboard/holiday-balance';
@@ -44,6 +45,7 @@ interface MyRequestsAdminProps {
 
 export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
   const { user, refreshUserData } = useAuth();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<AdminRequestsTabType>('dashboard');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
@@ -94,10 +96,10 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
   const getTypeLabel = (type: Holiday['type']) => {
     switch (type) {
-      case 'vacation': return 'Ferie';
-      case 'sick': return 'Malattia';
-      case 'personal': return 'Permesso Personale';
-      default: return 'Ferie';
+      case 'vacation': return t('admin.myRequests.types.vacation');
+      case 'sick': return t('admin.myRequests.types.sick');
+      case 'personal': return t('admin.myRequests.types.personal');
+      default: return t('admin.myRequests.types.vacation');
     }
   };
 
@@ -114,36 +116,36 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
   const formatWorkingDays = (days: number) => {
     if (days === 1) {
-      return '1 giorno';
+      return t('admin.myRequests.duration.oneDay');
     }
-    return `${days} giorni`;
+    return `${days} ${t('admin.myRequests.duration.days')}`;
   };
 
   const tabItems = [
     {
       id: 'dashboard' as AdminRequestsTabType,
-      label: 'Dashboard',
+      label: t('admin.myRequests.tabs.dashboard'),
       icon: TrendingUp,
-      description: 'Panoramica generale'
+      description: t('admin.myRequests.tabs.dashboardDesc')
     },
     {
       id: 'calendar' as AdminRequestsTabType,
-      label: 'Calendario',
+      label: t('admin.myRequests.tabs.calendar'),
       icon: Calendar,
-      description: 'Visualizza calendario ferie'
+      description: t('admin.myRequests.tabs.calendarDesc')
     },
     {
       id: 'requests' as AdminRequestsTabType,
-      label: 'Le Mie Richieste',
+      label: t('admin.myRequests.tabs.requests'),
       icon: FileText,
-      description: 'Storico richieste ferie',
+      description: t('admin.myRequests.tabs.requestsDesc'),
       badge: pendingHolidays.length > 0 ? pendingHolidays.length : undefined
     },
     {
       id: 'profile' as AdminRequestsTabType,
-      label: 'Profilo',
+      label: t('admin.myRequests.tabs.profile'),
       icon: User,
-      description: 'Informazioni personali'
+      description: t('admin.myRequests.tabs.profileDesc')
     }
   ];
 
@@ -162,16 +164,16 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl sm:text-2xl font-bold">Le Mie Richieste</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">{t('admin.myRequests.title')}</h1>
               <Shield className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
             </div>
             <p className="mt-1 text-green-100 text-sm sm:text-base">
-              Dashboard personale amministratori
+{t('admin.myRequests.subtitle')}
             </p>
             <div className="mt-3 space-y-1 text-xs sm:text-sm text-green-100">
-              <div className="truncate">Account: {user?.name}</div>
+              <div className="truncate">{t('admin.myRequests.account')} {user?.name}</div>
               <div className="flex items-center space-x-2">
-                <span>Ruolo: Amministratore</span>
+                <span>{t('admin.myRequests.role')}</span>
                 <span>•</span>
                 <span className="truncate">{user?.email}</span>
               </div>
@@ -183,8 +185,8 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nuova Richiesta</span>
-            <span className="sm:hidden">Nuova</span>
+            <span className="hidden sm:inline">{t('admin.myRequests.newRequest')}</span>
+            <span className="sm:hidden">{t('admin.myRequests.newRequestShort')}</span>
           </Button>
         </div>
       </div>
@@ -199,7 +201,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
               onClick={refreshHolidays}
               className="ml-2 underline hover:no-underline"
             >
-              Riprova
+{t('admin.myRequests.retry')}
             </button>
           </AlertDescription>
         </Alert>
@@ -300,13 +302,13 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                       <Calendar className="h-5 w-5 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Giorni disponibili</p>
+                      <p className="text-sm text-gray-600">{t('admin.myRequests.stats.availableDays')}</p>
                       <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
                       {stats.leaveTypes && (
                         <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                          <div>🏖️ {stats.leaveTypes.vacation.availableDays} ferie</div>
-                          <div>👤 {stats.leaveTypes.personal.availableDays} permessi</div>
-                          <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} malattia</div>
+                          <div>🏖️ {stats.leaveTypes.vacation.availableDays} {t('admin.myRequests.stats.vacation')}</div>
+                          <div>👤 {stats.leaveTypes.personal.availableDays} {t('admin.myRequests.stats.personal')}</div>
+                          <div>🏥 {stats.leaveTypes.sick.allowance === -1 ? '∞' : stats.leaveTypes.sick.availableDays} {t('admin.myRequests.stats.sick')}</div>
                         </div>
                       )}
                     </div>
@@ -322,9 +324,9 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                       <CalendarCheck className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Giorni già goduti</p>
+                      <p className="text-sm text-gray-600">{t('admin.myRequests.stats.takenDays')}</p>
                       <p className="text-2xl font-bold text-blue-600">{stats.takenDays || 0}</p>
-                      <p className="text-xs text-gray-500">ferie passate</p>
+                      <p className="text-xs text-gray-500">{t('admin.myRequests.stats.pastHolidays')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -338,9 +340,9 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                       <CalendarDays className="h-5 w-5 text-amber-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Giorni prenotati</p>
+                      <p className="text-sm text-gray-600">{t('admin.myRequests.stats.bookedDays')}</p>
                       <p className="text-2xl font-bold text-amber-600">{stats.bookedDays || 0}</p>
-                      <p className="text-xs text-gray-500">ferie future</p>
+                      <p className="text-xs text-gray-500">{t('admin.myRequests.stats.futureHolidays')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -354,9 +356,9 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                       <CalendarClock className="h-5 w-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Giorni in attesa</p>
+                      <p className="text-sm text-gray-600">{t('admin.myRequests.stats.pendingDays')}</p>
                       <p className="text-2xl font-bold text-purple-600">{stats.pendingDays || 0}</p>
-                      <p className="text-xs text-gray-500">da approvare</p>
+                      <p className="text-xs text-gray-500">{t('admin.myRequests.stats.awaitingApproval')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -433,10 +435,10 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
       {activeTab === 'requests' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Le Mie Richieste</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('admin.myRequests.tabs.requests')}</h2>
             <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Nuova Richiesta
+              {t('admin.myRequests.newRequest')}
             </Button>
           </div>
           
@@ -451,7 +453,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
       {activeTab === 'profile' && (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900">Profilo Dipendente</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('admin.myRequests.profile.title')}</h2>
           
           {/* Profile Information */}
           <Card>
@@ -459,7 +461,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5" />
-                  <span>Informazioni Personali</span>
+                  <span>{t('admin.myRequests.profile.personalInfo')}</span>
                 </div>
                 <Button 
                   variant="outline" 
@@ -471,7 +473,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                   className="text-xs"
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
-                  Aggiorna
+                  {t('admin.myRequests.profile.refresh')}
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -490,57 +492,57 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                   <h3 className="text-lg font-semibold text-gray-900">{user?.name}</h3>
                   <p className="text-gray-600">{user?.email}</p>
                   <Badge variant={user?.status === 'active' ? 'default' : 'secondary'}>
-                    {user?.status === 'active' ? 'Attivo' : 'In attesa'}
+                    {user?.status === 'active' ? t('admin.myRequests.profile.active') : t('admin.myRequests.profile.pending')}
                   </Badge>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Ruolo</label>
+                  <label className="text-sm font-medium text-gray-700">{t('admin.myRequests.profile.role')}</label>
                   <p className="text-sm text-gray-900 mt-1">
-                    {user?.role === 'admin' ? 'Amministratore' : 'Dipendente'}
+                    {user?.role === 'admin' ? t('admin.myRequests.profile.administrator') : t('admin.myRequests.profile.employee')}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Stato Account</label>
+                  <label className="text-sm font-medium text-gray-700">{t('admin.myRequests.profile.accountStatus')}</label>
                   <div className="flex items-center space-x-2 mt-1">
                     {user?.status === 'active' ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-600" />
-                        <span className="text-sm text-green-700 font-medium">Attivo</span>
+                        <span className="text-sm text-green-700 font-medium">{t('admin.myRequests.profile.active')}</span>
                       </>
                     ) : user?.status === 'pending' ? (
                       <>
                         <Clock className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm text-amber-700 font-medium">In attesa di approvazione</span>
+                        <span className="text-sm text-amber-700 font-medium">{t('admin.myRequests.profile.pending')}</span>
                       </>
                     ) : (
                       <>
                         <AlertTriangle className="h-4 w-4 text-red-600" />
-                        <span className="text-sm text-red-700 font-medium">Inattivo</span>
+                        <span className="text-sm text-red-700 font-medium">{t('admin.myRequests.profile.inactive')}</span>
                       </>
                     )}
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Dipartimento</label>
+                  <label className="text-sm font-medium text-gray-700">{t('admin.myRequests.profile.department')}</label>
                   <div className="flex items-center space-x-2 mt-1">
                     <Building2 className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-900">
-                      {user?.departmentName || 'Non assegnato'}
+                      {user?.departmentName || t('admin.myRequests.profile.unassigned')}
                     </span>
                   </div>
                 </div>
                 {stats && (
                   <>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Giorni Ferie Annuali</label>
-                      <p className="text-sm text-gray-900 mt-1">{user?.holidayAllowance || 25} giorni</p>
+                      <label className="text-sm font-medium text-gray-700">{t('admin.myRequests.profile.annualHolidays')}</label>
+                      <p className="text-sm text-gray-900 mt-1">{user?.holidayAllowance || 25} {t('admin.myRequests.profile.days')}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Giorni Rimanenti</label>
-                      <p className="text-sm text-gray-900 mt-1">{(user?.holidayAllowance || 25) - stats.usedDays} giorni</p>
+                      <label className="text-sm font-medium text-gray-700">{t('admin.myRequests.profile.remainingDays')}</label>
+                      <p className="text-sm text-gray-900 mt-1">{(user?.holidayAllowance || 25) - stats.usedDays} {t('admin.myRequests.profile.days')}</p>
                     </div>
                   </>
                 )}
@@ -554,7 +556,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Crea Nuova Richiesta di Ferie</DialogTitle>
+            <DialogTitle>{t('admin.myRequests.dialogs.create.title')}</DialogTitle>
           </DialogHeader>
           <MultiStepHolidayRequest
             existingHolidays={holidays.map(holiday => ({
@@ -575,12 +577,12 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
               
               // Show success message based on approval mode
               if (isAutoApproved) {
-                toast.success('✅ Richiesta ferie approvata automaticamente!', 
-                  'La richiesta è stata automaticamente approvata ed è già attiva.'
+                toast.success(t('admin.myRequests.messages.autoApproved'), 
+                  t('admin.myRequests.messages.autoApprovedDesc')
                 );
               } else {
-                toast.success('✅ Richiesta ferie inviata con successo!', 
-                  'La richiesta è stata inviata per approvazione.'
+                toast.success(t('admin.myRequests.messages.submitted'), 
+                  t('admin.myRequests.messages.submittedDesc')
                 );
               }
               
@@ -601,7 +603,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
       <Dialog open={!!selectedHoliday} onOpenChange={(open) => !open && setSelectedHoliday(null)}>
         <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Dettagli Ferie</DialogTitle>
+            <DialogTitle>{t('admin.myRequests.dialogs.details.title')}</DialogTitle>
           </DialogHeader>
           {selectedHoliday && (
             <div className="space-y-4">
@@ -612,26 +614,26 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                 <div>
                   <h3 className="font-semibold text-gray-900">{getTypeLabel(selectedHoliday.type)}</h3>
                   <p className="text-sm text-gray-600">
-                    {selectedHoliday.status === 'approved' ? 'Approvata' : 
-                     selectedHoliday.status === 'pending' ? 'In attesa di approvazione' : 
-                     selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                    {selectedHoliday.status === 'approved' ? t('admin.myRequests.statuses.approved') : 
+                     selectedHoliday.status === 'pending' ? t('admin.myRequests.statuses.pending') : 
+                     selectedHoliday.status === 'rejected' ? t('admin.myRequests.statuses.rejected') : selectedHoliday.status}
                   </p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <label className="font-medium text-gray-700">Periodo</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.period')}</label>
                   <p className="mt-1 text-gray-900">
                     {formatDateRange(selectedHoliday.startDate, selectedHoliday.endDate)}
                   </p>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Giorni lavorativi</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.workingDays')}</label>
                   <p className="mt-1 text-gray-900">{formatWorkingDays(selectedHoliday.workingDays)}</p>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Tipo</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.type')}</label>
                   <div className="mt-1">
                     <Badge variant="outline" className={
                       selectedHoliday.type === 'vacation' ? 'bg-blue-100 text-blue-800' :
@@ -643,16 +645,16 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium text-gray-700">Stato</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.status')}</label>
                   <div className="mt-1">
                     <Badge className={
                       selectedHoliday.status === 'approved' ? 'bg-green-100 text-green-800' :
                       selectedHoliday.status === 'pending' ? 'bg-amber-100 text-amber-800' :
                       'bg-red-100 text-red-800'
                     }>
-                      {selectedHoliday.status === 'approved' ? 'Approvata' : 
-                       selectedHoliday.status === 'pending' ? 'In attesa' : 
-                       selectedHoliday.status === 'rejected' ? 'Rifiutata' : selectedHoliday.status}
+                      {selectedHoliday.status === 'approved' ? t('admin.myRequests.statuses.approved') : 
+                       selectedHoliday.status === 'pending' ? t('admin.myRequests.statuses.pending') : 
+                       selectedHoliday.status === 'rejected' ? t('admin.myRequests.statuses.rejected') : selectedHoliday.status}
                     </Badge>
                   </div>
                 </div>
@@ -660,7 +662,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
 
               {selectedHoliday.notes && (
                 <div>
-                  <label className="font-medium text-gray-700">Note</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.notes')}</label>
                   <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
                     {selectedHoliday.notes}
                   </div>
@@ -670,7 +672,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
               {/* Medical Certificate Section for Sick Leave */}
               {selectedHoliday.type === 'sick' && (
                 <div className="border-t pt-4">
-                  <label className="font-medium text-gray-700">Certificato Medico</label>
+                  <label className="font-medium text-gray-700">{t('admin.myRequests.dialogs.details.medicalCert')}</label>
                   <div className="mt-2">
                     {selectedHoliday.medicalCertificateOption === 'upload' && selectedHoliday.medicalCertificateFileName ? (
                       <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
@@ -678,7 +680,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                           <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-green-800">
-                              Certificato caricato
+                              {t('admin.myRequests.dialogs.details.certUploaded')}
                             </p>
                             <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
                               {selectedHoliday.medicalCertificateFileName}
@@ -712,24 +714,24 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                                   
                                   const a = document.createElement('a');
                                   a.href = url;
-                                  a.download = selectedHoliday.medicalCertificateFileName || 'certificato-medico';
+                                  a.download = selectedHoliday.medicalCertificateFileName || t('admin.myRequests.messages.defaultCertName');
                                   document.body.appendChild(a);
                                   a.click();
                                   document.body.removeChild(a);
                                   
                                   window.URL.revokeObjectURL(url);
                                 } else {
-                                  alert('Errore durante il download del certificato');
+                                  alert(t('admin.myRequests.messages.downloadError'));
                                 }
                               } catch (error) {
                                 console.error('Download error:', error);
-                                alert('Errore durante il download del certificato');
+                                alert(t('admin.myRequests.messages.downloadError'));
                               }
                             }
                           }}
                         >
                           <Download className="h-4 w-4 mr-1" />
-                          Scarica
+                          {t('admin.myRequests.dialogs.details.download')}
                         </Button>
                       </div>
                     ) : selectedHoliday.medicalCertificateOption === 'send_later' ? (
@@ -738,10 +740,10 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                           <Clock className="h-5 w-5 text-blue-600" />
                           <div>
                             <p className="text-sm font-medium text-blue-800">
-                              Invio previsto via email
+                              {t('admin.myRequests.dialogs.details.sendLater')}
                             </p>
                             <p className="text-xs text-blue-600">
-                              Certificato da inviare entro 3 giorni lavorativi
+                              {t('admin.myRequests.dialogs.details.certDeadline')}
                             </p>
                           </div>
                         </div>
@@ -752,7 +754,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                           <AlertTriangle className="h-5 w-5 text-gray-600" />
                           <div>
                             <p className="text-sm font-medium text-gray-800">
-                              Certificato non specificato
+                              {t('admin.myRequests.dialogs.details.certNotSpecified')}
                             </p>
                           </div>
                         </div>

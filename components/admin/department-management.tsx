@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +43,7 @@ export function DepartmentManagement({
   error, 
   onRefresh 
 }: DepartmentManagementProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -191,11 +193,11 @@ export function DepartmentManagement({
 
   const handleDeleteDepartment = async (department: Department) => {
     if (department.employeeCount > 0) {
-      alert(`Non è possibile eliminare il dipartimento "${department.name}" perché ha ${department.employeeCount} dipendenti assegnati.`);
+      alert(t('admin.departments.deleteConfirm.cantDelete').replace('{name}', department.name).replace('{count}', department.employeeCount.toString()));
       return;
     }
 
-    if (!confirm(`Sei sicuro di voler eliminare il dipartimento "${department.name}"? Questa azione non può essere annullata.`)) {
+    if (!confirm(t('admin.departments.deleteConfirm.confirmMessage').replace('{name}', department.name))) {
       return;
     }
 
@@ -227,15 +229,15 @@ export function DepartmentManagement({
       onRefresh();
     } catch (err) {
       console.error('Error deleting department:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      alert(`Errore durante l'eliminazione del dipartimento: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : t('admin.departments.deleteConfirm.unknownError');
+      alert(t('admin.departments.deleteConfirm.deleteError').replace('{error}', errorMessage));
     } finally {
       setDeleteLoading(null);
     }
   };
 
   const handleUnassignEmployee = async (employeeId: string, employeeName: string) => {
-    if (!confirm(`Sei sicuro di voler rimuovere "${employeeName}" dal dipartimento? Il dipendente rimarrà nel sistema ma non sarà assegnato a nessun dipartimento.`)) {
+    if (!confirm(t('admin.departments.unassignEmployee.confirmMessage').replace('{name}', employeeName))) {
       return;
     }
 
@@ -268,8 +270,8 @@ export function DepartmentManagement({
       onRefresh();
     } catch (err) {
       console.error('Error unassigning employee:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
-      alert(`Errore durante la rimozione del dipendente: ${errorMessage}`);
+      const errorMessage = err instanceof Error ? err.message : t('admin.departments.unassignEmployee.unknownError');
+      alert(t('admin.departments.unassignEmployee.error').replace('{error}', errorMessage));
     } finally {
       setUnassignLoading(null);
     }
@@ -315,62 +317,62 @@ export function DepartmentManagement({
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
             <Building2 className="h-6 w-6" />
-            <span>Gestione Dipartimenti</span>
+            <span>{t('admin.departments.title')}</span>
           </h2>
           <p className="text-gray-600">
-            {departments.length} dipartimenti • {employees.length} dipendenti totali
+            {departments.length} {t('admin.departments.totalDepartments').toLowerCase()} • {employees.length} {t('admin.departments.totalEmployees')}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onRefresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Aggiorna
+            {t('admin.departments.refresh')}
           </Button>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Nuovo Dipartimento
+                {t('admin.departments.newDepartment')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Crea Nuovo Dipartimento</DialogTitle>
+                <DialogTitle>{t('admin.departments.createDialog.title')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="dept-name">Nome Dipartimento *</Label>
+                  <Label htmlFor="dept-name">{t('admin.departments.createDialog.nameLabel')}</Label>
                   <Input
                     id="dept-name"
                     value={newDepartment.name}
                     onChange={(e) => setNewDepartment(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="es. Risorse Umane"
+                    placeholder={t('admin.departments.createDialog.namePlaceholder')}
                     className="mt-1"
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="dept-location">Ubicazione</Label>
+                  <Label htmlFor="dept-location">{t('admin.departments.createDialog.locationLabel')}</Label>
                   <Input
                     id="dept-location"
                     value={newDepartment.location}
                     onChange={(e) => setNewDepartment(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="es. Milano, Roma"
+                    placeholder={t('admin.departments.createDialog.locationPlaceholder')}
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="dept-manager">Manager</Label>
+                  <Label htmlFor="dept-manager">{t('admin.departments.createDialog.managerLabel')}</Label>
                   <Select 
                     value={newDepartment.managerId} 
                     onValueChange={(value) => setNewDepartment(prev => ({ ...prev, managerId: value }))}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Seleziona un manager (opzionale)" />
+                      <SelectValue placeholder={t('admin.departments.createDialog.managerPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nessun manager</SelectItem>
+                      <SelectItem value="none">{t('admin.departments.createDialog.noManagerOption')}</SelectItem>
                       {availableManagers.map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
                           {manager.name} ({manager.email})
@@ -386,13 +388,13 @@ export function DepartmentManagement({
                   onClick={() => setShowCreateDialog(false)}
                   disabled={createLoading}
                 >
-                  Annulla
+                  {t('admin.departments.createDialog.cancel')}
                 </Button>
                 <Button 
                   onClick={handleCreateDepartment}
                   disabled={createLoading || !newDepartment.name.trim()}
                 >
-                  {createLoading ? 'Creando...' : 'Crea Dipartimento'}
+                  {createLoading ? t('admin.departments.createDialog.creating') : t('admin.departments.createDialog.create')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -402,42 +404,42 @@ export function DepartmentManagement({
           <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Modifica Dipartimento</DialogTitle>
+                <DialogTitle>{t('admin.departments.editDialog.title')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="edit-dept-name">Nome Dipartimento *</Label>
+                  <Label htmlFor="edit-dept-name">{t('admin.departments.editDialog.nameLabel')}</Label>
                   <Input
                     id="edit-dept-name"
                     value={editDepartment.name}
                     onChange={(e) => setEditDepartment(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="es. Risorse Umane"
+                    placeholder={t('admin.departments.editDialog.namePlaceholder')}
                     className="mt-1"
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="edit-dept-location">Ubicazione</Label>
+                  <Label htmlFor="edit-dept-location">{t('admin.departments.editDialog.locationLabel')}</Label>
                   <Input
                     id="edit-dept-location"
                     value={editDepartment.location}
                     onChange={(e) => setEditDepartment(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="es. Milano, Roma"
+                    placeholder={t('admin.departments.editDialog.locationPlaceholder')}
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="edit-dept-manager">Manager</Label>
+                  <Label htmlFor="edit-dept-manager">{t('admin.departments.editDialog.managerLabel')}</Label>
                   <Select 
                     value={editDepartment.managerId} 
                     onValueChange={(value) => setEditDepartment(prev => ({ ...prev, managerId: value }))}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Seleziona un manager (opzionale)" />
+                      <SelectValue placeholder={t('admin.departments.editDialog.managerPlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Nessun manager</SelectItem>
+                      <SelectItem value="none">{t('admin.departments.editDialog.noManagerOption')}</SelectItem>
                       {availableManagers.map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
                           {manager.name} ({manager.email})
@@ -453,13 +455,13 @@ export function DepartmentManagement({
                   onClick={() => setShowEditDialog(false)}
                   disabled={editLoading}
                 >
-                  Annulla
+                  {t('admin.departments.editDialog.cancel')}
                 </Button>
                 <Button 
                   onClick={handleEditDepartment}
                   disabled={editLoading || !editDepartment.name.trim()}
                 >
-                  {editLoading ? 'Salvando...' : 'Salva Modifiche'}
+                  {editLoading ? t('admin.departments.editDialog.saving') : t('admin.departments.editDialog.save')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -484,7 +486,7 @@ export function DepartmentManagement({
                 <Building2 className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Dipartimenti Totali</p>
+                <p className="text-sm text-gray-600">{t('admin.departments.totalDepartments')}</p>
                 <p className="text-2xl font-bold text-blue-600">{departments.length}</p>
               </div>
             </div>
@@ -498,7 +500,7 @@ export function DepartmentManagement({
                 <Crown className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Con Manager</p>
+                <p className="text-sm text-gray-600">{t('admin.departments.withManager')}</p>
                 <p className="text-2xl font-bold text-green-600">
                   {departments.filter(d => d.managerId).length}
                 </p>
@@ -514,7 +516,7 @@ export function DepartmentManagement({
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Dipendenti Totali</p>
+                <p className="text-sm text-gray-600">{t('admin.departments.totalEmployees')}</p>
                 <p className="text-2xl font-bold text-purple-600">{employees.length}</p>
               </div>
             </div>
@@ -528,7 +530,7 @@ export function DepartmentManagement({
                 <UserPlus className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Media per Dipartimento</p>
+                <p className="text-sm text-gray-600">{t('admin.departments.averagePerDepartment')}</p>
                 <p className="text-2xl font-bold text-amber-600">
                   {departments.length > 0 ? Math.round(employees.length / departments.length) : 0}
                 </p>
@@ -546,7 +548,7 @@ export function DepartmentManagement({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Cerca dipartimenti per nome, ubicazione o manager..."
+                  placeholder={t('admin.departments.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -562,19 +564,19 @@ export function DepartmentManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Dipartimento</TableHead>
-                  <TableHead>Manager</TableHead>
-                  <TableHead>Ubicazione</TableHead>
-                  <TableHead>Dipendenti</TableHead>
-                  <TableHead>Creato</TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
+                  <TableHead>{t('admin.departments.department')}</TableHead>
+                  <TableHead>{t('admin.departments.manager')}</TableHead>
+                  <TableHead>{t('admin.departments.location')}</TableHead>
+                  <TableHead>{t('admin.departments.employees')}</TableHead>
+                  <TableHead>{t('admin.departments.created')}</TableHead>
+                  <TableHead className="text-right">{t('admin.departments.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredDepartments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      {loading ? 'Caricamento dipartimenti...' : 'Nessun dipartimento trovato'}
+                      {loading ? t('admin.departments.loading') : t('admin.departments.notFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -597,11 +599,11 @@ export function DepartmentManagement({
                             <Crown className="h-4 w-4 text-amber-500" />
                             <div>
                               <div className="font-medium text-gray-900">{department.managerName}</div>
-                              <div className="text-sm text-gray-600">Manager</div>
+                              <div className="text-sm text-gray-600">{t('admin.departments.manager')}</div>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">Nessun manager</span>
+                          <span className="text-sm text-gray-400">{t('admin.departments.noManager')}</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -611,14 +613,14 @@ export function DepartmentManagement({
                             <span className="text-sm">{department.location}</span>
                           </div>
                         ) : (
-                          <span className="text-sm text-gray-400">Non specificata</span>
+                          <span className="text-sm text-gray-400">{t('admin.departments.notSpecified')}</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Users className="h-4 w-4 text-gray-400" />
                           <span className="font-medium">{department.employeeCount}</span>
-                          <span className="text-sm text-gray-600">dipendenti</span>
+                          <span className="text-sm text-gray-600">{t('admin.departments.employeesText')}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -660,7 +662,7 @@ export function DepartmentManagement({
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-lg lg:max-w-xl">
                               <DialogHeader>
-                                <DialogTitle>Dettagli Dipartimento</DialogTitle>
+                                <DialogTitle>{t('admin.departments.detailsDialog.title')}</DialogTitle>
                               </DialogHeader>
                               {selectedDepartment && (
                                 <div className="space-y-6">
@@ -676,23 +678,23 @@ export function DepartmentManagement({
                                   
                                   <div className="grid grid-cols-2 gap-4 text-sm">
                                     <div>
-                                      <label className="font-medium text-gray-700">Manager</label>
+                                      <label className="font-medium text-gray-700">{t('admin.departments.detailsDialog.manager')}</label>
                                       <p className="mt-1 text-gray-900">
-                                        {selectedDepartment.managerName || 'Nessuno'}
+                                        {selectedDepartment.managerName || t('admin.departments.detailsDialog.none')}
                                       </p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Ubicazione</label>
+                                      <label className="font-medium text-gray-700">{t('admin.departments.detailsDialog.location')}</label>
                                       <p className="mt-1 text-gray-900">
-                                        {selectedDepartment.location || 'Non specificata'}
+                                        {selectedDepartment.location || t('admin.departments.detailsDialog.notSpecified')}
                                       </p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Dipendenti</label>
+                                      <label className="font-medium text-gray-700">{t('admin.departments.detailsDialog.employees')}</label>
                                       <p className="mt-1 text-gray-900">{selectedDepartment.employeeCount}</p>
                                     </div>
                                     <div>
-                                      <label className="font-medium text-gray-700">Creato il</label>
+                                      <label className="font-medium text-gray-700">{t('admin.departments.detailsDialog.createdOn')}</label>
                                       <p className="mt-1 text-gray-900">
                                         {formatDate(selectedDepartment.createdAt)}
                                       </p>
@@ -703,7 +705,7 @@ export function DepartmentManagement({
                                   {selectedDepartmentEmployees.length > 0 && (
                                     <div className="space-y-3">
                                       <label className="font-medium text-gray-700 text-sm">
-                                        Dipendenti Assegnati ({selectedDepartmentEmployees.length})
+                                        {t('admin.departments.detailsDialog.assignedEmployees')} ({selectedDepartmentEmployees.length})
                                       </label>
                                       <div className="space-y-2 max-h-48 overflow-y-auto">
                                         {selectedDepartmentEmployees.map((employee) => (
@@ -738,7 +740,7 @@ export function DepartmentManagement({
 
                                   {selectedDepartmentEmployees.length === 0 && (
                                     <div className="text-center py-4 text-gray-500 text-sm">
-                                      Nessun dipendente assegnato a questo dipartimento
+                                      {t('admin.departments.detailsDialog.noEmployees')}
                                     </div>
                                   )}
                                 </div>

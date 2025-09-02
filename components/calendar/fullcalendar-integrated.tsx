@@ -518,7 +518,7 @@ export function FullCalendarIntegrated({
       <Dialog open={showNewRequestDialog} onOpenChange={setShowNewRequestDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
-            <DialogTitle>{t('holidays.request.title')}</DialogTitle>
+            <DialogTitle>{t('dashboard.holidays.request.title')}</DialogTitle>
           </DialogHeader>
           <MultiStepHolidayRequest
             defaultValues={{
@@ -592,7 +592,7 @@ export function FullCalendarIntegrated({
                 </div>
                 <div>
                   <label className="font-medium text-gray-700">Tipo:</label>
-                  <p>{t(`holidays.request.types.${selectedEvent.resource.type}`)}</p>
+                  <p>{t(`dashboard.calendar.legendDetails.${selectedEvent.resource.type}`)}</p>
                 </div>
                 <div>
                   <label className="font-medium text-gray-700">Stato:</label>
@@ -641,7 +641,7 @@ export function FullCalendarIntegrated({
                 {overlapWarning.conflictingEvents.map((event) => (
                   <div key={event.id} className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
                     <div>
-                      <p className="text-sm font-medium">{t(`holidays.request.types.${event.resource.type}`)}</p>
+                      <p className="text-sm font-medium">{t(`dashboard.calendar.legendDetails.${event.resource.type}`)}</p>
                       <p className="text-xs text-gray-600">
                         {format(event.start, "dd/MM/yyyy")} - {format(addDays(event.end, -1), "dd/MM/yyyy")}
                       </p>
@@ -772,15 +772,15 @@ export function CalendarLegend() {
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-orange-50 border-2 border-orange-600 rounded"></div>
-                <span className="text-xs">{t('dashboard.calendar.legend.pending')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.pending')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-green-100 border-2 border-green-600 rounded"></div>
-                <span className="text-xs">{t('dashboard.calendar.legend.approved')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.approved')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 bg-red-50 border-2 border-red-600 rounded"></div>
-                <span className="text-xs">{t('dashboard.calendar.legend.rejected')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.rejected')}</span>
               </div>
             </div>
           </div>
@@ -791,15 +791,15 @@ export function CalendarLegend() {
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <span className="text-sm">🏖️</span>
-                <span className="text-xs">{t('dashboard.calendar.legend.vacation')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.vacation')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm">🏥</span>
-                <span className="text-xs">{t('dashboard.calendar.legend.sick')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.sick')}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm">👤</span>
-                <span className="text-xs">{t('dashboard.calendar.legend.personal')}</span>
+                <span className="text-xs">{t('dashboard.calendar.legendDetails.personal')}</span>
               </div>
             </div>
           </div>

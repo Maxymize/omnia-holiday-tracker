@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, onEditProfile }: AdminSidebarProps) {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -65,55 +67,55 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
   }> = [
     {
       id: 'overview',
-      label: 'Panoramica',
+      label: t('admin.navigation.overview'),
       icon: TrendingUp,
-      description: 'Statistiche generali',
+      description: t('admin.navigation.overviewDesc'),
       badge: adminStats?.pendingEmployees && adminStats.pendingEmployees > 0 ? adminStats.pendingEmployees : undefined
     },
     {
       id: 'calendar',
-      label: 'Calendario',
+      label: t('admin.navigation.calendar'),
       icon: Calendar,
-      description: 'Vista generale ferie',
+      description: t('admin.navigation.calendarDesc'),
       badge: adminStats?.employeesOnHolidayToday && adminStats.employeesOnHolidayToday > 0 ? adminStats.employeesOnHolidayToday : undefined
     },
     {
       id: 'employees',
-      label: 'Dipendenti',
+      label: t('admin.navigation.employees'),
       icon: Users,
-      description: 'Gestione utenti',
+      description: t('admin.navigation.employeesDesc'),
       badge: adminStats?.pendingEmployees && adminStats.pendingEmployees > 0 ? adminStats.pendingEmployees : undefined
     },
     {
       id: 'requests',
-      label: 'Richieste',
+      label: t('admin.navigation.requests'),
       icon: FileText,
-      description: 'Approvazioni ferie',
+      description: t('admin.navigation.requestsDesc'),
       badge: adminStats?.pendingRequests && adminStats.pendingRequests > 0 ? adminStats.pendingRequests : undefined
     },
     {
       id: 'my-requests',
-      label: 'Le Mie Richieste',
+      label: t('admin.navigation.myRequests'),
       icon: CalendarCheck,
-      description: 'Le mie ferie e statistiche'
+      description: t('admin.navigation.myRequestsDesc')
     },
     {
       id: 'departments',
-      label: 'Dipartimenti',
+      label: t('admin.navigation.departments'),
       icon: Building2,
-      description: 'Gestione reparti',
+      description: t('admin.navigation.departmentsDesc'),
     },
     {
       id: 'reports',
-      label: 'Report',
+      label: t('admin.navigation.reports'),
       icon: BarChart3,
-      description: 'Analisi e statistiche',
+      description: t('admin.navigation.reportsDesc'),
     },
     {
       id: 'settings',
-      label: 'Impostazioni',
+      label: t('admin.navigation.settings'),
       icon: Settings,
-      description: 'Configurazione sistema',
+      description: t('admin.navigation.settingsDesc'),
     }
   ];
 
@@ -134,13 +136,13 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
               <h3 className="text-sm font-semibold text-gray-900 truncate">
-                {user?.name || 'Amministratore'}
+                {user?.name || t('admin.navigation.administrator')}
               </h3>
               <Shield className="h-4 w-4 text-purple-600" />
             </div>
             <p className="text-xs text-gray-600 truncate">{user?.email}</p>
             <Badge variant="secondary" className="mt-1 text-xs bg-purple-100 text-purple-700">
-              Amministratore
+              {t('admin.navigation.administrator')}
             </Badge>
           </div>
         </div>
@@ -156,7 +158,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
               className="w-full justify-start text-xs h-7 border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300"
             >
               <UserCog className="h-3 w-3 mr-1.5" />
-              <span>Modifica Profilo</span>
+              <span>{t('admin.profile.editButton')}</span>
             </Button>
           </div>
         )}
@@ -166,7 +168,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
-          Amministrazione
+          {t('admin.navigation.sectionTitle')}
         </h4>
         <div className="space-y-1">
           {navigationItems.map((item) => {
@@ -216,7 +218,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
             onClick={logout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Esci
+            {t('dashboard.navigation.logout')}
           </Button>
         </div>
       </div>

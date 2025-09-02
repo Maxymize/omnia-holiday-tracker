@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n/provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +53,8 @@ export function NotificationHeader({
   onDeleteNotification,
   className = ""
 }: NotificationHeaderProps) {
+  const { t } = useTranslation();
+  
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastReadTimestamp, setLastReadTimestamp] = useState<number>(0);
@@ -116,35 +119,35 @@ export function NotificationHeader({
     switch (type) {
       case 'holiday_request':
         return {
-          label: 'Richiesta Ferie',
+          label: t('notifications.types.holiday_request'),
           icon: FileText,
           color: 'text-blue-600',
           bgColor: 'bg-blue-100',
         };
       case 'employee_registration':
         return {
-          label: 'Registrazione',
+          label: t('notifications.types.employee_registration'),
           icon: UserCheck,
           color: 'text-purple-600',
           bgColor: 'bg-purple-100',
         };
       case 'holiday_approved':
         return {
-          label: 'Approvate',
+          label: t('notifications.types.holiday_approved'),
           icon: CheckCircle,
           color: 'text-green-600',
           bgColor: 'bg-green-100',
         };
       case 'holiday_rejected':
         return {
-          label: 'Rifiutate',
+          label: t('notifications.types.holiday_rejected'),
           icon: XCircle,
           color: 'text-red-600',
           bgColor: 'bg-red-100',
         };
       default:
         return {
-          label: 'Attività',
+          label: t('notifications.types.default'),
           icon: Activity,
           color: 'text-gray-600',
           bgColor: 'bg-gray-100',
@@ -192,7 +195,7 @@ export function NotificationHeader({
         size="sm"
         onClick={handleToggleDropdown}
         className="relative p-2 hover:bg-gray-100 transition-colors"
-        aria-label="Apri notifiche"
+        aria-label={t('notifications.actions.openNotifications')}
       >
         {unreadCount > 0 ? (
           <BellRing className="h-5 w-5 text-gray-700" />
@@ -303,7 +306,7 @@ export function NotificationHeader({
                                   await onDeleteNotification(activity.id);
                                 }}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
-                                aria-label="Elimina notifica"
+                                aria-label={t('notifications.actions.deleteNotification')}
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
