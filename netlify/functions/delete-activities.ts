@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../lib/db/index';
 import { holidays, users, auditLogs } from '../../lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // Input validation schema for deletion request
 const deleteActivitiesSchema = z.object({
@@ -296,7 +296,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication and require admin access
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
     requireAdmin(userToken);
 

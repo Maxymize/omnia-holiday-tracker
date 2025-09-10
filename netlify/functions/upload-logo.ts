@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // CORS headers
 const headers = {
@@ -69,7 +69,7 @@ export const handler: Handler = async (event, context) => {
     };
     
     // TODO: Re-enable authentication in production
-    // const userToken = verifyAuthHeader(event.headers.authorization);
+    // const userToken = await verifyAuthFromRequest(event);
     // requireAccessToken(userToken);
     // requireAdmin(userToken);
 

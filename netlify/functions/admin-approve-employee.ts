@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateEmployeeStatusWithAudit, getUserByEmail } from '../../lib/db/operations';
 import { z } from 'zod';
 
@@ -42,7 +42,7 @@ export const handler: Handler = async (event, context) => {
     console.log('DEBUG: Starting authentication verification');
     
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     console.log('DEBUG: User token extracted:', {
       email: userToken?.email,
       role: userToken?.role,

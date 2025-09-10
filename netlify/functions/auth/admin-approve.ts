@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { z, ZodError } from 'zod';
 import { getUserById, updateUserStatus } from '../../../lib/db/helpers';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../../lib/auth/jwt-utils';
 
 // Input validation schema
 const approveSchema = z.object({
@@ -36,7 +36,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify admin token
-    const adminToken = verifyAuthHeader(event.headers.authorization);
+    const adminToken = await verifyAuthFromRequest(event);
     requireAccessToken(adminToken);
     requireAdmin(adminToken);
     

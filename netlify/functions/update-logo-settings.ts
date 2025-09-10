@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../lib/db/index';
 import { settings } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // Input validation schema
 const logoSettingsSchema = z.object({
@@ -57,7 +57,7 @@ export const handler: Handler = async (event, context) => {
     };
     
     // TODO: Re-enable authentication in production
-    // const userToken = verifyAuthHeader(event.headers.authorization);
+    // const userToken = await verifyAuthFromRequest(event);
     // requireAccessToken(userToken);
     // requireAdmin(userToken);
 

@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { createHolidayWithAudit, getUserByEmail, getLeaveTypeAllowances, createAuditLog } from '../../lib/db/operations';
 import { db } from '../../lib/db/index';
 import { holidays, settings } from '../../lib/db/schema';
@@ -66,7 +66,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Parse and validate request body

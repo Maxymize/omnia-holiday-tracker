@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../lib/db/index';
 import { users } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Request body validation schema
 const updateRoleSchema = z.object({
@@ -37,7 +37,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication - only admins can update roles
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Get current user information to verify admin privileges

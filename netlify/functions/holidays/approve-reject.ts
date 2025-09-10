@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../../lib/db/index';
 import { holidays, users } from '../../../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../../lib/auth/jwt-utils';
 
 // Input validation schema
 const approveRejectSchema = z.object({
@@ -37,7 +37,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify admin authentication
-    const adminToken = verifyAuthHeader(event.headers.authorization);
+    const adminToken = await verifyAuthFromRequest(event);
     requireAccessToken(adminToken);
     requireAdmin(adminToken);
 

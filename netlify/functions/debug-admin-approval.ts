@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateEmployeeStatusWithAudit, getUserByEmail } from '../../lib/db/operations';
 import { db } from '../../lib/db';
 import { users } from '../../lib/db/schema';
@@ -59,7 +59,7 @@ export const handler: Handler = async (event, context) => {
     
     let userToken;
     try {
-      userToken = verifyAuthHeader(event.headers.authorization);
+      userToken = await verifyAuthFromRequest(event);
       requireAccessToken(userToken);
       debugSteps.push(`JWT verification successful: email=${userToken.email}, role=${userToken.role}`);
     } catch (jwtError: any) {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../../lib/db/index';
 import { holidays, users } from '../../../lib/db/schema';
 import { eq, and, or, lte, gte } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken } from '../../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../../lib/auth/jwt-utils';
 
 // Holiday types enum
 const holidayTypes = ['vacation', 'sick', 'personal'] as const;
@@ -134,7 +134,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Parse and validate input

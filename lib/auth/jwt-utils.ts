@@ -76,7 +76,7 @@ export async function verifyToken(token: string): Promise<JWTPayload> {
     });
     
     // Cast the payload to our expected interface
-    const decoded = payload as JWTPayload;
+    const decoded = payload as unknown as JWTPayload;
     
     console.log('✅ JWT Debug - Token verified successfully:', {
       userId: decoded.userId,
@@ -189,24 +189,24 @@ export function requireRefreshToken(payload: JWTPayload): void {
 }
 
 // Refresh access token using refresh token
-export function refreshAccessToken(refreshToken: string): string {
-  const payload = verifyToken(refreshToken);
+export async function refreshAccessToken(refreshToken: string): Promise<string> {
+  const payload = await verifyToken(refreshToken);
   
   // Verify it's a refresh token
   requireRefreshToken(payload);
   
-  // Generate new access token
-  const secret = getJWTSecret();
-  const newAccessToken = jwt.sign(
-    { 
-      userId: payload.userId, 
-      email: payload.email, 
-      role: payload.role,
-      type: 'access'
-    },
-    secret,
-    { expiresIn: '1h' }
-  );
+  // Generate new access token using JOSE
+  const secret = new TextEncoder().encode(getJWTSecret());
+  const newAccessToken = await new SignJWT({
+    userId: payload.userId, 
+    email: payload.email, 
+    role: payload.role,
+    type: 'access'
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(secret);
   
   return newAccessToken;
 }

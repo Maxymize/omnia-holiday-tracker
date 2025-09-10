@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { db } from '../../lib/db/index';
 import { settings } from '../../lib/db/schema';
 import { eq, or } from 'drizzle-orm';
@@ -20,7 +20,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Check admin permissions

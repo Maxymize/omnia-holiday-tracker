@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Validation schemas
 const uploadAvatarSchema = z.object({
@@ -76,7 +76,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Parse and validate input

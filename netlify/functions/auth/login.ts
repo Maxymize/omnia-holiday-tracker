@@ -86,7 +86,7 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Generate JWT tokens
-    const { accessToken, refreshToken, expiresIn } = generateTokens(user.id, user.email, user.role);
+    const { accessToken, refreshToken, expiresIn } = await generateTokens(user.id, user.email, user.role);
     
     // Create secure cookies
     const cookieHeaders = createTokenCookies(accessToken, refreshToken);

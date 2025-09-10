@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../lib/db/index';
 import { users, departments, holidays } from '../../lib/db/schema';
 import { eq, and, gte, lte, count, sum, desc, asc, ilike, or, inArray } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // Query parameters validation schema
 const getEmployeesSchema = z.object({
