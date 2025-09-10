@@ -109,9 +109,7 @@ export default function AdminDashboard() {
     setActivitiesLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-activities`, {
         headers: {
@@ -137,9 +135,7 @@ export default function AdminDashboard() {
   const handleDeleteActivities = async (activityIds: string[]) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/delete-activities`, {
         method: 'DELETE',

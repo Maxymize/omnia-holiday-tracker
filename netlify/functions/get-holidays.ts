@@ -4,7 +4,7 @@ import { db } from '../../lib/db/index';
 import { holidays, users, departments, settings } from '../../lib/db/schema';
 import { eq, and, or, gte, lte, desc, asc } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Query parameters validation schema
 const getHolidaysSchema = z.object({
@@ -62,7 +62,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Parse and validate query parameters

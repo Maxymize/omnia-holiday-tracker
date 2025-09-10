@@ -176,9 +176,7 @@ export function EmployeeManagement({
 
     setAssignLoading(true);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-to-department`, {
         method: 'POST',
@@ -239,9 +237,7 @@ export function EmployeeManagement({
 
     setAllowanceLoading(true);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const accessToken = localStorage.getItem('accessToken');
 
@@ -296,9 +292,7 @@ export function EmployeeManagement({
 
     setEditLoading(true);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const accessToken = localStorage.getItem('accessToken');
 

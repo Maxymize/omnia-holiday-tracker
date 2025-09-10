@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../lib/db/index';
 import { settings, users } from '../../lib/db/schema';
 import { eq, inArray } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Query parameters validation schema
 const getSettingsSchema = z.object({
@@ -39,7 +39,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication (both admin and employees can read settings)
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Parse and validate query parameters

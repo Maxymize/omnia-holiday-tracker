@@ -102,9 +102,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
   const CIRCUIT_BREAKER_RESET_TIME = 60000; // 1 minute
 
   const getBaseUrl = () => {
-    return process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : window.location.origin;
+    return window.location.origin;
   };
 
   // Use refs to stabilize options and prevent infinite loops

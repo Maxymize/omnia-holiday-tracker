@@ -45,7 +45,7 @@ function getLocale(request: NextRequest): string {
   return defaultLocale;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Skip middleware for API routes, static files, and Next.js internals
@@ -104,19 +104,21 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // TEMPORARY: Skip all auth checks while we fix cookie handling
-  // This allows access to all routes without authentication
-  // TODO: Remove this bypass after fixing cookie/JWT integration
-  console.log('🔧 Auth middleware temporarily disabled for debugging');
-  return NextResponse.next();
-  
-  /* DISABLED UNTIL COOKIE ISSUE IS FIXED
-  // Get auth token from cookies or headers
-  const authToken = request.cookies.get('auth-token')?.value || 
-    request.headers.get('authorization')?.replace('Bearer ', '');
+  // Get auth token from cookies (priority) or authorization header (fallback)
+  const cookieToken = request.cookies.get('auth-token')?.value;
+  const headerToken = request.headers.get('authorization')?.replace('Bearer ', '');
+  const authToken = cookieToken || headerToken;
+
+  console.log('🔍 Auth Debug:', {
+    cookieToken: cookieToken ? 'PRESENT' : 'MISSING',
+    headerToken: headerToken ? 'PRESENT' : 'MISSING',
+    finalToken: authToken ? 'PRESENT' : 'MISSING',
+    path: pathname
+  });
 
   // If no token found, redirect to login
   if (!authToken) {
+    console.log('🚫 No auth token found, redirecting to login');
     const loginUrl = new URL(`/${locale}/login`, request.url);
     // Only add redirect parameter if we're not already on login page
     if (!pathname.includes('/login')) {
@@ -126,17 +128,29 @@ export function middleware(request: NextRequest) {
   }
 
   try {
-    // Verify token and get user info
-    const userInfo = getUserFromToken(authToken ? `Bearer ${authToken}` : undefined);
+    // Verify token and get user info - pass token directly since it's from cookie
+    console.log('🔍 Middleware - About to verify token:', {
+      tokenLength: authToken?.length,
+      tokenStart: authToken?.substring(0, 20),
+      tokenEnd: authToken?.substring(authToken.length - 10)
+    });
+    
+    const userInfo = await getUserFromToken(undefined, authToken);
+    
+    console.log('🔍 Middleware - getUserFromToken result:', userInfo);
     
     if (!userInfo) {
+      console.log('❌ Middleware - userInfo is null/undefined');
       throw new Error('Invalid token');
     }
+
+    console.log(`✅ Authenticated user: ${userInfo.email} (${userInfo.role})`);
 
     // Check admin-only routes
     const isAdminRoute = adminRoutes.some(route => pathWithoutLocale.startsWith(route));
     
     if (isAdminRoute && userInfo.role !== 'admin') {
+      console.log(`🚫 Non-admin user ${userInfo.email} trying to access admin route`);
       // Redirect non-admin users to employee dashboard
       return NextResponse.redirect(new URL(`/${locale}/employee-dashboard`, request.url));
     }
@@ -145,7 +159,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
 
   } catch (error) {
-    console.error('Auth middleware error:', error);
+    console.error('🚨 Auth middleware error:', error);
     
     // Token invalid - redirect to login
     const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -162,7 +176,6 @@ export function middleware(request: NextRequest) {
     
     return response;
   }
-  */
 }
 
 export const config = {
@@ -176,5 +189,5 @@ export const config = {
      * - public folder
      */
     '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
-  ],
+  ]
 };

@@ -4,7 +4,7 @@ import { db } from '../../lib/db/index';
 import { holidays, users, departments, auditLogs } from '../../lib/db/schema';
 import { eq, and, or, desc, asc, gte, lte, like, ilike } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { verifyAuthHeader, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken, requireAdmin } from '../../lib/auth/jwt-utils';
 
 // Activity types that match the frontend interface
 export type ActivityType = 'holiday_request' | 'employee_registration' | 'holiday_approved' | 'holiday_rejected';
@@ -171,7 +171,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify authentication and require admin access
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
     requireAdmin(userToken);
 

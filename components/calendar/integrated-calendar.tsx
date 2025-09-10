@@ -117,9 +117,7 @@ export function IntegratedCalendar({
         throw new Error('No authentication token found')
       }
 
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin
+      const baseUrl = window.location.origin;
 
       // Build URL with date filter parameters
       const dateParams = buildDateFilterParams(dateFilter);
@@ -582,9 +580,7 @@ export function IntegratedCalendar({
         return
       }
 
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin
+      const baseUrl = window.location.origin;
 
       // Use real database endpoint
       const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, {

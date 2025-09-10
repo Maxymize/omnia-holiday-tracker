@@ -208,9 +208,7 @@ export function MultiStepHolidayRequest({
 
       // Check with backend API
       if (user?.id) {
-        const baseUrl = process.env.NODE_ENV === 'development' 
-          ? 'http://localhost:3000' 
-          : window.location.origin
+        const baseUrl = window.location.origin;
 
         const token = localStorage.getItem('accessToken')
         
@@ -369,9 +367,7 @@ export function MultiStepHolidayRequest({
         return
       }
 
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin
+      const baseUrl = window.location.origin;
 
       // Format dates to YYYY-MM-DD
       const formattedData = {

@@ -36,9 +36,7 @@ export default function HolidayRequestPage() {
   const fetchExistingHolidays = async () => {
     try {
       setIsLoading(true);
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
       

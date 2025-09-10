@@ -70,9 +70,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-settings?keys=leave_types.vacation_allowance,leave_types.personal_allowance,leave_types.sick_allowance`, {
         method: 'GET',
@@ -162,9 +160,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
       }
 
       const token = localStorage.getItem('accessToken');
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       // Prepare settings update payload
       const settingsToUpdate = Object.entries(allowances)
@@ -417,9 +413,7 @@ export function LeaveTypeSettings({ className }: LeaveTypeSettingsProps) {
             onClick={async () => {
               try {
                 const token = localStorage.getItem('accessToken');
-                const baseUrl = process.env.NODE_ENV === 'development' 
-                  ? 'http://localhost:3000' 
-                  : window.location.origin;
+                const baseUrl = window.location.origin;
 
                 const response = await fetch(`${baseUrl}/.netlify/functions/apply-allowances-to-all`, {
                   method: 'POST',

@@ -108,9 +108,7 @@ export function DepartmentManagement({
     setCreateLoading(true);
     try {
       // TODO: Call API to create department
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/create-department`, {
         method: 'POST',
@@ -151,9 +149,7 @@ export function DepartmentManagement({
 
     setEditLoading(true);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/update-department`, {
         method: 'POST',
@@ -203,9 +199,7 @@ export function DepartmentManagement({
 
     setDeleteLoading(department.id);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/delete-department`, {
         method: 'POST',
@@ -243,9 +237,7 @@ export function DepartmentManagement({
 
     setUnassignLoading(employeeId);
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/assign-employee-to-department`, {
         method: 'POST',

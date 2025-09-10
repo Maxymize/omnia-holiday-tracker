@@ -1,4 +1,4 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import { SignJWT, jwtVerify } from 'jose';
 
 export interface JWTPayload {
   userId: string;
@@ -26,31 +26,31 @@ function getJWTSecret(): string {
 }
 
 // Generate access and refresh tokens
-export function generateTokens(userId: string, email: string, role: 'employee' | 'admin') {
-  const secret = getJWTSecret();
+export async function generateTokens(userId: string, email: string, role: 'employee' | 'admin') {
+  const secret = new TextEncoder().encode(getJWTSecret());
 
   // Access token (short-lived)
-  const accessToken = jwt.sign(
-    { 
-      userId, 
-      email, 
-      role,
-      type: 'access'
-    },
-    secret,
-    { expiresIn: '1h' }
-  );
+  const accessToken = await new SignJWT({ 
+    userId, 
+    email, 
+    role,
+    type: 'access'
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(secret);
 
   // Refresh token (longer-lived)
-  const refreshToken = jwt.sign(
-    { 
-      userId, 
-      email,
-      type: 'refresh'
-    },
-    secret,
-    { expiresIn: '7d' }
-  );
+  const refreshToken = await new SignJWT({ 
+    userId, 
+    email,
+    type: 'refresh'
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(secret);
 
   return { 
     accessToken, 
@@ -60,21 +60,48 @@ export function generateTokens(userId: string, email: string, role: 'employee' |
 }
 
 // Verify JWT token
-export function verifyToken(token: string): JWTPayload {
-  const secret = getJWTSecret();
+export async function verifyToken(token: string): Promise<JWTPayload> {
+  const secret = new TextEncoder().encode(getJWTSecret());
+  
+  console.log('🔍 JWT Debug - verifyToken called:', {
+    tokenLength: token?.length,
+    tokenStart: token?.substring(0, 20),
+    secretExists: !!getJWTSecret(),
+    secretStart: getJWTSecret()?.substring(0, 10)
+  });
   
   try {
-    const decoded = jwt.verify(token, secret, {
-      algorithms: [JWT_CONFIG.algorithm]
-    }) as JWTPayload;
+    const { payload } = await jwtVerify(token, secret, {
+      algorithms: ['HS256']
+    });
+    
+    // Cast the payload to our expected interface
+    const decoded = payload as JWTPayload;
+    
+    console.log('✅ JWT Debug - Token verified successfully:', {
+      userId: decoded.userId,
+      email: decoded.email,
+      role: decoded.role,
+      type: decoded.type,
+      exp: decoded.exp,
+      iat: decoded.iat
+    });
     
     return decoded;
-  } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
-      throw new Error('Token non valido');
-    }
-    if (error instanceof jwt.TokenExpiredError) {
+  } catch (error: any) {
+    console.log('❌ JWT Debug - verifyToken error:', {
+      errorName: error.constructor.name,
+      errorMessage: error.message,
+      isJWTError: error.name === 'JWTExpired' || error.name === 'JWTInvalid',
+      isExpired: error.name === 'JWTExpired',
+      fullError: error
+    });
+    
+    if (error.name === 'JWTExpired') {
       throw new Error('Token scaduto');
+    }
+    if (error.name === 'JWTInvalid' || error.name === 'JWSSignatureVerificationFailed') {
+      throw new Error('Token non valido');
     }
     throw new Error('Errore di verifica token');
   }
@@ -90,9 +117,54 @@ export function extractToken(authHeader: string | undefined): string {
 }
 
 // Verify token from Authorization header
-export function verifyAuthHeader(authHeader: string | undefined): JWTPayload {
+export async function verifyAuthHeader(authHeader: string | undefined): Promise<JWTPayload> {
   const token = extractToken(authHeader);
-  return verifyToken(token);
+  return await verifyToken(token);
+}
+
+// NEW: Unified authentication function that checks both cookies and Authorization header
+export async function verifyAuthFromRequest(event: any): Promise<JWTPayload> {
+  console.log('🔍 JWT Debug - Checking multiple auth sources:', {
+    hasCookies: !!event.headers.cookie,
+    hasAuthHeader: !!event.headers.authorization,
+    cookiePreview: event.headers.cookie?.substring(0, 50) + '...' || 'none'
+  });
+
+  // First try to get token from cookies (production method)
+  if (event.headers.cookie) {
+    try {
+      const cookies = event.headers.cookie.split(';').reduce((acc: any, cookie: string) => {
+        const [name, value] = cookie.trim().split('=');
+        acc[name] = value;
+        return acc;
+      }, {});
+      
+      if (cookies['auth-token']) {
+        console.log('🍪 JWT Debug - Found token in cookies, attempting verification');
+        const payload = await verifyToken(cookies['auth-token']);
+        console.log('✅ JWT Debug - Cookie authentication successful');
+        return payload;
+      }
+    } catch (error) {
+      console.log('🍪 JWT Debug - Cookie authentication failed:', error);
+      // Continue to try Authorization header
+    }
+  }
+
+  // Fall back to Authorization header (development method)
+  if (event.headers.authorization) {
+    try {
+      console.log('🔑 JWT Debug - Trying Authorization header as fallback');
+      const payload = await verifyAuthHeader(event.headers.authorization);
+      console.log('✅ JWT Debug - Authorization header authentication successful');
+      return payload;
+    } catch (error) {
+      console.log('🔑 JWT Debug - Authorization header authentication failed:', error);
+      throw error;
+    }
+  }
+
+  throw new Error('No valid authentication token found in cookies or Authorization header');
 }
 
 // Check if user has admin role
@@ -148,18 +220,47 @@ export function requireAdminAccess(payload: JWTPayload): void {
   }
 }
 
-// Get user info from token (for middleware)
-export function getUserFromToken(authHeader: string | undefined) {
+// Get user info from token (for middleware) - supports both header and direct token
+export async function getUserFromToken(authHeader: string | undefined, directToken?: string) {
   try {
-    const payload = verifyAuthHeader(authHeader);
+    let token = directToken;
+    
+    console.log('🔍 JWT Debug - getUserFromToken:', {
+      hasAuthHeader: !!authHeader,
+      hasDirectToken: !!directToken,
+      authHeaderPrefix: authHeader?.substring(0, 10),
+      directTokenPrefix: directToken?.substring(0, 10)
+    });
+    
+    // If no direct token provided, try to extract from auth header
+    if (!token && authHeader) {
+      token = extractToken(authHeader);
+    }
+    
+    if (!token) {
+      console.log('❌ JWT Debug - No token available');
+      return null;
+    }
+    
+    console.log('🔍 JWT Debug - Token found, attempting verification');
+    const payload = await verifyToken(token);
+    console.log('✅ JWT Debug - Token verified:', {
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+      type: payload.type
+    });
+    
     requireAccessToken(payload);
+    console.log('✅ JWT Debug - Access token requirements passed');
     
     return {
       userId: payload.userId,
       email: payload.email,
       role: payload.role
     };
-  } catch (error) {
+  } catch (error: any) {
+    console.log('❌ JWT Debug - Error:', error.message);
     return null;
   }
 }

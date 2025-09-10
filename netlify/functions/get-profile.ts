@@ -5,7 +5,7 @@ import { getUserById } from '../../lib/db/helpers';
 import { db } from '../../lib/db/index';
 import { users, departments } from '../../lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyAuthHeader, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 
 // Input validation schemas
 const getProfileSchema = z.object({
@@ -175,7 +175,7 @@ export const handler: Handler = async (event, context) => {
 
   try {
     // Verify token for all operations
-    const userToken = verifyAuthHeader(event.headers.authorization);
+    const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 
     // Handle GET request - Get profile

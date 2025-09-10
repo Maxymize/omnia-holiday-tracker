@@ -30,9 +30,7 @@ export function useSystemSettings() {
         throw new Error('No authentication token found');
       }
 
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-settings`, {
         headers: {

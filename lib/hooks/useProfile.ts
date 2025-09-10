@@ -40,9 +40,7 @@ export function useProfile(): UseProfileResult {
     setError(null);
 
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`${baseUrl}/.netlify/functions/get-profile`, {

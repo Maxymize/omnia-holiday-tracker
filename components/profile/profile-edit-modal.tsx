@@ -85,9 +85,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
   // Load fresh user data from server to ensure latest info
   const loadUserProfile = async () => {
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`${baseUrl}/.netlify/functions/get-profile`, {
@@ -187,9 +185,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
   // Load departments for selection
   const loadDepartments = async () => {
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
       const response = await fetch(`${baseUrl}/.netlify/functions/get-departments`, {
@@ -257,9 +253,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
 
   // Upload avatar to server
   const uploadAvatar = async (imageData: string, fileName: string, mimeType: string) => {
-    const baseUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000' 
-      : window.location.origin;
+    const baseUrl = window.location.origin;
 
     const token = localStorage.getItem('accessToken');
     const response = await fetch(`${baseUrl}/.netlify/functions/upload-avatar`, {
@@ -317,9 +311,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
       }
 
       // Update profile
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
       const updateData: any = {

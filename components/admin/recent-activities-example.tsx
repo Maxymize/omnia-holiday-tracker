@@ -143,9 +143,7 @@ export function AdminDashboardWithRecentActivities() {
   const handleDeleteActivities = async (activityIds: string[]) => {
     try {
       // Chiamata API per eliminare le attività
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
       
       const response = await fetch(`${baseUrl}/.netlify/functions/delete-activities`, {
         method: 'DELETE',
@@ -173,9 +171,7 @@ export function AdminDashboardWithRecentActivities() {
     setLoading(true);
     try {
       // Chiamata API per recuperare le attività aggiornate
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000'
-        : window.location.origin;
+      const baseUrl = window.location.origin;
       
       const response = await fetch(`${baseUrl}/.netlify/functions/get-recent-activities`, {
         credentials: 'include',

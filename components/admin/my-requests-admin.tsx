@@ -695,9 +695,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                             if (selectedHoliday.medicalCertificateFileId) {
                               try {
                                 const token = localStorage.getItem('accessToken');
-                                const baseUrl = process.env.NODE_ENV === 'development' 
-                                  ? 'http://localhost:3000' 
-                                  : window.location.origin;
+                                const baseUrl = window.location.origin;
                                 
                                 const response = await fetch(
                                   `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${selectedHoliday.medicalCertificateFileId}`,

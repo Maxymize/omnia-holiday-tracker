@@ -88,20 +88,14 @@ export interface AdminStats {
 
 // Helper function for consistent fetch configuration
 const createFetchConfig = (method: 'GET' | 'POST' | 'PUT' | 'DELETE', token?: string, body?: any) => {
-  // Multiple checks for development mode
-  const isDevelopment = process.env.NODE_ENV === 'development' || 
-                       window.location.hostname === 'localhost' ||
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.port === '3001';
-
   const config: RequestInit = {
     method,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     },
-    // Include credentials only in production where cookies work properly
-    ...(isDevelopment ? {} : { credentials: 'include' }),
+    // Include credentials in both development and production (for cookie-based auth)
+    credentials: 'include',
   };
 
   if (body) {
@@ -118,7 +112,7 @@ const getBaseUrl = () => {
                        window.location.hostname === '127.0.0.1' ||
                        window.location.port === '3001';
   
-  return isDevelopment ? 'http://localhost:3000' : window.location.origin;
+  return window.location.origin;  // Always use current window origin
 };
 
 export function useAdminData() {

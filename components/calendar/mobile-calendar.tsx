@@ -110,9 +110,7 @@ export function MobileCalendar({
         limit: '100'
       })
 
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
-        : window.location.origin
+      const baseUrl = window.location.origin;
 
       const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays?${params}`, {
         headers: {
@@ -765,9 +763,7 @@ export function MobileCalendar({
             onSubmit={async (data) => {
               try {
                 // Call the backend API to create the holiday request
-                const baseUrl = process.env.NODE_ENV === 'development' 
-                  ? 'http://localhost:3000' 
-                  : window.location.origin
+                const baseUrl = window.location.origin;
 
                 const token = localStorage.getItem('accessToken')
                 

@@ -70,9 +70,8 @@ export function useAuth() {
                            window.location.hostname === '127.0.0.1' ||
                            window.location.port === '3001';
       
-      const baseUrl = isDevelopment 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
+      // ALWAYS use the current window origin - no hardcoding
+      const baseUrl = window.location.origin;
       
       console.log('🔧 Login attempt:', {
         NODE_ENV: process.env.NODE_ENV,
@@ -144,7 +143,7 @@ export function useAuth() {
     try {
       // Call logout endpoint to clear cookies
       const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000' 
+        ? window.location.origin  // Use current window origin 
         : window.location.origin;
         
       await fetch(`${baseUrl}/.netlify/functions/logout`, {
@@ -186,7 +185,7 @@ export function useAuth() {
                            window.location.port === '3001';
       
       const baseUrl = isDevelopment 
-        ? 'http://localhost:3000' 
+        ? window.location.origin  // Use current window origin 
         : window.location.origin;
 
       // Call a profile endpoint to get updated user data

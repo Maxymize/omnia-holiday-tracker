@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { getUserByEmail, getDepartments } from '../../lib/db/operations';
 import { createAuditLog } from '../../lib/db/helpers';
 import { autoInitializeDatabase, isDatabaseInitialized } from '../../lib/db/auto-init';
@@ -195,11 +195,27 @@ export const handler: Handler = async (event, context) => {
       type: 'access' // Required by requireAccessToken function
     };
 
-    const accessToken = jwt.sign(tokenPayload, process.env.JWT_SECRET!, { expiresIn: '1h' });
+    console.log('🔍 JWT Debug - Generating token with secret:', {
+      secretExists: !!process.env.JWT_SECRET,
+      secretStart: process.env.JWT_SECRET?.substring(0, 10),
+      payload: tokenPayload
+    });
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    const accessToken = await new SignJWT(tokenPayload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('1h')
+      .sign(secret);
+    
+    console.log('✅ JWT Debug - Token generated successfully:', {
+      tokenLength: accessToken.length,
+      tokenStart: accessToken.substring(0, 20)
+    });
 
     // Create secure cookies
     const isProduction = process.env.NODE_ENV === 'production';
-    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Strict; Path=/`;
+    const cookieOptions = `HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=${isProduction ? 'Strict' : 'Lax'}; Path=/`;
     
     return {
       statusCode: 200,
