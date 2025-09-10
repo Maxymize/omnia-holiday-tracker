@@ -48,13 +48,16 @@ function getLocale(request: NextRequest): string {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // Skip middleware for API routes, static files, and Next.js internals
+  // Skip middleware for API routes, static files, Next.js internals, and RSC requests
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.includes('.') ||
-    pathname.startsWith('/.netlify/')
+    pathname.startsWith('/.netlify/') ||
+    request.nextUrl.searchParams.has('_rsc') || // Skip RSC requests
+    request.headers.get('RSC') === '1' || // Skip RSC requests
+    request.headers.get('Next-Router-Prefetch') === '1' // Skip prefetch requests
   ) {
     return NextResponse.next();
   }

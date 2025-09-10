@@ -84,12 +84,16 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Apply security headers to all routes except RSC requests
         source: '/:path*',
-        headers: [
+        has: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+            type: 'query',
+            key: '_rsc',
+            value: undefined
+          }
+        ],
+        headers: [
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
@@ -101,6 +105,30 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+      {
+        // Specific headers for RSC requests to allow proper fetching
+        source: '/:path*',
+        has: [
+          {
+            type: 'query',
+            key: '_rsc'
+          }
+        ],
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'RSC, Next-Router-Prefetch, Content-Type',
           },
         ],
       },
