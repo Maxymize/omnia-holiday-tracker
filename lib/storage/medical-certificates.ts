@@ -1,16 +1,44 @@
-import { getStore } from '@netlify/blobs';
+import fs from 'fs/promises';
+import path from 'path';
 import { encryptFile, decryptFile, generateFileId, isValidMedicalCertificateType, isValidFileSize } from '../utils/crypto';
 
 // Storage configuration
 const RETENTION_DAYS = parseInt(process.env.MEDICAL_CERT_RETENTION_DAYS || '2555'); // ~7 years default
+const STORAGE_DIR = path.join(process.cwd(), '.mock-blob-storage', 'medical-certificates');
 
-// Get Netlify Blobs store for medical certificates
-const getBlobs = () => {
-  try {
-    return getStore('medical-certificates');
-  } catch (error) {
-    console.error('Failed to initialize Netlify Blobs store:', error);
-    throw new Error('Storage initialization failed');
+// Check if we're running in Netlify production environment
+const isNetlifyProduction = () => {
+  return !!(process.env.NETLIFY && process.env.CONTEXT === 'production');
+};
+
+// Initialize storage based on environment
+const initializeStorage = async () => {
+  if (isNetlifyProduction()) {
+    try {
+      // Dynamic import for Netlify Blobs (only in production)
+      const { getStore } = await import('@netlify/blobs');
+      console.log('Using Netlify Blobs for production storage');
+      return {
+        type: 'blobs',
+        store: getStore('medical-certificates')
+      };
+    } catch (error) {
+      console.error('Failed to initialize Netlify Blobs, falling back to filesystem:', error);
+      // Fall back to filesystem storage
+      await fs.mkdir(STORAGE_DIR, { recursive: true });
+      return {
+        type: 'filesystem',
+        store: null
+      };
+    }
+  } else {
+    // Development environment - use filesystem
+    console.log('Using filesystem storage for development');
+    await fs.mkdir(STORAGE_DIR, { recursive: true });
+    return {
+      type: 'filesystem',
+      store: null
+    };
   }
 };
 
@@ -53,8 +81,8 @@ export async function storeMedicalCertificate(
       throw new Error('File size exceeds 10MB limit');
     }
 
-    // Initialize Netlify Blobs store
-    const blobs = getBlobs();
+    // Initialize storage
+    const storage = await initializeStorage();
 
     // Generate secure file ID
     const fileId = generateFileId(uploadedBy);
@@ -84,8 +112,15 @@ export async function storeMedicalCertificate(
       metadata
     };
 
-    // Save to Netlify Blobs
-    await blobs.set(fileId, JSON.stringify(storedCertificate));
+    // Save based on storage type
+    if (storage.type === 'blobs' && storage.store) {
+      // Use Netlify Blobs
+      await storage.store.set(fileId, JSON.stringify(storedCertificate));
+    } else {
+      // Use filesystem
+      const filePath = path.join(STORAGE_DIR, `${fileId}.json`);
+      await fs.writeFile(filePath, JSON.stringify(storedCertificate, null, 2));
+    }
 
     console.log('✅ Medical certificate stored securely:', {
       fileId,
@@ -124,31 +159,62 @@ export async function retrieveMedicalCertificate(
   error?: string;
 }> {
   try {
-    // Initialize Netlify Blobs store
-    const blobs = getBlobs();
+    // Initialize storage
+    const storage = await initializeStorage();
+    let storedCertificate: StoredCertificate;
 
-    // Read stored certificate from Netlify Blobs
-    const fileContent = await blobs.get(fileId, { type: 'text' });
-    
-    if (!fileContent) {
-      return {
-        success: false,
-        error: 'Medical certificate not found'
-      };
-    }
-
-    const storedCertificate: StoredCertificate = JSON.parse(fileContent);
-
-    // Check if certificate has expired
-    if (storedCertificate.metadata.expiresAt) {
-      const expirationDate = new Date(storedCertificate.metadata.expiresAt);
-      if (new Date() > expirationDate) {
-        // Certificate expired - delete it from Netlify Blobs
-        await blobs.delete(fileId);
+    if (storage.type === 'blobs' && storage.store) {
+      // Use Netlify Blobs
+      const fileContent = await storage.store.get(fileId, { type: 'text' });
+      
+      if (!fileContent) {
         return {
           success: false,
-          error: 'Medical certificate has expired and been removed'
+          error: 'Medical certificate not found'
         };
+      }
+
+      storedCertificate = JSON.parse(fileContent);
+
+      // Check if certificate has expired
+      if (storedCertificate.metadata.expiresAt) {
+        const expirationDate = new Date(storedCertificate.metadata.expiresAt);
+        if (new Date() > expirationDate) {
+          // Certificate expired - delete it from Netlify Blobs
+          await storage.store.delete(fileId);
+          return {
+            success: false,
+            error: 'Medical certificate has expired and been removed'
+          };
+        }
+      }
+    } else {
+      // Use filesystem
+      const filePath = path.join(STORAGE_DIR, `${fileId}.json`);
+
+      try {
+        await fs.access(filePath);
+      } catch {
+        return {
+          success: false,
+          error: 'Medical certificate not found'
+        };
+      }
+
+      const fileContent = await fs.readFile(filePath, 'utf8');
+      storedCertificate = JSON.parse(fileContent);
+
+      // Check if certificate has expired
+      if (storedCertificate.metadata.expiresAt) {
+        const expirationDate = new Date(storedCertificate.metadata.expiresAt);
+        if (new Date() > expirationDate) {
+          // Certificate expired - delete it
+          await fs.unlink(filePath);
+          return {
+            success: false,
+            error: 'Medical certificate has expired and been removed'
+          };
+        }
       }
     }
 
@@ -185,20 +251,37 @@ export async function deleteMedicalCertificate(
   deletedBy: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Initialize Netlify Blobs store
-    const blobs = getBlobs();
+    // Initialize storage
+    const storage = await initializeStorage();
 
-    // Check if file exists
-    const fileContent = await blobs.get(fileId, { type: 'text' });
-    if (!fileContent) {
-      return {
-        success: false,
-        message: 'Medical certificate not found'
-      };
+    if (storage.type === 'blobs' && storage.store) {
+      // Use Netlify Blobs
+      const fileContent = await storage.store.get(fileId, { type: 'text' });
+      if (!fileContent) {
+        return {
+          success: false,
+          message: 'Medical certificate not found'
+        };
+      }
+
+      // Delete from Netlify Blobs
+      await storage.store.delete(fileId);
+    } else {
+      // Use filesystem
+      const filePath = path.join(STORAGE_DIR, `${fileId}.json`);
+
+      try {
+        await fs.access(filePath);
+      } catch {
+        return {
+          success: false,
+          message: 'Medical certificate not found'
+        };
+      }
+
+      // Delete the file
+      await fs.unlink(filePath);
     }
-
-    // Delete from Netlify Blobs
-    await blobs.delete(fileId);
 
     console.log('✅ Medical certificate deleted:', {
       fileId,
@@ -229,29 +312,50 @@ export async function listMedicalCertificates(): Promise<{
   error?: string;
 }> {
   try {
-    // Initialize Netlify Blobs store
-    const blobs = getBlobs();
-
-    // List all blobs in the medical-certificates store
-    const blobsList = await blobs.list();
-
+    // Initialize storage
+    const storage = await initializeStorage();
     const certificates = [];
-    
-    for (const blobInfo of blobsList.blobs) {
-      try {
-        const fileId = blobInfo.key;
-        const content = await blobs.get(fileId, { type: 'text' });
-        
-        if (content) {
+
+    if (storage.type === 'blobs' && storage.store) {
+      // Use Netlify Blobs
+      const blobsList = await storage.store.list();
+      
+      for (const blobInfo of blobsList.blobs) {
+        try {
+          const fileId = blobInfo.key;
+          const content = await storage.store.get(fileId, { type: 'text' });
+          
+          if (content) {
+            const storedCertificate: StoredCertificate = JSON.parse(content);
+            
+            certificates.push({
+              fileId,
+              metadata: storedCertificate.metadata
+            });
+          }
+        } catch (error) {
+          console.warn('Skipping corrupted certificate blob:', blobInfo.key, error);
+        }
+      }
+    } else {
+      // Use filesystem
+      const files = await fs.readdir(STORAGE_DIR);
+      const jsonFiles = files.filter(file => file.endsWith('.json'));
+
+      for (const file of jsonFiles) {
+        try {
+          const fileId = file.replace('.json', '');
+          const filePath = path.join(STORAGE_DIR, file);
+          const content = await fs.readFile(filePath, 'utf8');
           const storedCertificate: StoredCertificate = JSON.parse(content);
           
           certificates.push({
             fileId,
             metadata: storedCertificate.metadata
           });
+        } catch (error) {
+          console.warn('Skipping corrupted certificate file:', file, error);
         }
-      } catch (error) {
-        console.warn('Skipping corrupted certificate blob:', blobInfo.key, error);
       }
     }
 
