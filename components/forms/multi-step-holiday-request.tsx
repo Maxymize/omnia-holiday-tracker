@@ -345,11 +345,7 @@ export function MultiStepHolidayRequest({
       return;
     }
 
-    // FIXED: Prevent auto-submit - require explicit user confirmation
-    if (!userConfirmedSubmit) {
-      console.log('Submit blocked - user has not explicitly confirmed submission');
-      return;
-    }
+    // Note: userConfirmedSubmit check removed as it caused double-click requirement
 
     if (conflictWarning) {
       toast.error("Risolvi i conflitti di date prima di inviare la richiesta")

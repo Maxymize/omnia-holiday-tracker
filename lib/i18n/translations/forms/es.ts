@@ -233,6 +233,10 @@ const formsEs = {
         title: 'Resumen',
         description: 'Confirmar y enviar',
       },
+      review: {
+        title: 'Revisar Solicitud',
+        description: 'Confirmar y enviar',
+      },
       dates: {
         title: 'Fechas',
         description: 'Seleccionar fechas',
