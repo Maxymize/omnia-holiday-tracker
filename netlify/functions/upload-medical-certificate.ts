@@ -1,6 +1,8 @@
 import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
+import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
+import { storeMedicalCertificate } from '../../lib/storage/medical-certificates';
 
 // Validation schemas
 const uploadCertificateSchema = z.object({
@@ -19,65 +21,74 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// Process file upload
-async function processCertificateUpload(fileName: string, fileType: string, holidayRequestId: string, contentLength: number) {
+// Process file upload with secure encryption
+async function processCertificateUpload(
+  fileName: string, 
+  fileType: string, 
+  holidayRequestId: string, 
+  contentLength: number,
+  fileData: string,
+  uploadedBy: string
+) {
   try {
-    // Validate file type (PDF, DOC, DOCX, JPG, PNG)
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/jpg', 
-      'image/png'
-    ];
-
-    if (!allowedTypes.includes(fileType)) {
-      throw new Error('Tipo di file non supportato. Supportati: PDF, DOC, DOCX, JPG, PNG');
+    // Validate that file data is provided
+    if (!fileData) {
+      throw new Error('Dati del file mancanti');
     }
 
-    // Validate file size (limit to 5MB)
-    const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
-    if (contentLength > maxSizeInBytes) {
-      throw new Error('File troppo grande. Dimensione massima: 5MB');
+    // Convert base64 file data to buffer
+    let fileBuffer: Buffer;
+    try {
+      fileBuffer = Buffer.from(fileData, 'base64');
+    } catch (error) {
+      throw new Error('Dati del file non validi (formato base64 richiesto)');
     }
 
-    // Validate minimum size (at least 1KB)
-    if (contentLength < 1024) {
-      throw new Error('File troppo piccolo. Dimensione minima: 1KB');
+    // Verify file size matches content length
+    if (fileBuffer.length !== contentLength) {
+      throw new Error('Dimensione del file non corrisponde ai dati forniti');
     }
 
-    // Generate unique filename with timestamp
-    const timestamp = Date.now();
-    const fileExtension = fileName.split('.').pop() || 'pdf';
-    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_'); // Sanitize filename
-    const uniqueFileName = `medical_cert_${holidayRequestId}_${timestamp}_${sanitizedFileName}`;
-
-    // For now, we'll store file metadata (in production, upload to cloud storage)
-    // This is a placeholder - in real implementation you would:
-    // 1. Upload to AWS S3, Cloudinary, or similar
-    // 2. Store file URL in database linked to holiday request
-    // 3. Set up proper encryption for sensitive medical documents
-    
-    const fileMetadata = {
-      originalFileName: fileName,
-      uniqueFileName,
+    console.log('🔐 Processing secure upload:', {
+      fileName,
       fileType,
-      fileSize: contentLength,
+      contentLength,
       holidayRequestId,
-      uploadedAt: new Date().toISOString(),
-      status: 'uploaded'
-    };
+      uploadedBy
+    });
+
+    // Store the certificate securely with encryption
+    const storageResult = await storeMedicalCertificate(
+      fileBuffer,
+      fileName,
+      fileType,
+      uploadedBy,
+      holidayRequestId
+    );
+
+    if (!storageResult.success) {
+      throw new Error(`Errore di storage: ${storageResult.message}`);
+    }
+
+    console.log('✅ Certificate stored securely with ID:', storageResult.fileId);
 
     return {
       success: true,
-      fileId: uniqueFileName,
-      message: 'Certificato medico caricato con successo',
-      metadata: fileMetadata
+      fileId: storageResult.fileId,
+      message: 'Certificato medico crittografato e salvato con successo',
+      metadata: {
+        originalFileName: fileName,
+        fileType,
+        fileSize: contentLength,
+        holidayRequestId,
+        uploadedAt: new Date().toISOString(),
+        status: 'encrypted_and_stored',
+        secureFileId: storageResult.fileId
+      }
     };
 
   } catch (error) {
-    console.error('Certificate upload error:', error);
+    console.error('❌ Secure certificate upload error:', error);
     throw error;
   }
 }
@@ -135,10 +146,25 @@ export const handler: Handler = async (event, context) => {
       validatedData.fileName,
       validatedData.fileType,
       validatedData.holidayRequestId,
-      validatedData.contentLength
+      validatedData.contentLength,
+      validatedData.fileData || '',
+      userToken.email
     );
 
     console.log('✅ Certificate upload successful:', uploadResult.fileId);
+
+    // Update the holiday request with the file ID
+    const dbUpdateSuccess = await updateHolidayRequestWithFileId(
+      validatedData.holidayRequestId,
+      uploadResult.fileId
+    );
+
+    if (!dbUpdateSuccess) {
+      console.error('❌ Failed to update holiday request with file ID');
+      throw new Error('Errore durante l\'aggiornamento della richiesta con il certificato medico');
+    }
+
+    console.log('✅ Holiday request updated with certificate:', validatedData.holidayRequestId);
 
     return {
       statusCode: 200,
@@ -161,8 +187,8 @@ export const handler: Handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           error: 'Dati non validi',
-          message: error.errors[0]?.message || 'Errore di validazione',
-          details: error.errors
+          message: error.issues[0]?.message || 'Errore di validazione',
+          details: error.issues
         })
       };
     }

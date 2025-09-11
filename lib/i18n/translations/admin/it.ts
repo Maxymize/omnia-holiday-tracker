@@ -465,6 +465,13 @@ const adminTranslations = {
       title: 'Dettagli Richiesta di Ferie',
       requestDate: 'Data richiesta',
       notes: 'Note',
+      medicalCertificate: 'Certificato Medico',
+      fileUploaded: 'File caricato',
+      certificatePresent: 'Certificato presente',
+      download: 'Scarica',
+      downloadError: 'Errore nel download del certificato',
+      noCertificate: 'Certificato medico non specificato',
+      employeeNotProvided: 'Il dipendente non ha fornito informazioni sul certificato medico',
     },
     rejectModal: {
       message: 'Stai per rifiutare la richiesta di ferie di',

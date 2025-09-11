@@ -7,12 +7,10 @@
 
 import { neon } from '@neondatabase/serverless';
 import { 
-  getUserPreferredLanguage, 
   getUserPreferredLanguageByEmail,
   generateLocalizedEmail,
   generateEmailHTML 
 } from '../../lib/email/language-utils';
-import { Locale } from '../../lib/i18n/config';
 
 export const handler = async (event: any) => {
   const headers = {
@@ -47,7 +45,9 @@ export const handler = async (event: any) => {
     console.log('Holiday data:', holidayData);
 
     const sql = neon(process.env.DATABASE_URL!);
-    const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+    // Use production domain for emails, even in development
+    // This ensures email links always point to production
+    const baseUrl = process.env.SITE_URL || 'https://holiday.omniaelectronics.com';
 
     // Helper function to check if notifications are enabled
     const isNotificationEnabled = async (settingName: string): Promise<boolean> => {

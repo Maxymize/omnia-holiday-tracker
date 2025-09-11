@@ -465,6 +465,13 @@ const adminTranslations = {
       title: 'Holiday Request Details',
       requestDate: 'Request date',
       notes: 'Notes',
+      medicalCertificate: 'Medical Certificate',
+      fileUploaded: 'File uploaded',
+      certificatePresent: 'Certificate present',
+      download: 'Download',
+      downloadError: 'Error downloading certificate',
+      noCertificate: 'Certificate not specified',
+      employeeNotProvided: 'The employee has not provided information about the medical certificate',
     },
     rejectModal: {
       message: 'You are about to reject the holiday request from',

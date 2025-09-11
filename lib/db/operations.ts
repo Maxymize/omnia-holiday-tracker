@@ -826,5 +826,82 @@ export async function createUserWithAudit(
   }
 }
 
+// Get holiday details with employee information for email notifications
+export async function getHolidayWithEmployeeDetails(holidayId: string): Promise<{
+  holiday: Holiday;
+  employee: User;
+} | null> {
+  try {
+    const result = await db
+      .select({
+        // Holiday fields
+        holidayId: holidays.id,
+        holidayStartDate: holidays.startDate,
+        holidayEndDate: holidays.endDate,
+        holidayType: holidays.type,
+        holidayStatus: holidays.status,
+        holidayWorkingDays: holidays.workingDays,
+        holidayNotes: holidays.notes,
+        holidayCreatedAt: holidays.createdAt,
+        holidayApprovedAt: holidays.approvedAt,
+        holidayRejectionReason: holidays.rejectionReason,
+        // Employee fields
+        employeeId: users.id,
+        employeeName: users.name,
+        employeeEmail: users.email,
+        employeeRole: users.role,
+        employeeStatus: users.status,
+        employeeDepartmentId: users.departmentId,
+        employeeHolidayAllowance: users.holidayAllowance,
+        employeePhone: users.phone,
+        employeePreferredLanguage: users.preferredLanguage
+      })
+      .from(holidays)
+      .innerJoin(users, eq(holidays.userId, users.id))
+      .where(eq(holidays.id, holidayId))
+      .limit(1);
+
+    if (!result[0]) {
+      return null;
+    }
+
+    const data = result[0];
+    
+    return {
+      holiday: {
+        id: data.holidayId,
+        userId: data.employeeId,
+        startDate: data.holidayStartDate,
+        endDate: data.holidayEndDate,
+        type: data.holidayType as 'vacation' | 'sick' | 'personal',
+        status: data.holidayStatus as HolidayStatus,
+        workingDays: data.holidayWorkingDays,
+        notes: data.holidayNotes,
+        createdAt: data.holidayCreatedAt,
+        updatedAt: data.holidayCreatedAt, // Using same date for simplicity
+        approvedAt: data.holidayApprovedAt,
+        approvedBy: null, // Will be set separately
+        rejectionReason: data.holidayRejectionReason
+      },
+      employee: {
+        id: data.employeeId,
+        name: data.employeeName,
+        email: data.employeeEmail,
+        role: data.employeeRole as 'admin' | 'employee',
+        status: data.employeeStatus as UserStatus,
+        departmentId: data.employeeDepartmentId,
+        holidayAllowance: data.employeeHolidayAllowance,
+        phone: data.employeePhone,
+        preferredLanguage: data.employeePreferredLanguage as 'it' | 'en' | 'es',
+        createdAt: data.holidayCreatedAt, // Using same date for simplicity
+        updatedAt: data.holidayCreatedAt
+      }
+    };
+  } catch (error) {
+    console.error('Failed to get holiday with employee details:', error);
+    return null;
+  }
+}
+
 // Export the newHolidayRequests array for compatibility
 export const newHolidayRequests: any[] = [];

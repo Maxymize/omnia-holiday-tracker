@@ -442,15 +442,16 @@ export function MultiStepHolidayRequest({
             const uploadData = {
               fileName: selectedFile.name,
               fileType: selectedFile.type,
-              fileContent: fileContent,
-              holidayRequestId: result.data.id
+              fileData: fileContent,
+              holidayRequestId: result.data.id,
+              contentLength: selectedFile.size
             };
 
             console.log('Sending upload data:', { 
               fileName: uploadData.fileName, 
               fileType: uploadData.fileType,
               holidayRequestId: uploadData.holidayRequestId,
-              contentLength: uploadData.fileContent.length 
+              contentLength: uploadData.contentLength 
             });
 
             const uploadResponse = await fetch(`${baseUrl}/.netlify/functions/upload-medical-certificate`, {

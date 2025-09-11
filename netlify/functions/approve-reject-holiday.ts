@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { updateHolidayStatusWithAudit, getUserByEmail } from '../../lib/db/operations';
+import { updateHolidayStatusWithAudit, getUserByEmail, getHolidayWithEmployeeDetails } from '../../lib/db/operations';
 import { z } from 'zod';
 
 // Input validation schema
@@ -84,6 +84,26 @@ export const handler: Handler = async (event, context) => {
 
     // Send email notification to employee (don't block on email failures)
     try {
+      console.log('🔍 Fetching holiday and employee details for email notification...');
+      
+      // Get holiday details with employee information
+      const holidayWithEmployee = await getHolidayWithEmployeeDetails(validatedData.holidayId);
+      
+      if (!holidayWithEmployee) {
+        console.error('❌ Holiday or employee not found for email notification');
+        throw new Error('Holiday or employee not found');
+      }
+      
+      const { holiday, employee } = holidayWithEmployee;
+      
+      console.log('✅ Found employee details for email:', {
+        employeeId: employee.id,
+        employeeName: employee.name,
+        employeeEmail: employee.email,
+        holidayId: holiday.id,
+        holidayDates: `${holiday.startDate} to ${holiday.endDate}`
+      });
+      
       const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
       
       const emailAction = validatedData.action === 'approve' ? 'holiday_request_approved' : 'holiday_request_rejected';
@@ -91,19 +111,23 @@ export const handler: Handler = async (event, context) => {
       const emailNotificationData = {
         action: emailAction,
         userData: {
-          name: 'Employee', // We'd need to fetch employee details properly
-          email: 'employee@domain.com' // We'd need to fetch employee details properly
+          name: employee.name,
+          email: employee.email
         },
         holidayData: {
-          id: validatedData.holidayId,
-          startDate: 'TBD', // We'd need to fetch holiday details
-          endDate: 'TBD',
-          type: 'vacation', // We'd need to fetch holiday details
-          workingDays: 0, // We'd need to fetch holiday details
+          id: holiday.id,
+          startDate: holiday.startDate,
+          endDate: holiday.endDate,
+          type: holiday.type,
+          workingDays: holiday.workingDays,
           status: status,
           approvedBy: adminUser.name,
           rejectedBy: validatedData.action === 'reject' ? adminUser.name : undefined,
           rejectionReason: validatedData.action === 'reject' ? validatedData.notes : undefined
+        },
+        adminData: {
+          name: adminUser.name,
+          email: adminUser.email
         }
       };
 

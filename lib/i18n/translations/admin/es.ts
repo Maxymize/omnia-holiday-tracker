@@ -465,6 +465,13 @@ const adminTranslations = {
       title: 'Detalles de Solicitud de Vacaciones',
       requestDate: 'Fecha de solicitud',
       notes: 'Notas',
+      medicalCertificate: 'Certificado Médico',
+      fileUploaded: 'Archivo subido',
+      certificatePresent: 'Certificado presente',
+      download: 'Descargar',
+      downloadError: 'Error al descargar certificado',
+      noCertificate: 'Certificado médico no especificado',
+      employeeNotProvided: 'El empleado no ha proporcionado información sobre el certificado médico',
     },
     rejectModal: {
       message: 'Estás a punto de rechazar la solicitud de vacaciones de',

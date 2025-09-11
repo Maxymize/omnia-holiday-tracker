@@ -160,6 +160,28 @@ export function HolidayRequestsManagement({
     return filtered;
   }, [requests, searchTerm, statusFilter, typeFilter, sortConfig]);
 
+  // Helper function to extract medical certificate info from notes field
+  const getMedicalCertificateInfo = (request: PendingHolidayRequest): {
+    hasUploadedCertificate: boolean;
+    fileId: string | null;
+    fileName: string | null;
+  } => {
+    if (!request.notes) {
+      return { hasUploadedCertificate: false, fileId: null, fileName: null };
+    }
+    
+    // Look for pattern: "Medical Certificate: {fileId}"
+    const match = request.notes.match(/Medical Certificate:\s*([^\n\r]+)/);
+    if (match) {
+      const fileId = match[1].trim();
+      // Generate a display filename from the fileId
+      const fileName = `medical_cert_${fileId.substring(0, 8)}.pdf`;
+      return { hasUploadedCertificate: true, fileId, fileName };
+    }
+    
+    return { hasUploadedCertificate: false, fileId: null, fileName: null };
+  };
+
   const handleApprove = async (request: PendingHolidayRequest) => {
     // Se la richiesta non è pending, mostra dialog di conferma
     if (request.status !== 'pending') {
@@ -726,21 +748,23 @@ export function HolidayRequestsManagement({
                                   {/* Medical Certificate Section for Sick Leave */}
                                   {selectedRequest.type === 'sick' && (
                                     <div className="border-t pt-4">
-                                      <label className="font-medium text-gray-700">Certificato Medico</label>
+                                      <label className="font-medium text-gray-700">{t('admin.requests.detailsModal.medicalCertificate')}</label>
                                       <div className="mt-2">
-                                        {selectedRequest.medicalCertificateOption === 'upload' && selectedRequest.medicalCertificateFileName ? (
+                                        {(() => {
+                                          const certInfo = getMedicalCertificateInfo(selectedRequest);
+                                          return certInfo.hasUploadedCertificate ? (
                                           <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
                                             <div className="flex items-start space-x-3 min-w-0 flex-1">
                                               <FileText className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                                               <div className="min-w-0 flex-1">
                                                 <p className="text-sm font-medium text-green-800 break-all">
-                                                  File caricato:
+                                                  {t('admin.requests.detailsModal.fileUploaded')}:
                                                 </p>
                                                 <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
-                                                  {selectedRequest.medicalCertificateFileName}
+                                                  {certInfo.fileName}
                                                 </p>
                                                 <p className="text-xs text-green-600 mt-1">
-                                                  Certificato medico presente nel sistema
+                                                  {t('admin.requests.detailsModal.certificatePresent')}
                                                 </p>
                                               </div>
                                             </div>
@@ -749,13 +773,13 @@ export function HolidayRequestsManagement({
                                               variant="outline"
                                               className="text-green-700 border-green-300"
                                               onClick={async () => {
-                                                if ((selectedRequest as any).medicalCertificateFileId) {
+                                                if (certInfo.fileId) {
                                                   try {
                                                     const token = localStorage.getItem('accessToken');
                                                     const baseUrl = window.location.origin;
                                                     
                                                     const response = await fetch(
-                                                      `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${(selectedRequest as any).medicalCertificateFileId}`,
+                                                      `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${certInfo.fileId}`,
                                                       {
                                                         headers: {
                                                           'Authorization': `Bearer ${token}`
@@ -771,7 +795,7 @@ export function HolidayRequestsManagement({
                                                       // Create a download link and click it
                                                       const a = document.createElement('a');
                                                       a.href = url;
-                                                      a.download = selectedRequest.medicalCertificateFileName || 'certificato-medico';
+                                                      a.download = certInfo.fileName || 'certificato-medico.pdf';
                                                       document.body.appendChild(a);
                                                       a.click();
                                                       document.body.removeChild(a);
@@ -779,19 +803,19 @@ export function HolidayRequestsManagement({
                                                       // Clean up the URL
                                                       window.URL.revokeObjectURL(url);
                                                     } else {
-                                                      alert('Errore durante il download del certificato');
+                                                      alert(t('admin.requests.detailsModal.downloadError'));
                                                     }
                                                   } catch (error) {
                                                     console.error('Download error:', error);
-                                                    alert('Errore durante il download del certificato');
+                                                    alert(t('admin.requests.detailsModal.downloadError'));
                                                   }
                                                 } else {
-                                                  alert('File non disponibile nel sistema');
+                                                  alert(t('admin.requests.detailsModal.fileNotAvailable'));
                                                 }
                                               }}
                                             >
                                               <Download className="h-4 w-4 mr-1" />
-                                              Scarica
+                                              {t('admin.requests.detailsModal.download')}
                                             </Button>
                                           </div>
                                         ) : selectedRequest.medicalCertificateOption === 'send_later' ? (
@@ -818,15 +842,16 @@ export function HolidayRequestsManagement({
                                               <AlertTriangle className="h-5 w-5 text-gray-600" />
                                               <div>
                                                 <p className="text-sm font-medium text-gray-800">
-                                                  Certificato medico non specificato
+                                                  {t('admin.requests.detailsModal.noCertificate')}
                                                 </p>
                                                 <p className="text-xs text-gray-600">
-                                                  Il dipendente non ha fornito informazioni sul certificato medico
+                                                  {t('admin.requests.detailsModal.employeeNotProvided')}
                                                 </p>
                                               </div>
                                             </div>
                                           </div>
-                                        )}
+                                        );
+                                        })()}
                                       </div>
                                     </div>
                                   )}
