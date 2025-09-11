@@ -5,6 +5,11 @@
 
 # testing
 /coverage
+/__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
 
 # next.js
 /.next/
@@ -12,6 +17,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -21,10 +27,31 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # local env files
 .env*.local
 .env
+.env.development
+.env.staging
+.env.production
+
+# sensitive files
+*.key
+*.p12
+*.p8
+*.cer
+*.crt
+*.pem
+config.json
+secrets.json
+
+# API keys and credentials (additional protection)
+**/api-keys.*
+**/credentials.*
+**/secrets.*
+**/*.key
+**/*.secret
 
 # vercel
 .vercel
@@ -36,6 +63,7 @@ next-env.d.ts
 # netlify
 .netlify
 netlify.toml
+functions-serve/
 
 # IDE
 .vscode/
@@ -43,10 +71,120 @@ netlify.toml
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
 
 # OS
 Thumbs.db
 desktop.ini
+*.DS_Store
 
-# Examples
+# Examples and documentation (development only)
 /examples
+/docs-temp
+
+# Test and development files
+test-*.js
+test-*.ts
+*-test.js
+*-test.ts
+debug-*.js
+debug-*.ts
+temp-*.js
+temp-*.ts
+backup-*
+*.backup
+*.bak
+*.orig
+
+# Database and migration files (sensitive)
+*.dump
+*.sql.backup
+database-backup*
+migration-test*
+
+# Email testing files (contain sensitive data)
+email-test*
+*-email-test.*
+direct-email-test.*
+test-email-*
+run-email-test.*
+
+# Scripts directory test files
+scripts/test-*
+scripts/*-test.*
+scripts/debug-*
+scripts/backup-*
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.sass-cache/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+lib-cov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
