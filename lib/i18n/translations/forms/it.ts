@@ -25,8 +25,10 @@ const formsIt = {
         typeDescription: 'Tipo di permesso',
         notes: 'Note Aggiuntive',
         notesDescription: 'Aggiungi dettagli',
-        review: 'Riepilogo',
-        reviewDescription: 'Conferma e invia'
+        review: {
+          title: 'Riepilogo',
+          description: 'Conferma e invia'
+        }
       },
       stepTitles: {
         selectPeriod: 'Seleziona il Periodo',

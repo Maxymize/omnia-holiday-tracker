@@ -25,8 +25,10 @@ const formsEs = {
         typeDescription: 'Tipo de ausencia',
         notes: 'Notas Adicionales',
         notesDescription: 'Añadir detalles',
-        review: 'Resumen',
-        reviewDescription: 'Confirmar y enviar'
+        review: {
+          title: 'Resumen',
+          description: 'Confirmar y enviar'
+        }
       },
       stepTitles: {
         selectPeriod: 'Seleccionar Período',

@@ -25,8 +25,10 @@ const formsEn = {
         typeDescription: 'Type of leave',
         notes: 'Additional Notes',
         notesDescription: 'Add details',
-        review: 'Summary',
-        reviewDescription: 'Confirm and submit'
+        review: {
+          title: 'Summary',
+          description: 'Confirm and submit'
+        }
       },
       stepTitles: {
         selectPeriod: 'Select Period',
