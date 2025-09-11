@@ -45,28 +45,49 @@ export async function storeMedicalCertificate(
   holidayRequestId: string
 ): Promise<{ fileId: string; success: boolean; message: string }> {
   try {
+    console.log('📥 Starting medical certificate storage:', {
+      originalName,
+      mimeType,
+      uploadedBy,
+      holidayRequestId,
+      fileSize: fileBuffer.length,
+      storageDir: STORAGE_DIR,
+      retentionDays: RETENTION_DAYS
+    });
+
     // Validate file type
     if (!isValidMedicalCertificateType(mimeType)) {
+      console.error('❌ Invalid file type:', mimeType);
       throw new Error(`Invalid file type: ${mimeType}. Allowed types: PDF, JPG, PNG, GIF, WebP`);
     }
+    console.log('✅ File type validation passed');
 
     // Validate file size
     if (!isValidFileSize(fileBuffer.length)) {
+      console.error('❌ File size too large:', fileBuffer.length);
       throw new Error('File size exceeds 10MB limit');
     }
+    console.log('✅ File size validation passed');
 
     // Ensure storage directory exists
+    console.log('📁 Creating storage directory:', STORAGE_DIR);
     await ensureStorageDir();
+    console.log('✅ Storage directory ready');
 
     // Generate secure file ID
+    console.log('🔑 Generating file ID...');
     const fileId = generateFileId(uploadedBy);
+    console.log('✅ File ID generated:', fileId);
 
     // Encrypt the file
+    console.log('🔐 Starting encryption...');
     const { encrypted, iv } = encryptFile(fileBuffer);
+    console.log('✅ Encryption completed, IV:', iv);
 
     // Calculate expiration date
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + RETENTION_DAYS);
+    console.log('📅 Expiration date set:', expiresAt.toISOString());
 
     // Create metadata
     const metadata: MedicalCertificateMetadata = {

@@ -31,8 +31,16 @@ async function processCertificateUpload(
   uploadedBy: string
 ) {
   try {
+    // Debug: Log environment check
+    console.log('🔍 Environment debug:', {
+      hasEncryptionKey: !!process.env.MEDICAL_CERT_ENCRYPTION_KEY,
+      hasRetentionDays: !!process.env.MEDICAL_CERT_RETENTION_DAYS,
+      nodeEnv: process.env.NODE_ENV
+    });
+
     // Validate that file data is provided
     if (!fileData) {
+      console.error('❌ File data missing in request');
       throw new Error('Dati del file mancanti');
     }
 
@@ -40,12 +48,15 @@ async function processCertificateUpload(
     let fileBuffer: Buffer;
     try {
       fileBuffer = Buffer.from(fileData, 'base64');
+      console.log('✅ Base64 conversion successful, buffer size:', fileBuffer.length);
     } catch (error) {
+      console.error('❌ Base64 conversion failed:', error);
       throw new Error('Dati del file non validi (formato base64 richiesto)');
     }
 
     // Verify file size matches content length
     if (fileBuffer.length !== contentLength) {
+      console.error('❌ Size mismatch:', { bufferLength: fileBuffer.length, expectedLength: contentLength });
       throw new Error('Dimensione del file non corrisponde ai dati forniti');
     }
 
@@ -54,7 +65,8 @@ async function processCertificateUpload(
       fileType,
       contentLength,
       holidayRequestId,
-      uploadedBy
+      uploadedBy,
+      actualBufferSize: fileBuffer.length
     });
 
     // Store the certificate securely with encryption
