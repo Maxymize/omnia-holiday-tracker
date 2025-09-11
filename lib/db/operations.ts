@@ -887,11 +887,14 @@ export async function getHolidayWithEmployeeDetails(holidayId: string): Promise<
         id: data.employeeId,
         name: data.employeeName,
         email: data.employeeEmail,
+        passwordHash: '', // Not needed for display purposes
         role: data.employeeRole as 'admin' | 'employee',
         status: data.employeeStatus as UserStatus,
         departmentId: data.employeeDepartmentId,
         holidayAllowance: data.employeeHolidayAllowance,
         phone: data.employeePhone,
+        avatarUrl: null, // Will be populated from actual user data if available
+        jobTitle: null, // Will be populated from actual user data if available
         preferredLanguage: data.employeePreferredLanguage as 'it' | 'en' | 'es',
         createdAt: data.holidayCreatedAt, // Using same date for simplicity
         updatedAt: data.holidayCreatedAt
