@@ -67,6 +67,9 @@ const dashboardTranslations = {
         roleLabel: 'Role',
         roleHint: 'Role can only be modified by administrators',
         superAdmin: 'Super Admin',
+        languageLabel: 'Preferred Language',
+        languagePlaceholder: 'Select preferred language',
+        languageHint: 'Language used for emails and user interface',
       },
       password: {
         section: 'Change Password (optional)',

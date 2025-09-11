@@ -7,6 +7,7 @@ import { LanguageSelector } from '@/components/layout/language-selector';
 import { LoginLogoDisplay } from '@/components/login/login-logo-display';
 import { AnimatedBackground } from '@/components/login/animated-background';
 import { useCompanyName } from '@/lib/hooks/useCompanyName';
+import { Globe } from 'lucide-react';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -15,7 +16,8 @@ export default function RegisterPage() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    preferredLanguage: 'it' as 'it' | 'en' | 'es'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,6 +28,13 @@ export default function RegisterPage() {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredLanguage: e.target.value as 'it' | 'en' | 'es'
     }));
   };
 
@@ -57,7 +66,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          preferredLanguage: formData.preferredLanguage
         })
       });
 
@@ -69,7 +79,7 @@ export default function RegisterPage() {
 
       // Registration successful
       setSuccess(true);
-      setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+      setFormData({ name: '', email: '', password: '', confirmPassword: '', preferredLanguage: 'it' });
     } catch (err: any) {
       setError(err.message || 'Errore durante la registrazione. Riprova.');
     } finally {
@@ -201,12 +211,32 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder={t('auth.register.confirmPassword')}
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 disabled={isLoading}
               />
+            </div>
+            <div>
+              <label htmlFor="preferredLanguage" className="sr-only">
+                {t('dashboard.profile.modal.fields.languageLabel')}
+              </label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  id="preferredLanguage"
+                  name="preferredLanguage"
+                  value={formData.preferredLanguage}
+                  onChange={handleLanguageChange}
+                  disabled={isLoading}
+                  className="appearance-none relative block w-full pl-10 pr-8 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                >
+                  <option value="it">🇮🇹 Italiano</option>
+                  <option value="en">🇬🇧 English</option>
+                  <option value="es">🇪🇸 Español</option>
+                </select>
+              </div>
             </div>
           </div>
 

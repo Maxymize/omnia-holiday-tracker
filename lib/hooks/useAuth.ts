@@ -15,6 +15,7 @@ interface User {
   phone?: string;
   avatarUrl?: string;
   jobTitle?: string;
+  preferredLanguage?: 'it' | 'en' | 'es';
 }
 
 interface AuthState {

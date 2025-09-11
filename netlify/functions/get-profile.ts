@@ -19,6 +19,7 @@ const updateProfileSchema = z.object({
   departmentId: z.string().uuid('ID dipartimento non valido').optional().nullable(),
   avatarUrl: z.string().optional().nullable().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, { message: 'URL avatar non valido' }),
   jobTitle: z.string().min(2, 'Mansione deve avere almeno 2 caratteri').max(100, 'Mansione non può superare 100 caratteri').optional().nullable(),
+  preferredLanguage: z.enum(['it', 'en', 'es']).optional(),
   currentPassword: z.string().min(1, 'Password attuale richiesta').optional(),
   newPassword: z.string().min(8, 'Nuova password deve avere almeno 8 caratteri').optional(),
 });
@@ -48,6 +49,7 @@ async function getProfile(userId: string) {
       phone: users.phone,
       avatarUrl: users.avatarUrl,
       jobTitle: users.jobTitle,
+      preferredLanguage: users.preferredLanguage,
       createdAt: users.createdAt,
       updatedAt: users.updatedAt
     })
@@ -75,6 +77,7 @@ async function getProfile(userId: string) {
     phone: user.phone,
     avatarUrl: user.avatarUrl,
     jobTitle: user.jobTitle,
+    preferredLanguage: user.preferredLanguage,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };
@@ -133,6 +136,11 @@ async function updateProfile(userId: string, updateData: any) {
     updateFields.departmentId = updateData.departmentId || null;
   }
 
+  // Update preferred language if provided
+  if (updateData.preferredLanguage) {
+    updateFields.preferredLanguage = updateData.preferredLanguage;
+  }
+
   // Update password if provided
   if (updateData.newPassword && updateData.currentPassword) {
     // Verify current password
@@ -174,7 +182,7 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
-    // Verify token for all operations
+    // Verify authentication (supports both cookies and Authorization header)
     const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
 

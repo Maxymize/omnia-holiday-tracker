@@ -15,6 +15,13 @@
       "when": 1755871903512,
       "tag": "0001_abandoned_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757595386803,
+      "tag": "0002_fast_meltdown",
+      "breakpoints": true
     }
   ]
 }

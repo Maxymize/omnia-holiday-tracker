@@ -11,6 +11,7 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Nome deve avere almeno 2 caratteri').max(100),
   email: z.string().email('Email non valida').toLowerCase(),
   password: z.string().min(8, 'Password deve avere almeno 8 caratteri'),
+  preferredLanguage: z.enum(['it', 'en', 'es']).default('it'),
 });
 
 // CORS headers
@@ -128,7 +129,8 @@ export const handler: Handler = async (event, context) => {
       email: validatedData.email,
       role: 'employee',
       status: 'pending',
-      holidayAllowance: defaultHolidayAllowance
+      holidayAllowance: defaultHolidayAllowance,
+      preferredLanguage: validatedData.preferredLanguage
     });
     
     const newUser = await createUser({
@@ -138,12 +140,47 @@ export const handler: Handler = async (event, context) => {
       role: 'employee',
       status: 'pending', // Requires admin approval
       holidayAllowance: defaultHolidayAllowance, // From system settings (default 25)
+      preferredLanguage: validatedData.preferredLanguage,
     });
     
     console.log('User created successfully:', { id: newUser.id, email: newUser.email, status: newUser.status });
 
     // Log registration for audit trail
     console.log(`New user registration: ${validatedData.email} at ${new Date().toISOString()}`);
+
+    // Send email notification to admin (don't block registration if email fails)
+    try {
+      const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+      
+      const emailNotificationData = {
+        action: 'employee_registration',
+        userData: {
+          name: newUser.name,
+          email: newUser.email,
+          department: null, // New users don't have departments yet
+          jobTitle: null,
+          phone: null,
+          holidayAllowance: defaultHolidayAllowance
+        }
+      };
+
+      console.log('Sending email notification for new employee registration...');
+      
+      const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailNotificationData)
+      });
+
+      if (emailResponse.ok) {
+        console.log('✅ Registration email notification sent successfully');
+      } else {
+        const emailError = await emailResponse.text();
+        console.error('⚠️ Failed to send registration email notification:', emailError);
+      }
+    } catch (emailError) {
+      console.error('⚠️ Email notification error (continuing with registration):', emailError);
+    }
 
     // Return success response (don't expose user details)
     return {

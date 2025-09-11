@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToasts } from '@/lib/utils/toast';
-import { User, Camera, Save, X, Eye, EyeOff, Building2, Mail, Phone, Shield, UserCog, Trash2 } from 'lucide-react';
+import { User, Camera, Save, X, Eye, EyeOff, Building2, Mail, Phone, Shield, UserCog, Trash2, Globe } from 'lucide-react';
 import { z } from 'zod';
 
 interface Department {
@@ -69,6 +69,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
     phone: '',
     jobTitle: '',
     departmentId: '',
+    preferredLanguage: 'it',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -111,6 +112,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
             phone: freshUserData.phone || '',
             jobTitle: freshUserData.jobTitle || '',
             departmentId: freshUserData.departmentId || 'none',
+            preferredLanguage: freshUserData.preferredLanguage || 'it',
             currentPassword: '',
             newPassword: '',
             confirmPassword: ''
@@ -134,6 +136,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
           phone: user.phone || '',
           jobTitle: user.jobTitle || '',
           departmentId: user.departmentId || 'none',
+          preferredLanguage: user.preferredLanguage || 'it',
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
@@ -156,6 +159,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
           phone: user.phone || '',
           jobTitle: user.jobTitle || '',
           departmentId: user.departmentId || 'none',
+          preferredLanguage: user.preferredLanguage || 'it',
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
@@ -320,6 +324,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         phone: validatedData.phone || null,
         jobTitle: validatedData.jobTitle || null,
         departmentId: validatedData.departmentId === 'none' ? null : validatedData.departmentId,
+        preferredLanguage: formData.preferredLanguage,
         avatarUrl: avatarUrl || null
       };
 
@@ -347,6 +352,14 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         await refreshUserData();
         onProfileUpdate();
         onClose();
+
+        // If language was changed, trigger page reload to activate middleware redirect
+        if (formData.preferredLanguage !== user?.preferredLanguage) {
+          // Small delay to ensure modal closes and toast is visible
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
       } else {
         throw new Error(result.error || 'Errore durante l\'aggiornamento');
       }
@@ -432,6 +445,30 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
               {t('dashboard.profile.modal.avatar.clickCamera')}<br/>
               {(avatarPreview || user.avatarUrl) && <>{t('dashboard.profile.modal.avatar.clickTrash')}<br/></>}
               {t('dashboard.profile.modal.avatar.supportedFormats')}
+            </p>
+          </div>
+
+          {/* Language Preference */}
+          <div className="space-y-2">
+            <Label htmlFor="preferredLanguage" className="flex items-center space-x-2">
+              <Globe className="h-4 w-4" />
+              <span>{t('dashboard.profile.modal.fields.languageLabel')}</span>
+            </Label>
+            <Select 
+              value={formData.preferredLanguage} 
+              onValueChange={(value) => handleInputChange('preferredLanguage', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('dashboard.profile.modal.fields.languagePlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                <SelectItem value="en">🇬🇧 English</SelectItem>
+                <SelectItem value="es">🇪🇸 Español</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {t('dashboard.profile.modal.fields.languageHint')}
             </p>
           </div>
 

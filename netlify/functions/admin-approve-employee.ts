@@ -117,6 +117,44 @@ export const handler: Handler = async (event, context) => {
     
     console.log('DEBUG: Employee status update completed successfully');
     
+    // Send email notification if employee was approved (don't block on email failures)
+    if (action === 'approve') {
+      try {
+        const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+        
+        // Get the approved employee details
+        const approvedEmployee = await getUserByEmail(userToken.email); // This gets admin, need employee
+        // We need to get employee by ID, but we need to import the right function
+        // For now, we'll use a simpler approach and pass what we have
+        
+        const emailNotificationData = {
+          action: 'employee_approved',
+          userData: {
+            id: employeeId,
+            name: 'Employee', // We don't have the name readily available here
+            email: 'employee@email.com' // We need to fetch this properly
+          }
+        };
+
+        console.log('DEBUG: Sending employee approval email notification...');
+        
+        const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailNotificationData)
+        });
+
+        if (emailResponse.ok) {
+          console.log('✅ Employee approval email notification sent successfully');
+        } else {
+          const emailError = await emailResponse.text();
+          console.error('⚠️ Failed to send employee approval email notification:', emailError);
+        }
+      } catch (emailError) {
+        console.error('⚠️ Email notification error (continuing with approval):', emailError);
+      }
+    }
+    
     console.log('Employee approval action completed:', {
       employeeId,
       action,

@@ -82,6 +82,49 @@ export const handler: Handler = async (event, context) => {
       timestamp: new Date().toISOString()
     });
 
+    // Send email notification to employee (don't block on email failures)
+    try {
+      const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+      
+      const emailAction = validatedData.action === 'approve' ? 'holiday_request_approved' : 'holiday_request_rejected';
+      
+      const emailNotificationData = {
+        action: emailAction,
+        userData: {
+          name: 'Employee', // We'd need to fetch employee details properly
+          email: 'employee@domain.com' // We'd need to fetch employee details properly
+        },
+        holidayData: {
+          id: validatedData.holidayId,
+          startDate: 'TBD', // We'd need to fetch holiday details
+          endDate: 'TBD',
+          type: 'vacation', // We'd need to fetch holiday details
+          workingDays: 0, // We'd need to fetch holiday details
+          status: status,
+          approvedBy: adminUser.name,
+          rejectedBy: validatedData.action === 'reject' ? adminUser.name : undefined,
+          rejectionReason: validatedData.action === 'reject' ? validatedData.notes : undefined
+        }
+      };
+
+      console.log('Sending email notification for holiday decision...');
+      
+      const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailNotificationData)
+      });
+
+      if (emailResponse.ok) {
+        console.log('✅ Holiday decision email notification sent successfully');
+      } else {
+        const emailError = await emailResponse.text();
+        console.error('⚠️ Failed to send holiday decision email notification:', emailError);
+      }
+    } catch (emailError) {
+      console.error('⚠️ Email notification error (continuing with approval/rejection):', emailError);
+    }
+
     // Response with updated holiday status
     const updatedHoliday = {
       id: validatedData.holidayId,

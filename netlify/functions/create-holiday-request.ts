@@ -285,6 +285,45 @@ export const handler: Handler = async (event, context) => {
 
     console.log('New holiday request created in database:', newHoliday.id);
 
+    // Send email notification for new holiday request (don't block on email failures)
+    try {
+      const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+      
+      const emailNotificationData = {
+        action: 'holiday_request_submitted',
+        userData: {
+          name: user.name,
+          email: user.email,
+          department: user.departmentId // This might be null
+        },
+        holidayData: {
+          startDate: validatedData.startDate,
+          endDate: validatedData.endDate,
+          type: validatedData.type,
+          workingDays: workingDays,
+          notes: validatedData.notes,
+          status: initialStatus
+        }
+      };
+
+      console.log('Sending email notification for new holiday request...');
+      
+      const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailNotificationData)
+      });
+
+      if (emailResponse.ok) {
+        console.log('✅ Holiday request email notification sent successfully');
+      } else {
+        const emailError = await emailResponse.text();
+        console.error('⚠️ Failed to send holiday request email notification:', emailError);
+      }
+    } catch (emailError) {
+      console.error('⚠️ Email notification error (continuing with request creation):', emailError);
+    }
+
     // Add audit log for auto-approval if applicable
     if (initialStatus === 'approved') {
       try {

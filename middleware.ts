@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from '@/lib/i18n/config';
 import { getUserFromToken } from '@/lib/auth/jwt-utils';
+import { getUserById } from '@/lib/db/helpers';
 
 // Supported locales
 const supportedLocales = locales;
@@ -10,6 +11,22 @@ const publicRoutes = ['/', '/login', '/register', '/api/auth/login', '/api/auth/
 
 // Admin-only routes
 const adminRoutes = ['/admin'];
+
+// Function to get user's preferred language from database
+async function getUserPreferredLanguage(authToken?: string): Promise<string | null> {
+  if (!authToken) return null;
+  
+  try {
+    const userInfo = await getUserFromToken(undefined, authToken);
+    if (!userInfo?.userId) return null;
+    
+    const user = await getUserById(userInfo.userId);
+    return user?.preferredLanguage || null;
+  } catch (error) {
+    console.log('Failed to get user preferred language:', error);
+    return null;
+  }
+}
 
 // Function to get locale from request
 function getLocale(request: NextRequest): string {
@@ -156,6 +173,30 @@ export async function middleware(request: NextRequest) {
       console.log(`🚫 Non-admin user ${userInfo.email} trying to access admin route`);
       // Redirect non-admin users to employee dashboard
       return NextResponse.redirect(new URL(`/${locale}/employee-dashboard`, request.url));
+    }
+
+    // Check if user has a preferred language different from current locale
+    try {
+      const userPreferredLanguage = await getUserPreferredLanguage(authToken);
+      if (userPreferredLanguage && userPreferredLanguage !== locale && supportedLocales.includes(userPreferredLanguage as any)) {
+        console.log(`🌍 Redirecting user to preferred language: ${userPreferredLanguage} (current: ${locale})`);
+        
+        // Redirect to the same path but with user's preferred language
+        const redirectUrl = new URL(`/${userPreferredLanguage}${pathWithoutLocale}${search}`, request.url);
+        const response = NextResponse.redirect(redirectUrl);
+        
+        // Update locale cookie to match user preference
+        response.cookies.set('locale', userPreferredLanguage, {
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+          httpOnly: true,
+          sameSite: 'lax',
+        });
+        
+        return response;
+      }
+    } catch (error) {
+      console.log('Error checking user preferred language:', error);
+      // Continue without redirecting if there's an error
     }
 
     // Authentication successful - continue

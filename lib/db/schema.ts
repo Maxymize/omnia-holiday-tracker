@@ -6,6 +6,7 @@ export const userRoleEnum = pgEnum('user_role', ['employee', 'admin']);
 export const userStatusEnum = pgEnum('user_status', ['pending', 'active', 'inactive']);
 export const holidayTypeEnum = pgEnum('holiday_type', ['vacation', 'sick', 'personal']);
 export const holidayStatusEnum = pgEnum('holiday_status', ['pending', 'approved', 'rejected', 'cancelled']);
+export const languageEnum = pgEnum('language', ['it', 'en', 'es']);
 
 // Departments Table (defined first to avoid circular reference)
 export const departments = pgTable('departments', {
@@ -30,6 +31,7 @@ export const users = pgTable('users', {
   phone: text('phone'), // Optional phone number
   avatarUrl: text('avatar_url'), // Optional avatar image URL
   jobTitle: text('job_title'), // Optional job title/position (e.g., Project Manager, CEO, Developer)
+  preferredLanguage: languageEnum('preferred_language').notNull().default('it'), // User's preferred language for emails and UI
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -116,12 +118,39 @@ export const settingsRelations = relations(settings, ({ one }) => ({
   }),
 }));
 
+// Email System Tables
+export const emailStatusEnum = pgEnum('email_status', ['pending', 'sent', 'failed']);
+
+export const emailSettings = pgTable('email_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  settingName: text('setting_name').notNull().unique(),
+  isEnabled: boolean('is_enabled').notNull().default(true),
+  settingValue: text('setting_value'),
+  updatedBy: uuid('updated_by').references(() => users.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const emailQueue = pgTable('email_queue', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  recipientEmail: text('recipient_email').notNull(),
+  subject: text('subject').notNull(),
+  content: text('content').notNull(),
+  templateName: text('template_name'),
+  status: emailStatusEnum('status').notNull().default('pending'),
+  scheduledFor: timestamp('scheduled_for').defaultNow(),
+  sentAt: timestamp('sent_at'),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // Audit Log Table for GDPR compliance
 export const auditLogActionEnum = pgEnum('audit_log_action', [
   'user_created', 'user_updated', 'user_deleted', 'user_status_changed',
   'holiday_created', 'holiday_updated', 'holiday_approved', 'holiday_rejected', 'holiday_deleted',
   'department_created', 'department_updated', 'department_deleted',
-  'setting_updated', 'employee_allowance_updated', 'login_attempt', 'data_export', 'data_deletion'
+  'setting_updated', 'employee_allowance_updated', 'login_attempt', 'data_export', 'data_deletion',
+  'email_sent', 'email_failed' // Added email audit actions
 ]);
 
 export const auditLogs = pgTable('audit_logs', {
