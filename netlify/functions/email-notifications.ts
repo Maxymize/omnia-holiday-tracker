@@ -442,46 +442,49 @@ export const handler = async (event: any) => {
       console.log('📧 Processing holiday starting reminder');
       
       const adminEmail = await getAdminEmail();
-      const startDate = new Date(holidayData.startDate).toLocaleDateString('it-IT');
+      
+      // Get admin's preferred language
+      const adminLanguage = await getUserPreferredLanguageByEmail(adminEmail);
+      console.log(`🌍 Admin language detected: ${adminLanguage}`);
+      
+      // Format dates according to locale
+      const startDate = new Date(holidayData.startDate).toLocaleDateString(
+        adminLanguage === 'en' ? 'en-US' : adminLanguage === 'es' ? 'es-ES' : 'it-IT'
+      );
+      
+      // Generate localized email content
+      const localizedEmail = generateLocalizedEmail(
+        adminLanguage, 
+        'holiday_starting_reminder',
+        { 
+          userData, 
+          holidayData: {
+            ...holidayData,
+            startDate
+          },
+          adminData: { name: 'Admin' }
+        }
+      );
+      
+      const htmlContent = generateEmailHTML(
+        localizedEmail,
+        'holiday_starting_reminder',
+        { 
+          userData, 
+          holidayData: {
+            ...holidayData,
+            startDate
+          },
+          adminData: { name: 'Admin' }
+        },
+        baseUrl
+      );
       
       const emailData = {
         action: 'send_immediate',
         to: adminEmail,
-        subject: `🏖️ Promemoria: ${userData.name} inizia le ferie domani`,
-        htmlContent: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-              .container { max-width: 600px; margin: 0 auto; }
-              .header { background: #f59e0b; color: white; padding: 20px; text-align: center; }
-              .content { padding: 20px; background: #f8f9fa; }
-              .reminder-box { background: #fef3c7; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #f59e0b; }
-              .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>⏰ Promemoria Ferie</h1>
-              </div>
-              <div class="content">
-                <div class="reminder-box">
-                  <h3>🏖️ Ferie in partenza</h3>
-                  <p><strong>${userData.name}</strong> inizia le ferie il <strong>${startDate}</strong></p>
-                </div>
-                <p>Assicurati che tutto sia organizzato per coprire le sue responsabilità durante l'assenza.</p>
-              </div>
-              <div class="footer">
-                <p>&copy; 2025 OmniaServices. All rights reserved.</p>
-                <p>Promemoria automatico da OMNIA HOLIDAY TRACKER.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `
+        subject: localizedEmail.subject,
+        htmlContent: htmlContent
       };
       
       const { emailResult } = await sendEmail(emailData);

@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { locales, localeNames } from '@/lib/i18n/config';
-import { addLocaleToPathname } from '@/lib/i18n/utils';
 
 interface LanguageSwitcherProps {
   className?: string;
@@ -15,13 +14,35 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const router = useRouter();
 
   const handleLanguageChange = (newLocale: string) => {
-    const newPathname = addLocaleToPathname(pathname, newLocale);
+    console.log('🎯 LanguageSwitcher clicked:', { currentLocale: locale, newLocale, pathname });
     
-    // Set locale cookie
-    document.cookie = `locale=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    // Import session language functions
+    const setSessionLanguage = (language: string) => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('session_language', language);
+        sessionStorage.setItem('language_override', 'true');
+      }
+    };
+
+    // Set session language override
+    setSessionLanguage(newLocale);
     
-    // Navigate to new locale
-    router.push(newPathname);
+    // Set cookies for session language (temporary preference)
+    document.cookie = `session-language=${newLocale}; path=/; max-age=${60 * 60 * 24 * 30}`;
+    document.cookie = `language-override=true; path=/; max-age=${60 * 60 * 24 * 30}`;
+    
+    console.log('🍪 LanguageSwitcher cookies set:', {
+      sessionLanguage: newLocale,
+      override: true,
+      allCookies: document.cookie
+    });
+
+    const segments = pathname.split('/');
+    segments[1] = newLocale;
+    const newPath = segments.join('/');
+    
+    console.log('🚀 LanguageSwitcher navigating to:', newPath);
+    router.push(newPath);
   };
 
   return (

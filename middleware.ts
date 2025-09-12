@@ -40,7 +40,15 @@ function getLocale(request: NextRequest): string {
     return pathname.split('/')[1];
   }
 
-  // Try to get locale from cookie
+  // Check for session language override first (temporary preference)
+  const sessionLanguage = request.cookies.get('session-language')?.value;
+  const hasOverride = request.cookies.get('language-override')?.value === 'true';
+  
+  if (hasOverride && sessionLanguage && supportedLocales.includes(sessionLanguage as any)) {
+    return sessionLanguage;
+  }
+
+  // Try to get locale from cookie (persistent preference)
   const localeCookie = request.cookies.get('locale')?.value;
   if (localeCookie && supportedLocales.includes(localeCookie as any)) {
     return localeCookie;
@@ -176,23 +184,31 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check if user has a preferred language different from current locale
+    // BUT only redirect if user hasn't manually overridden language
     try {
-      const userPreferredLanguage = await getUserPreferredLanguage(authToken);
-      if (userPreferredLanguage && userPreferredLanguage !== locale && supportedLocales.includes(userPreferredLanguage as any)) {
-        console.log(`🌍 Redirecting user to preferred language: ${userPreferredLanguage} (current: ${locale})`);
-        
-        // Redirect to the same path but with user's preferred language
-        const redirectUrl = new URL(`/${userPreferredLanguage}${pathWithoutLocale}${search}`, request.url);
-        const response = NextResponse.redirect(redirectUrl);
-        
-        // Update locale cookie to match user preference
-        response.cookies.set('locale', userPreferredLanguage, {
-          maxAge: 60 * 60 * 24 * 365, // 1 year
-          httpOnly: true,
-          sameSite: 'lax',
-        });
-        
-        return response;
+      const sessionLanguage = request.cookies.get('session-language')?.value;
+      const hasOverride = request.cookies.get('language-override')?.value === 'true';
+      
+      if (!hasOverride) { // Only check profile preference if no session override
+        const userPreferredLanguage = await getUserPreferredLanguage(authToken);
+        if (userPreferredLanguage && userPreferredLanguage !== locale && supportedLocales.includes(userPreferredLanguage as any)) {
+          console.log(`🌍 Redirecting user to profile preferred language: ${userPreferredLanguage} (current: ${locale})`);
+          
+          // Redirect to the same path but with user's preferred language
+          const redirectUrl = new URL(`/${userPreferredLanguage}${pathWithoutLocale}${search}`, request.url);
+          const response = NextResponse.redirect(redirectUrl);
+          
+          // Update locale cookie to match user preference
+          response.cookies.set('locale', userPreferredLanguage, {
+            maxAge: 60 * 60 * 24 * 365, // 1 year
+            httpOnly: true,
+            sameSite: 'lax',
+          });
+          
+          return response;
+        }
+      } else {
+        console.log(`🎯 Session language override active: ${sessionLanguage} (ignoring profile preference)`);
       }
     } catch (error) {
       console.log('Error checking user preferred language:', error);

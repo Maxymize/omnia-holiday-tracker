@@ -499,69 +499,241 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
         </SettingCard>
       </div>
 
-      {/* Notification Settings */}
+      {/* Email Notification Settings */}
       <div className="mt-6">
         <SettingCard
           title={t('admin.settings.notifications.title')}
           description={t('admin.settings.notifications.description')}
           icon={Bell}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="email-notifications">{t('admin.settings.notifications.email')}</Label>
-                  <p className="text-xs text-gray-500">
-                    {t('admin.settings.notifications.emailDescription')}
-                  </p>
+          <div className="space-y-8">
+            {/* Admin Notifications Section */}
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
-                <StatusButton
-                  enabled={localSettings['notifications.email_enabled'] ?? false}
-                  onToggle={(enabled) => handleSettingChange('notifications.email_enabled', enabled)}
-                />
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {t('admin.settings.notifications.adminNotifications')}
+                  </h4>
+                  <p className="text-sm text-gray-600">Notifiche inviate agli amministratori</p>
+                </div>
               </div>
-
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="browser-notifications">{t('admin.settings.notifications.browser')}</Label>
-                  <p className="text-xs text-gray-500">
-                    {t('admin.settings.notifications.browserDescription')}
-                  </p>
+              
+              <div className="space-y-6">
+                {/* Employee Registration */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.employeeRegistration')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.employeeRegistrationDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.employee_registration'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.employee_registration', enabled)}
+                  />
                 </div>
-                <StatusButton
-                  enabled={localSettings['notifications.browser_enabled'] ?? true}
-                  onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
-                />
+
+                {/* Holiday Request Submitted */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.holidayRequestSubmitted')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.holidayRequestSubmittedDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.holiday_request_submitted'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.holiday_request_submitted', enabled)}
+                  />
+                </div>
+
+                {/* Holiday Starting Reminder */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.holidayStartingReminder')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.holidayStartingReminderDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.holiday_starting_reminder'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.holiday_starting_reminder', enabled)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="manager-reminders">{t('admin.settings.notifications.managerReminders')}</Label>
-                  <p className="text-xs text-gray-500">
-                    {t('admin.settings.notifications.managerRemindersDescription')}
-                  </p>
+            {/* Employee Notifications Section */}
+            <div className="bg-green-50 rounded-lg p-6 border border-green-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                 </div>
-                <StatusButton
-                  enabled={localSettings['notifications.remind_managers'] ?? true}
-                  onToggle={(enabled) => handleSettingChange('notifications.remind_managers', enabled)}
-                />
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {t('admin.settings.notifications.employeeNotifications')}
+                  </h4>
+                  <p className="text-sm text-gray-600">Notifiche inviate ai dipendenti</p>
+                </div>
               </div>
+              
+              <div className="space-y-6">
+                {/* Employee Approved */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.employeeApproved')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.employeeApprovedDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.employee_approved'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.employee_approved', enabled)}
+                  />
+                </div>
 
+                {/* Holiday Request Approved */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.holidayRequestApproved')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.holidayRequestApprovedDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.holiday_request_approved'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.holiday_request_approved', enabled)}
+                  />
+                </div>
+
+                {/* Holiday Request Rejected */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.holidayRequestRejected')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.holidayRequestRejectedDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.holiday_request_rejected'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.holiday_request_rejected', enabled)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* General Settings Section */}
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {t('admin.settings.notifications.generalSettings')}
+                  </h4>
+                  <p className="text-sm text-gray-600">Impostazioni generali del sistema di notifiche</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Browser Notifications */}
+                <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                      </svg>
+                      <Label className="text-sm font-medium text-gray-900">
+                        {t('admin.settings.notifications.browser')}
+                      </Label>
+                    </div>
+                    <p className="text-xs text-gray-500 pl-6">
+                      {t('admin.settings.notifications.browserDescription')}
+                    </p>
+                  </div>
+                  <StatusButton
+                    enabled={localSettings['notifications.browser_enabled'] ?? true}
+                    onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-6 border-t border-gray-200">
               <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleSaveSetting('notifications.email_enabled')}
+                size="lg"
+                variant="default"
+                onClick={() => handleSaveSetting('notifications.employee_registration')}
                 disabled={Boolean(
-                  saveLoading === 'notifications.email_enabled' ||
-                  (localSettings['notifications.email_enabled'] === settings['notifications.email_enabled'] &&
-                   localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'] &&
-                   localSettings['notifications.remind_managers'] === settings['notifications.remind_managers'])
+                  saveLoading === 'notifications.employee_registration' ||
+                  (localSettings['notifications.employee_registration'] === settings['notifications.employee_registration'] &&
+                   localSettings['notifications.holiday_request_submitted'] === settings['notifications.holiday_request_submitted'] &&
+                   localSettings['notifications.holiday_starting_reminder'] === settings['notifications.holiday_starting_reminder'] &&
+                   localSettings['notifications.employee_approved'] === settings['notifications.employee_approved'] &&
+                   localSettings['notifications.holiday_request_approved'] === settings['notifications.holiday_request_approved'] &&
+                   localSettings['notifications.holiday_request_rejected'] === settings['notifications.holiday_request_rejected'] &&
+                   localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'])
                 )}
                 className="w-full"
               >
-                {saveLoading === 'notifications.email_enabled' ? t('admin.settings.saving') : t('admin.settings.notifications.save')}
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {saveLoading === 'notifications.employee_registration' ? t('admin.settings.saving') : t('admin.settings.notifications.save')}
               </Button>
             </div>
           </div>

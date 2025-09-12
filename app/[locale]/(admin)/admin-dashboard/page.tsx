@@ -19,6 +19,7 @@ import { NotificationHeader } from '@/components/ui/notification-header';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { ProfileEditModal } from '@/components/profile/profile-edit-modal';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Image from 'next/image';
@@ -125,7 +126,10 @@ export default function AdminDashboard() {
         console.error('Failed to fetch activities:', response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching activities:', error);
+      // Only log errors that aren't due to language changes or navigation
+      if (error instanceof Error && !error.message.includes('Load failed') && !error.message.includes('aborted')) {
+        console.error('Error fetching activities:', error);
+      }
     } finally {
       setActivitiesLoading(false);
     }
@@ -178,7 +182,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Admin Sidebar */}
       <AdminSidebar 
         adminStats={adminStats || undefined}
@@ -437,6 +441,8 @@ export default function AdminDashboard() {
         onClose={() => setIsProfileModalOpen(false)}
         onProfileUpdate={fetchAllAdminData}
       />
+      
+      <Footer />
     </div>
   );
 }

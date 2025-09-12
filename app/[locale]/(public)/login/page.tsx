@@ -58,10 +58,10 @@ function LoginPageContent() {
     const success = await login(formData.email, formData.password);
     
     if (success) {
-      // Force page reload to let middleware read cookie auth
+      // Use router.push instead of window.location to avoid RSC issues
       const redirectUrl = searchParams.get('redirect') || '/it/admin-dashboard';
       console.log('🔄 Redirecting to:', redirectUrl);
-      window.location.href = redirectUrl;
+      router.push(redirectUrl);
     }
   };
 

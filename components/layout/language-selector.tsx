@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Globe } from 'lucide-react';
+import { setSessionLanguage } from '@/lib/i18n/session-language';
 
 const languages = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
@@ -23,10 +24,27 @@ export function LanguageSelector() {
   const { locale } = useTranslation();
 
   const handleLanguageChange = (newLocale: string) => {
+    console.log('🎯 Language selector clicked:', { currentLocale: locale, newLocale, pathname });
+    
+    // Set session language (temporary override)
+    setSessionLanguage(newLocale);
+    
+    // Set cookies for middleware to read
+    document.cookie = `session-language=${newLocale}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+    document.cookie = `language-override=true; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
+    
+    console.log('🍪 Cookies set:', {
+      sessionLanguage: newLocale,
+      override: true,
+      allCookies: document.cookie
+    });
+    
     // Get the current path without the locale
     const segments = pathname.split('/');
     segments[1] = newLocale; // Replace the locale segment
     const newPath = segments.join('/');
+    
+    console.log('🚀 Navigating to:', newPath);
     
     router.push(newPath);
   };

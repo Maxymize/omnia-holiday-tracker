@@ -63,6 +63,11 @@
     overflow-x: hidden;
   }
   
+  /* Fix RSC navigation issues in development */
+  :root {
+    --rsc-prefetch: none;
+  }
+  
   /* OmniaGroup specific form styling */
   input[type="text"],
   input[type="email"],
@@ -263,5 +268,17 @@
   
   .animate-pulse-slow {
     animation: pulse-slow 6s ease-in-out infinite;
+  }
+  
+  /* Development: Disable problematic prefetch behaviors */
+  @media (prefers-reduced-data: no-preference) {
+    [data-nextjs-prefetch] {
+      pointer-events: auto !important;
+    }
+  }
+  
+  /* Development: Reduce aggressive RSC prefetching */
+  link[rel="prefetch"][data-rsc] {
+    display: none;
   }
 }

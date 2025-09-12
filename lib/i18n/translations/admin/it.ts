@@ -548,14 +548,31 @@ const adminTranslations = {
       save: 'Salva Dipartimenti',
     },
     notifications: {
-      title: 'Notifiche',
-      description: 'Configura come vengono inviate le notifiche agli utenti',
-      email: 'Email',
-      emailDescription: 'Invia notifiche via email per approvazioni e aggiornamenti',
+      title: 'Notifiche Email',
+      description: 'Configura quali notifiche email vengono inviate per ogni tipo di evento',
+      adminNotifications: 'Notifiche Admin',
+      employeeNotifications: 'Notifiche Dipendenti',
+      generalSettings: 'Impostazioni Generali',
+      
+      // Admin Notifications
+      employeeRegistration: 'Registrazione Dipendente',
+      employeeRegistrationDescription: 'Notifica quando un nuovo dipendente si registra',
+      holidayRequestSubmitted: 'Richiesta Ferie Inviata',
+      holidayRequestSubmittedDescription: 'Notifica quando viene inviata una nuova richiesta ferie',
+      holidayStartingReminder: 'Promemoria Inizio Ferie',
+      holidayStartingReminderDescription: 'Promemoria quando un dipendente inizia le ferie',
+      
+      // Employee Notifications
+      employeeApproved: 'Dipendente Approvato',
+      employeeApprovedDescription: 'Notifica al dipendente quando viene approvato',
+      holidayRequestApproved: 'Richiesta Ferie Approvata',
+      holidayRequestApprovedDescription: 'Notifica al dipendente quando la richiesta è approvata',
+      holidayRequestRejected: 'Richiesta Ferie Rifiutata',
+      holidayRequestRejectedDescription: 'Notifica al dipendente quando la richiesta è rifiutata',
+      
+      // General
       browser: 'Notifiche Browser',
       browserDescription: 'Mostra notifiche nel browser per eventi importanti',
-      managerReminders: 'Promemoria Manager',
-      managerRemindersDescription: 'Invia promemoria ai manager per richieste pendenti',
       save: 'Salva Notifiche',
     },
     statusButtons: {

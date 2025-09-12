@@ -42,6 +42,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PWAInstallBanner } from '@/components/ui/pwa-install-banner';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { Footer } from '@/components/layout/Footer';
 import { Holiday } from '@/lib/hooks/useHolidays';
 import { format } from 'date-fns';
 import { it, enUS, es } from 'date-fns/locale';
@@ -205,7 +206,7 @@ function EmployeeDashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Sidebar */}
       <EmployeeSidebar 
         holidayStats={sidebarStats} 
@@ -773,6 +774,8 @@ function EmployeeDashboardContent() {
           refreshHolidays();
         }}
       />
+      
+      <Footer />
     </div>
   );
 }

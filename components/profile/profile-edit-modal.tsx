@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTranslation } from '@/lib/i18n/provider';
+import { useLanguageChange } from '@/lib/hooks/useLanguageChange';
+import { clearLanguageOverride } from '@/lib/i18n/session-language';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +34,7 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
   const { success, error } = useToasts();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
+  const { markLanguageChanging } = useLanguageChange();
 
   // Dynamic validation schema with translations
   const profileSchema = z.object({
@@ -353,12 +356,26 @@ export function ProfileEditModal({ isOpen, onClose, onProfileUpdate }: ProfileEd
         onProfileUpdate();
         onClose();
 
-        // If language was changed, trigger page reload to activate middleware redirect
+        // If profile language was changed, clear session override and refresh
         if (formData.preferredLanguage !== user?.preferredLanguage) {
-          // Small delay to ensure modal closes and toast is visible
+          // Mark that a language change is happening
+          markLanguageChanging();
+          
+          // Clear any session language override - profile language takes precedence
+          clearLanguageOverride();
+          
+          // Clear cookies too
+          document.cookie = 'session-language=; path=/; max-age=0';
+          document.cookie = 'language-override=; path=/; max-age=0';
+          
+          // Close modal first to avoid state issues
+          onClose();
+          
+          // Small delay to ensure modal closes and components can handle language change
           setTimeout(() => {
-            window.location.reload();
-          }, 500);
+            // Use router.replace instead of window.location.reload for cleaner navigation
+            window.location.href = window.location.pathname + window.location.search;
+          }, 300);
         }
       } else {
         throw new Error(result.error || 'Errore durante l\'aggiornamento');

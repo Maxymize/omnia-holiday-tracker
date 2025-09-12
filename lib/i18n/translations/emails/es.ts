@@ -10,7 +10,7 @@ export const emailTranslations = {
     holiday_request_approved: '✅ Solicitud de Vacaciones Aprobada',
     holiday_request_rejected: '❌ Solicitud de Vacaciones Rechazada',
     employee_approved: '👋 ¡Bienvenido a OMNIA HOLIDAY TRACKER!',
-    holiday_starting_reminder: '🏖️ Recordatorio: Tus Vacaciones Comienzan Mañana'
+    holiday_starting_reminder: '🏖️ Recordatorio: {name} comienza vacaciones mañana'
   },
 
   templates: {
@@ -100,6 +100,20 @@ export const emailTranslations = {
       },
       message: 'Ahora puedes acceder al sistema y comenzar a gestionar tus solicitudes de vacaciones.',
       buttonText: 'Acceder al Sistema'
+    },
+
+    holiday_starting_reminder: {
+      title: 'Recordatorio de Vacaciones',
+      greeting: 'Un empleado comenzará sus vacaciones pronto.',
+      fields: {
+        employee: 'Empleado',
+        startDate: 'Fecha de Inicio',
+        endDate: 'Fecha de Fin',
+        type: 'Tipo de Vacaciones',
+        days: 'Días'
+      },
+      message: 'Asegúrate de que todo esté organizado para cubrir sus responsabilidades durante su ausencia.',
+      buttonText: 'Ver Dashboard'
     }
   },
 

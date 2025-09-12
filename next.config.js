@@ -70,6 +70,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Fix RSC issues in development
+    ppr: false,
+    reactCompiler: false,
   },
   webpack: (config, { isServer }) => {
     // FIXED: Additional webpack config to handle framer-motion properly
@@ -84,7 +87,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Minimal security headers - no CORS restrictions for RSC
+        // Development-friendly headers to fix RSC and debug issues
         source: '/:path*',
         headers: [
           {
@@ -95,6 +98,21 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          // Allow dev tools access in development
+          ...(process.env.NODE_ENV === 'development' ? [
+            {
+              key: 'Access-Control-Allow-Origin',
+              value: 'http://localhost:3000',
+            },
+            {
+              key: 'Access-Control-Allow-Methods',
+              value: 'GET, POST, PUT, DELETE, OPTIONS',
+            },
+            {
+              key: 'Access-Control-Allow-Headers',
+              value: 'Content-Type, Authorization, x-rsc',
+            },
+          ] : []),
         ],
       },
     ];

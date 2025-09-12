@@ -10,7 +10,7 @@ export const emailTranslations = {
     holiday_request_approved: '✅ Richiesta ferie approvata',
     holiday_request_rejected: '❌ Richiesta ferie rifiutata',
     employee_approved: '👋 Benvenuto in OMNIA HOLIDAY TRACKER!',
-    holiday_starting_reminder: '🏖️ Promemoria: Le tue ferie iniziano domani'
+    holiday_starting_reminder: '🏖️ Promemoria: {name} inizia le ferie domani'
   },
 
   templates: {
@@ -100,6 +100,20 @@ export const emailTranslations = {
       },
       message: 'Ora puoi accedere al sistema e iniziare a gestire le tue richieste ferie.',
       buttonText: 'Accedi al Sistema'
+    },
+
+    holiday_starting_reminder: {
+      title: 'Promemoria Ferie',
+      greeting: 'Un dipendente inizia le ferie a breve.',
+      fields: {
+        employee: 'Dipendente',
+        startDate: 'Data inizio',
+        endDate: 'Data fine',
+        type: 'Tipo ferie',
+        days: 'Giorni'
+      },
+      message: 'Assicurati che tutto sia organizzato per coprire le sue responsabilità durante l\'assenza.',
+      buttonText: 'Visualizza Dashboard'
     }
   },
 

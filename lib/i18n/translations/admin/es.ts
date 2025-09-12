@@ -548,14 +548,31 @@ const adminTranslations = {
       save: 'Guardar Departamentos',
     },
     notifications: {
-      title: 'Notificaciones',
-      description: 'Configura cómo se envían las notificaciones a los usuarios',
-      email: 'Email',
-      emailDescription: 'Enviar notificaciones por email para aprobaciones y actualizaciones',
+      title: 'Notificaciones por Email',
+      description: 'Configura qué notificaciones por email se envían para cada tipo de evento',
+      adminNotifications: 'Notificaciones Admin',
+      employeeNotifications: 'Notificaciones Empleados',
+      generalSettings: 'Configuración General',
+      
+      // Admin Notifications
+      employeeRegistration: 'Registro de Empleado',
+      employeeRegistrationDescription: 'Notificación cuando un nuevo empleado se registra',
+      holidayRequestSubmitted: 'Solicitud de Vacaciones Enviada',
+      holidayRequestSubmittedDescription: 'Notificación cuando se envía una nueva solicitud de vacaciones',
+      holidayStartingReminder: 'Recordatorio Inicio de Vacaciones',
+      holidayStartingReminderDescription: 'Recordatorio cuando un empleado comienza sus vacaciones',
+      
+      // Employee Notifications
+      employeeApproved: 'Empleado Aprobado',
+      employeeApprovedDescription: 'Notificación al empleado cuando es aprobado',
+      holidayRequestApproved: 'Solicitud de Vacaciones Aprobada',
+      holidayRequestApprovedDescription: 'Notificación al empleado cuando la solicitud es aprobada',
+      holidayRequestRejected: 'Solicitud de Vacaciones Rechazada',
+      holidayRequestRejectedDescription: 'Notificación al empleado cuando la solicitud es rechazada',
+      
+      // General
       browser: 'Notificaciones del Navegador',
       browserDescription: 'Mostrar notificaciones del navegador para eventos importantes',
-      managerReminders: 'Recordatorios para Gerentes',
-      managerRemindersDescription: 'Enviar recordatorios a gerentes para solicitudes pendientes',
       save: 'Guardar Notificaciones',
     },
     statusButtons: {

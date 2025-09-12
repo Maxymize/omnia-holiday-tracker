@@ -548,14 +548,31 @@ const adminTranslations = {
       save: 'Save Departments',
     },
     notifications: {
-      title: 'Notifications',
-      description: 'Configure how notifications are sent to users',
-      email: 'Email',
-      emailDescription: 'Send email notifications for approvals and updates',
+      title: 'Email Notifications',
+      description: 'Configure which email notifications are sent for each type of event',
+      adminNotifications: 'Admin Notifications',
+      employeeNotifications: 'Employee Notifications',
+      generalSettings: 'General Settings',
+      
+      // Admin Notifications
+      employeeRegistration: 'Employee Registration',
+      employeeRegistrationDescription: 'Notification when a new employee registers',
+      holidayRequestSubmitted: 'Holiday Request Submitted',
+      holidayRequestSubmittedDescription: 'Notification when a new holiday request is submitted',
+      holidayStartingReminder: 'Holiday Starting Reminder',
+      holidayStartingReminderDescription: 'Reminder when an employee starts their holiday',
+      
+      // Employee Notifications
+      employeeApproved: 'Employee Approved',
+      employeeApprovedDescription: 'Notification to employee when they are approved',
+      holidayRequestApproved: 'Holiday Request Approved',
+      holidayRequestApprovedDescription: 'Notification to employee when request is approved',
+      holidayRequestRejected: 'Holiday Request Rejected',
+      holidayRequestRejectedDescription: 'Notification to employee when request is rejected',
+      
+      // General
       browser: 'Browser Notifications',
       browserDescription: 'Show browser notifications for important events',
-      managerReminders: 'Manager Reminders',
-      managerRemindersDescription: 'Send reminders to managers for pending requests',
       save: 'Save Notifications',
     },
     statusButtons: {

@@ -10,7 +10,7 @@ export const emailTranslations = {
     holiday_request_approved: '✅ Holiday Request Approved',
     holiday_request_rejected: '❌ Holiday Request Rejected',
     employee_approved: '👋 Welcome to OMNIA HOLIDAY TRACKER!',
-    holiday_starting_reminder: '🏖️ Reminder: Your Holiday Starts Tomorrow'
+    holiday_starting_reminder: '🏖️ Reminder: {name} starts holiday tomorrow'
   },
 
   templates: {
@@ -100,6 +100,20 @@ export const emailTranslations = {
       },
       message: 'You can now log into the system and start managing your holiday requests.',
       buttonText: 'Access System'
+    },
+
+    holiday_starting_reminder: {
+      title: 'Holiday Reminder',
+      greeting: 'An employee is starting their holiday soon.',
+      fields: {
+        employee: 'Employee',
+        startDate: 'Start Date',
+        endDate: 'End Date',
+        type: 'Holiday Type',
+        days: 'Days'
+      },
+      message: 'Make sure everything is organized to cover their responsibilities during their absence.',
+      buttonText: 'View Dashboard'
     }
   },
 

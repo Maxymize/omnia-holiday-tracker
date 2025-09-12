@@ -215,8 +215,11 @@ export function useAdminData() {
         setEmployees(employeesWithMetrics);
       }
     } catch (err) {
-      console.error('Error fetching employees:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch employees');
+      // Only log errors that aren't due to language changes or navigation
+      if (err instanceof Error && !err.message.includes('Load failed') && !err.message.includes('aborted')) {
+        console.error('Error fetching employees:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch employees');
+      }
     } finally {
       setLoading(false);
     }
@@ -244,8 +247,11 @@ export function useAdminData() {
         setDepartments(data.departments || []);
       }
     } catch (err) {
-      console.error('Error fetching departments:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch departments');
+      // Only log errors that aren't due to language changes or navigation
+      if (err instanceof Error && !err.message.includes('Load failed') && !err.message.includes('aborted')) {
+        console.error('Error fetching departments:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch departments');
+      }
     } finally {
       setLoading(false);
     }
@@ -273,8 +279,11 @@ export function useAdminData() {
         setAllRequests(data.data.holidays || data.data || []);
       }
     } catch (err) {
-      console.error('Error fetching holiday requests:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch holiday requests');
+      // Only log errors that aren't due to language changes or navigation
+      if (err instanceof Error && !err.message.includes('Load failed') && !err.message.includes('aborted')) {
+        console.error('Error fetching holiday requests:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch holiday requests');
+      }
     } finally {
       setLoading(false);
     }
@@ -342,8 +351,11 @@ export function useAdminData() {
         setSystemSettings(convertedSettings);
       }
     } catch (err) {
-      console.error('Error fetching system settings:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch system settings');
+      // Only log errors that aren't due to language changes or navigation
+      if (err instanceof Error && !err.message.includes('Load failed') && !err.message.includes('aborted')) {
+        console.error('Error fetching system settings:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch system settings');
+      }
     } finally {
       setLoading(false);
     }
