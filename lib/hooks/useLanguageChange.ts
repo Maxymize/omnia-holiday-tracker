@@ -46,9 +46,9 @@ export function useLanguageChange() {
 }
 
 /**
- * Wrapper per fetch che ignora errori durante cambio lingua
+ * Hook per fetch che ignora errori durante cambio lingua
  */
-export function createLanguageAwareFetch() {
+export function useLanguageAwareFetch() {
   const { getIsLanguageChanging } = useLanguageChange();
 
   return useCallback(

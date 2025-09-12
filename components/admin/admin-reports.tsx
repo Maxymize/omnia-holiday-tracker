@@ -130,7 +130,7 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
       ...dept,
       utilizationRate: safePercentage(dept.holidaysUsed, dept.holidaysAllowed)
     }));
-  }, [employees, requests]);
+  }, [employees, requests, t]);
 
   // Employee performance data
   const employeePerformance = useMemo(() => {

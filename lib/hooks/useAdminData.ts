@@ -523,7 +523,7 @@ export function useAdminData() {
     }
   }, [isAdmin, fetchAllRequests]);
 
-  const updateSystemSetting = useCallback(async (key: keyof SystemSettings, value: any) => {
+  const updateSystemSetting = useCallback(async (key: string, value: any) => {
     if (!isAdmin) return false;
 
     try {

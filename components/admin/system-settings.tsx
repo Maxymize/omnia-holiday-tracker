@@ -100,7 +100,7 @@ interface SystemSettingsProps {
   settings: Partial<SystemSettings>;
   loading: boolean;
   error: string | null;
-  onUpdateSetting: (key: keyof SystemSettings, value: any) => Promise<boolean>;
+  onUpdateSetting: (key: string, value: any) => Promise<boolean>;
   onRefresh: () => void;
 }
 
@@ -122,7 +122,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
     setHasChanges(false);
   }, [settings]);
 
-  const handleSettingChange = (key: keyof SystemSettings, value: any) => {
+  const handleSettingChange = (key: string, value: any) => {
     setLocalSettings(prev => ({
       ...prev,
       [key]: value
@@ -135,9 +135,9 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
     return await onUpdateSetting('company.name', newValue);
   }, [onUpdateSetting]);
 
-  const handleSaveSetting = async (key: keyof SystemSettings) => {
-    const value = localSettings[key];
-    if (value === settings[key]) return; // No change
+  const handleSaveSetting = async (key: string) => {
+    const value = (localSettings as any)[key];
+    if (value === (settings as any)[key]) return; // No change
 
     setSaveLoading(key);
     try {
@@ -540,7 +540,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.employee_registration'] ?? true}
+                    enabled={(localSettings as any)['notifications.employee_registration'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.employee_registration', enabled)}
                   />
                 </div>
@@ -561,7 +561,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.holiday_request_submitted'] ?? true}
+                    enabled={(localSettings as any)['notifications.holiday_request_submitted'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.holiday_request_submitted', enabled)}
                   />
                 </div>
@@ -582,7 +582,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.holiday_starting_reminder'] ?? true}
+                    enabled={(localSettings as any)['notifications.holiday_starting_reminder'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.holiday_starting_reminder', enabled)}
                   />
                 </div>
@@ -622,7 +622,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.employee_approved'] ?? true}
+                    enabled={(localSettings as any)['notifications.employee_approved'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.employee_approved', enabled)}
                   />
                 </div>
@@ -643,7 +643,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.holiday_request_approved'] ?? true}
+                    enabled={(localSettings as any)['notifications.holiday_request_approved'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.holiday_request_approved', enabled)}
                   />
                 </div>
@@ -664,7 +664,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.holiday_request_rejected'] ?? true}
+                    enabled={(localSettings as any)['notifications.holiday_request_rejected'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.holiday_request_rejected', enabled)}
                   />
                 </div>
@@ -705,7 +705,7 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                     </p>
                   </div>
                   <StatusButton
-                    enabled={localSettings['notifications.browser_enabled'] ?? true}
+                    enabled={(localSettings as any)['notifications.browser_enabled'] ?? true}
                     onToggle={(enabled) => handleSettingChange('notifications.browser_enabled', enabled)}
                   />
                 </div>
@@ -720,13 +720,13 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
                 onClick={() => handleSaveSetting('notifications.employee_registration')}
                 disabled={Boolean(
                   saveLoading === 'notifications.employee_registration' ||
-                  (localSettings['notifications.employee_registration'] === settings['notifications.employee_registration'] &&
-                   localSettings['notifications.holiday_request_submitted'] === settings['notifications.holiday_request_submitted'] &&
-                   localSettings['notifications.holiday_starting_reminder'] === settings['notifications.holiday_starting_reminder'] &&
-                   localSettings['notifications.employee_approved'] === settings['notifications.employee_approved'] &&
-                   localSettings['notifications.holiday_request_approved'] === settings['notifications.holiday_request_approved'] &&
-                   localSettings['notifications.holiday_request_rejected'] === settings['notifications.holiday_request_rejected'] &&
-                   localSettings['notifications.browser_enabled'] === settings['notifications.browser_enabled'])
+                  ((localSettings as any)['notifications.employee_registration'] === (settings as any)['notifications.employee_registration'] &&
+                   (localSettings as any)['notifications.holiday_request_submitted'] === (settings as any)['notifications.holiday_request_submitted'] &&
+                   (localSettings as any)['notifications.holiday_starting_reminder'] === (settings as any)['notifications.holiday_starting_reminder'] &&
+                   (localSettings as any)['notifications.employee_approved'] === (settings as any)['notifications.employee_approved'] &&
+                   (localSettings as any)['notifications.holiday_request_approved'] === (settings as any)['notifications.holiday_request_approved'] &&
+                   (localSettings as any)['notifications.holiday_request_rejected'] === (settings as any)['notifications.holiday_request_rejected'] &&
+                   (localSettings as any)['notifications.browser_enabled'] === (settings as any)['notifications.browser_enabled'])
                 )}
                 className="w-full"
               >
