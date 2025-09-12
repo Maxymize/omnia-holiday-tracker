@@ -58,10 +58,12 @@ function LoginPageContent() {
     const success = await login(formData.email, formData.password);
     
     if (success) {
-      // Use router.push instead of window.location to avoid RSC issues
+      // Force immediate redirect after successful login
       const redirectUrl = searchParams.get('redirect') || '/it/admin-dashboard';
       console.log('🔄 Redirecting to:', redirectUrl);
-      router.push(redirectUrl);
+      
+      // Use window.location.href for immediate redirect to avoid race conditions
+      window.location.href = redirectUrl;
     }
   };
 
