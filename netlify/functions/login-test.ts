@@ -205,7 +205,7 @@ export const handler: Handler = async (event, context) => {
     const accessToken = await new SignJWT(tokenPayload)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('1h')
+      .setExpirationTime('8h')
       .sign(secret);
     
     console.log('✅ JWT Debug - Token generated successfully:', {
@@ -221,7 +221,7 @@ export const handler: Handler = async (event, context) => {
       statusCode: 200,
       headers: {
         ...headers,
-        'Set-Cookie': `auth-token=${accessToken}; Max-Age=3600; ${cookieOptions}`
+        'Set-Cookie': `auth-token=${accessToken}; Max-Age=28800; ${cookieOptions}`
       },
       body: JSON.stringify({
         success: true,

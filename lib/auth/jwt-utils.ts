@@ -9,10 +9,10 @@ export interface JWTPayload {
   exp: number;
 }
 
-// JWT configuration
+// JWT configuration for internal company tool
 const JWT_CONFIG = {
-  accessTokenExpiry: '1h',
-  refreshTokenExpiry: '7d',
+  accessTokenExpiry: '8h', // Extended for internal corporate use
+  refreshTokenExpiry: '30d',
   algorithm: 'HS256' as const
 };
 
@@ -29,7 +29,7 @@ function getJWTSecret(): string {
 export async function generateTokens(userId: string, email: string, role: 'employee' | 'admin') {
   const secret = new TextEncoder().encode(getJWTSecret());
 
-  // Access token (short-lived)
+  // Access token (extended for corporate environment)
   const accessToken = await new SignJWT({ 
     userId, 
     email, 
@@ -38,7 +38,7 @@ export async function generateTokens(userId: string, email: string, role: 'emplo
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('1h')
+    .setExpirationTime('8h')
     .sign(secret);
 
   // Refresh token (longer-lived)
@@ -55,7 +55,7 @@ export async function generateTokens(userId: string, email: string, role: 'emplo
   return { 
     accessToken, 
     refreshToken,
-    expiresIn: 3600 // 1 hour in seconds
+    expiresIn: 28800 // 8 hours in seconds
   };
 }
 
