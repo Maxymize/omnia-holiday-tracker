@@ -6,21 +6,32 @@ import { encryptFile, decryptFile, generateFileId, isValidMedicalCertificateType
 const RETENTION_DAYS = parseInt(process.env.MEDICAL_CERT_RETENTION_DAYS || '2555'); // ~7 years default
 const STORAGE_DIR = path.join(process.cwd(), '.mock-blob-storage', 'medical-certificates');
 
-// Check if we're running in Netlify production environment
-const isNetlifyProduction = () => {
-  const result = !!(process.env.NETLIFY && process.env.CONTEXT === 'production');
+// Check if we're running in Netlify environment (production or deploy-preview)
+const isNetlifyEnvironment = () => {
+  const hasNetlify = !!process.env.NETLIFY;
+  const context = process.env.CONTEXT;
+  const isProduction = context === 'production';
+  const isDeployPreview = context === 'deploy-preview';
+  const shouldUseBlobs = hasNetlify && (isProduction || isDeployPreview);
+  
   console.log('🔍 Environment Detection:', {
     NETLIFY: process.env.NETLIFY,
     CONTEXT: process.env.CONTEXT,
-    isNetlifyProduction: result,
-    nodeEnv: process.env.NODE_ENV
+    NODE_ENV: process.env.NODE_ENV,
+    NETLIFY_SITE_ID: process.env.NETLIFY_SITE_ID,
+    hasNetlify,
+    context,
+    isProduction,
+    isDeployPreview,
+    shouldUseBlobs
   });
-  return result;
+  
+  return shouldUseBlobs;
 };
 
 // Initialize storage based on environment
 const initializeStorage = async () => {
-  if (isNetlifyProduction()) {
+  if (isNetlifyEnvironment()) {
     try {
       console.log('🔍 Attempting to import @netlify/blobs...');
       // Dynamic import for Netlify Blobs (only in production)
@@ -84,6 +95,14 @@ export async function storeMedicalCertificate(
   uploadedBy: string,
   holidayRequestId: string
 ): Promise<{ fileId: string; success: boolean; message: string }> {
+  console.log('🚀 storeMedicalCertificate function called with:', {
+    originalName,
+    mimeType,
+    uploadedBy,
+    holidayRequestId,
+    bufferLength: fileBuffer.length
+  });
+  
   try {
     // Validate file type
     if (!isValidMedicalCertificateType(mimeType)) {
