@@ -8,10 +8,10 @@ Claude Code MUST read these files in order at session start:
 
 1. **CLAUDE.md** (this file) - Core rules and project overview
 2. **TASK.md** - ACTIVE TASKS ONLY (optimized for context preservation)
-3. **STATUS-HANDOFF.md** - Current project state and next steps
-4. **AGENT-WORK-LOG.md** - Recent agent work history
+3. **STATUS-HANDOFF.md** - Current project state and next steps (in docs folder)
+4. **AGENT-WORK-LOG.md** - Recent agent work history (in docs folder)
 5. **PLANNING.md** - Complete architecture and technology stack (when needed)
-6. **CLAUDE-CODE-INSTRUCTIONS.md** - Detailed agent usage (reference only)
+6. **CLAUDE-CODE-INSTRUCTIONS.md** - Detailed agent usage (reference only)(in docs folder)
 7. **TASK-COMPLETED.md** - Completed work archive (reference only)
 
 **CONTEXT OPTIMIZATION**: Files are now structured to minimize context usage while maintaining full project visibility.
@@ -715,3 +715,5 @@ npx netlify db init
 - **Caching strategy**: Cache department lists, employee data, holiday statistics
 - **Mobile optimization**: Touch-friendly calendar interface, offline capability for viewing
 - **Bundle splitting**: Separate admin dashboard from employee dashboard for faster loading
+- la documentazione di progetto è stata inserita nella cartella docs (/Users/maximiliangiurastante/Sviluppo/Claude/Omnia-Holiday-Tracker/docs) tranne le istruzioni base di claude code che corrispondono ai files CLAUDE.md, INITIAL.md, PLANNING.md, README.md, TASK-COMPLETED.md, TASK.md che restano nella root del progetto.
+- ogni volta che fai una modifica aggiorna la versione del package.json di + x.x.1 ad esempio da  "version": "2.8.7" a  "version": "2.8.8", a meno che non ti venga esplicitamente richiesto di dare una nuova numerazione
