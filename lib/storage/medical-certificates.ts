@@ -8,22 +8,36 @@ const STORAGE_DIR = path.join(process.cwd(), '.mock-blob-storage', 'medical-cert
 
 // Check if we're running in Netlify production environment
 const isNetlifyProduction = () => {
-  return !!(process.env.NETLIFY && process.env.CONTEXT === 'production');
+  const result = !!(process.env.NETLIFY && process.env.CONTEXT === 'production');
+  console.log('🔍 Environment Detection:', {
+    NETLIFY: process.env.NETLIFY,
+    CONTEXT: process.env.CONTEXT,
+    isNetlifyProduction: result,
+    nodeEnv: process.env.NODE_ENV
+  });
+  return result;
 };
 
 // Initialize storage based on environment
 const initializeStorage = async () => {
   if (isNetlifyProduction()) {
     try {
+      console.log('🔍 Attempting to import @netlify/blobs...');
       // Dynamic import for Netlify Blobs (only in production)
       const { getStore } = await import('@netlify/blobs');
-      console.log('Using Netlify Blobs for production storage');
+      console.log('✅ Successfully imported @netlify/blobs');
+      console.log('✅ Using Netlify Blobs for production storage');
       return {
         type: 'blobs',
         store: getStore('medical-certificates')
       };
     } catch (error) {
-      console.error('Failed to initialize Netlify Blobs, falling back to filesystem:', error);
+      console.error('❌ Failed to initialize Netlify Blobs, falling back to filesystem:', error);
+      console.error('❌ Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       // Fall back to filesystem storage
       await fs.mkdir(STORAGE_DIR, { recursive: true });
       return {
@@ -33,7 +47,7 @@ const initializeStorage = async () => {
     }
   } else {
     // Development environment - use filesystem
-    console.log('Using filesystem storage for development');
+    console.log('🔍 Using filesystem storage for development');
     await fs.mkdir(STORAGE_DIR, { recursive: true });
     return {
       type: 'filesystem',
