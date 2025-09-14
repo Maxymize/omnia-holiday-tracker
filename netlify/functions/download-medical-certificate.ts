@@ -1,6 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates';
+import { getSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
 
 // CORS headers
 const headers = {
@@ -50,20 +51,40 @@ export const handler: Handler = async (event, context) => {
     console.log('📋 Download request for fileId:', fileId);
 
     // Retrieve and decrypt the medical certificate
-    const retrievalResult = await retrieveMedicalCertificate(fileId, userToken.email);
+    console.log('🔍 Attempting primary storage (Netlify Blobs) retrieval...');
+    let retrievalResult;
 
-    if (!retrievalResult.success) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({
-          error: 'Certificato non trovato',
-          message: retrievalResult.error || 'Il certificato medico richiesto non è disponibile'
-        })
-      };
+    try {
+      retrievalResult = await retrieveMedicalCertificate(fileId, userToken.email);
+
+      if (!retrievalResult.success) {
+        throw new Error(retrievalResult.error || 'Primary storage retrieval failed');
+      }
+
+      console.log('✅ Primary storage (Netlify Blobs) retrieval successful');
+
+    } catch (primaryError) {
+      console.log('❌ Primary storage retrieval failed, trying simple storage...');
+      console.error('Primary retrieval error:', primaryError);
+
+      // Fallback to simple storage
+      retrievalResult = await getSimpleMedicalCertificate(fileId);
+
+      if (!retrievalResult.success) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Certificato non trovato',
+            message: `Certificate not found in either storage system. Primary: ${primaryError instanceof Error ? primaryError.message : 'Unknown'}. Fallback: ${retrievalResult.message}`
+          })
+        };
+      }
+
+      console.log('✅ Fallback storage retrieval successful');
     }
 
-    if (!retrievalResult.fileBuffer || !retrievalResult.metadata) {
+    if (!retrievalResult.fileBuffer) {
       return {
         statusCode: 500,
         headers,
@@ -74,16 +95,17 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    // Adapt for different storage systems
+    const originalName = retrievalResult.metadata?.originalName || retrievalResult.fileName || 'medical_certificate.pdf';
+    const mimeType = retrievalResult.metadata?.mimeType || retrievalResult.mimeType || 'application/octet-stream';
+
     console.log('✅ Certificate decrypted successfully:', {
       fileId,
-      originalName: retrievalResult.metadata.originalName,
+      originalName: originalName,
       size: retrievalResult.fileBuffer.length,
-      requestedBy: userToken.email
+      requestedBy: userToken.email,
+      storageType: retrievalResult.metadata ? 'netlify-blobs' : 'simple-storage'
     });
-
-    // Determine file extension from original name or mime type
-    const originalName = retrievalResult.metadata.originalName;
-    const mimeType = retrievalResult.metadata.mimeType;
     
     // Set appropriate content type header
     const contentType = mimeType || 'application/octet-stream';

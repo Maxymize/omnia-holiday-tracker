@@ -86,13 +86,13 @@ export async function storeSimpleMedicalCertificate(
     console.log('🏥 Simple storage: Certificate encrypted and prepared');
     console.log('🏥 Simple storage: File ID:', fileId);
 
-    // TODO: Store certificateData in database table
-    // For now, just return success
+    // Store in temporary memory (for testing)
+    storeInMemory(fileId, certificateData);
 
     return {
       fileId,
       success: true,
-      message: 'Certificate stored using temporary simple storage method'
+      message: 'Certificate stored using temporary simple storage method (in-memory)'
     };
 
   } catch (error) {
@@ -105,6 +105,15 @@ export async function storeSimpleMedicalCertificate(
   }
 }
 
+// In-memory storage for testing (temporary solution)
+const temporaryStorage = new Map<string, SimpleCertificateData>();
+
+// Store certificate data temporarily
+export function storeInMemory(fileId: string, data: SimpleCertificateData) {
+  temporaryStorage.set(fileId, data);
+  console.log('🏥 Stored in temporary memory:', fileId);
+}
+
 // Retrieve certificate using simple approach
 export async function getSimpleMedicalCertificate(
   fileId: string
@@ -112,12 +121,28 @@ export async function getSimpleMedicalCertificate(
   try {
     console.log('🏥 Simple storage: Retrieving certificate:', fileId);
 
-    // TODO: Retrieve from database
-    // For now, return error since we don't have persistence yet
+    // Check temporary in-memory storage
+    const certificateData = temporaryStorage.get(fileId);
+
+    if (!certificateData) {
+      return {
+        success: false,
+        message: `Certificate with ID ${fileId} not found in temporary storage. Note: Simple storage is temporary and certificates may expire.`
+      };
+    }
+
+    // Decrypt the file data
+    const encryptionKey = process.env.MEDICAL_CERT_ENCRYPTION_KEY || 'default-key-12345';
+    const decryptedBuffer = simpleDecrypt(certificateData.encryptedData, encryptionKey);
+
+    console.log('🏥 Simple storage: Certificate decrypted successfully');
 
     return {
-      success: false,
-      message: 'Certificate retrieval not implemented in simple storage yet'
+      success: true,
+      fileBuffer: decryptedBuffer,
+      fileName: certificateData.fileName,
+      mimeType: certificateData.fileType,
+      message: 'Certificate retrieved from temporary storage'
     };
 
   } catch (error) {
