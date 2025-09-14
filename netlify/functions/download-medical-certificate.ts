@@ -104,7 +104,7 @@ export const handler: Handler = async (event, context) => {
       originalName: originalName,
       size: retrievalResult.fileBuffer.length,
       requestedBy: userToken.email,
-      storageType: retrievalResult.metadata ? 'netlify-blobs' : 'simple-storage'
+      storageType: (retrievalResult as any).metadata ? 'netlify-blobs' : 'simple-storage'
     });
     
     // Set appropriate content type header
