@@ -63,8 +63,9 @@ const initializeNetlifyBlobs = async () => {
       }
 
       // Manual configuration with siteID and token
-      store = getStore({
-        name: 'medical-certificates',
+      // Cast to any to bypass TypeScript type checking for manual configuration
+      const getStoreWithConfig = getStore as any;
+      store = getStoreWithConfig('medical-certificates', {
         siteID: siteID,
         token: token
       });
