@@ -1,8 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
-// Use v2 version that works properly with Netlify Blobs in production
-import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates-v2';
-import { getSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
+// Use database storage for reliability (Netlify Blobs not available)
+import { retrieveMedicalCertificateFromDB } from '../../lib/storage/medical-certificates-db';
 
 // CORS headers
 const headers = {
@@ -51,39 +50,22 @@ export const handler: Handler = async (event, context) => {
 
     console.log('📋 Download request for fileId:', fileId);
 
-    // Retrieve and decrypt the medical certificate
-    console.log('🔍 Attempting primary storage (Netlify Blobs) retrieval...');
-    let retrievalResult;
+    // Retrieve and decrypt the medical certificate from database
+    console.log('🔍 Retrieving medical certificate from database...');
+    const retrievalResult = await retrieveMedicalCertificateFromDB(fileId, userToken.email);
 
-    try {
-      retrievalResult = await retrieveMedicalCertificate(fileId, userToken.email);
-
-      if (!retrievalResult.success) {
-        throw new Error(retrievalResult.error || 'Primary storage retrieval failed');
-      }
-
-      console.log('✅ Primary storage (Netlify Blobs) retrieval successful');
-
-    } catch (primaryError) {
-      console.log('❌ Primary storage retrieval failed, trying simple storage...');
-      console.error('Primary retrieval error:', primaryError);
-
-      // Fallback to simple storage
-      retrievalResult = await getSimpleMedicalCertificate(fileId);
-
-      if (!retrievalResult.success) {
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({
-            error: 'Certificato non trovato',
-            message: `Certificate not found in either storage system. Primary: ${primaryError instanceof Error ? primaryError.message : 'Unknown'}. Fallback: ${retrievalResult.message}`
-          })
-        };
-      }
-
-      console.log('✅ Fallback storage retrieval successful');
+    if (!retrievalResult.success) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({
+          error: 'Certificato non trovato',
+          message: retrievalResult.error || 'Certificate not found in database'
+        })
+      };
     }
+
+    console.log('✅ Database retrieval successful');
 
     if (!retrievalResult.fileBuffer) {
       return {
@@ -96,16 +78,16 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Adapt for different storage systems - safe access to properties
-    const originalName = (retrievalResult as any).metadata?.originalName || (retrievalResult as any).fileName || 'medical_certificate.pdf';
-    const mimeType = (retrievalResult as any).metadata?.mimeType || (retrievalResult as any).mimeType || 'application/octet-stream';
+    // Get file metadata from database result
+    const originalName = retrievalResult.fileName || 'medical_certificate.pdf';
+    const mimeType = retrievalResult.mimeType || 'application/octet-stream';
 
     console.log('✅ Certificate decrypted successfully:', {
       fileId,
       originalName: originalName,
       size: retrievalResult.fileBuffer.length,
       requestedBy: userToken.email,
-      storageType: (retrievalResult as any).metadata ? 'netlify-blobs' : 'simple-storage'
+      storageType: 'database'
     });
     
     // Set appropriate content type header

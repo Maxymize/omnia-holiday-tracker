@@ -2,9 +2,8 @@ import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
-// Use v2 version that works properly with Netlify Blobs in production
-import { storeMedicalCertificate } from '../../lib/storage/medical-certificates-v2';
-import { storeSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
+// Use database storage for reliability (Netlify Blobs not available)
+import { storeMedicalCertificateInDB } from '../../lib/storage/medical-certificates-db';
 
 // Validation schemas
 const uploadCertificateSchema = z.object({
@@ -72,44 +71,22 @@ async function processCertificateUpload(
       actualBufferSize: fileBuffer.length
     });
 
-    // Store the certificate securely with encryption
-    console.log('🔍 Attempting primary storage (Netlify Blobs)...');
-    let storageResult;
+    // Store the certificate in database with encryption
+    console.log('🔍 Storing medical certificate in database...');
+    const storageResult = await storeMedicalCertificateInDB(
+      fileBuffer,
+      fileName,
+      fileType,
+      uploadedBy,
+      holidayRequestId,
+      uploadedBy // Using email as uploadedById for now
+    );
 
-    try {
-      storageResult = await storeMedicalCertificate(
-        fileBuffer,
-        fileName,
-        fileType,
-        uploadedBy,
-        holidayRequestId
-      );
-
-      if (!storageResult.success) {
-        throw new Error(storageResult.message);
-      }
-
-      console.log('✅ Primary storage (Netlify Blobs) successful');
-
-    } catch (primaryError) {
-      console.log('❌ Primary storage failed, trying simple fallback storage...');
-      console.error('Primary storage error:', primaryError);
-
-      // Fallback to simple storage
-      storageResult = await storeSimpleMedicalCertificate(
-        fileBuffer,
-        fileName,
-        fileType,
-        uploadedBy,
-        holidayRequestId
-      );
-
-      if (!storageResult.success) {
-        throw new Error(`Both storage methods failed. Primary: ${primaryError instanceof Error ? primaryError.message : 'Unknown'}. Fallback: ${storageResult.message}`);
-      }
-
-      console.log('✅ Fallback storage successful with file ID:', storageResult.fileId);
+    if (!storageResult.success) {
+      throw new Error(storageResult.message);
     }
+
+    console.log('✅ Database storage successful');
 
     console.log('✅ Certificate stored securely with ID:', storageResult.fileId);
 
