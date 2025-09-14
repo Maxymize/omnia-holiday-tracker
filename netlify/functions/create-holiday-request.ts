@@ -65,9 +65,18 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
+    // DEBUG: Log all headers and cookies for comparison with upload function
+    console.log('🔍 CREATE-HOLIDAY DEBUG Headers:', {
+      cookie: event.headers.cookie,
+      authorization: event.headers.authorization,
+      userAgent: event.headers['user-agent']
+    });
+    
     // Verify authentication
     const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
+    
+    console.log('✅ CREATE-HOLIDAY: Authentication successful for user:', userToken.userId);
 
     // Parse and validate request body
     const body = JSON.parse(event.body || '{}');
