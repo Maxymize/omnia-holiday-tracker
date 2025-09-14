@@ -95,9 +95,9 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Adapt for different storage systems
-    const originalName = retrievalResult.metadata?.originalName || retrievalResult.fileName || 'medical_certificate.pdf';
-    const mimeType = retrievalResult.metadata?.mimeType || retrievalResult.mimeType || 'application/octet-stream';
+    // Adapt for different storage systems - safe access to properties
+    const originalName = (retrievalResult as any).metadata?.originalName || (retrievalResult as any).fileName || 'medical_certificate.pdf';
+    const mimeType = (retrievalResult as any).metadata?.mimeType || (retrievalResult as any).mimeType || 'application/octet-stream';
 
     console.log('✅ Certificate decrypted successfully:', {
       fileId,
