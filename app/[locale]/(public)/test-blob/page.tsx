@@ -57,24 +57,38 @@ export default function TestBlobPage() {
       
       console.log('🔍 Testing authentication functionality...');
       console.log('🍪 Current cookies:', document.cookie || 'none');
+      console.log('🌍 Current location:', window.location.href);
+      console.log('🌐 Domain:', window.location.hostname);
       
-      const response = await fetch(`${baseUrl}/.netlify/functions/test-auth`, {
-        method: 'POST',
+      // Test with an existing function that requires auth (get-profile)
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-profile`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         },
         // Include credentials to send cookies
-        credentials: 'include',
-        body: JSON.stringify({ test: true })
+        credentials: 'include'
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        const text = await response.text();
+        data = { error: 'Invalid JSON response', rawResponse: text };
+      }
       
       console.log('Auth test response:', data);
       setResult({
         status: response.status,
         success: response.ok,
-        data: data
+        data: data,
+        cookieInfo: {
+          documentCookie: document.cookie || 'empty',
+          domain: window.location.hostname,
+          protocol: window.location.protocol,
+          href: window.location.href
+        }
       });
       
     } catch (error: any) {
