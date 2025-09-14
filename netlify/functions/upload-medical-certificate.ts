@@ -112,49 +112,28 @@ export const handler: Handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
+  // Only allow POST requests - exact same check as create-holiday-request
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ 
-        error: 'Metodo non consentito',
-        message: 'Solo richieste POST sono supportate' 
-      })
+      body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
 
   try {
-    // DEBUG: Log all headers and cookies for troubleshooting
-    console.log('🔍 DEBUG Headers:', {
-      cookie: event.headers.cookie ? 'Present' : 'Missing',
-      cookieLength: event.headers.cookie?.length || 0,
-      authorization: event.headers.authorization ? 'Present' : 'Missing',
-      authLength: event.headers.authorization?.length || 0,
-      authPrefix: event.headers.authorization?.substring(0, 20) + '...',
-      userAgent: event.headers['user-agent']?.substring(0, 50) + '...',
-      origin: event.headers.origin,
-      referer: event.headers.referer
+    // DEBUG: Log all headers exactly like create-holiday-request
+    console.log('🔍 UPLOAD-MEDICAL DEBUG Headers:', {
+      cookie: event.headers.cookie,
+      authorization: event.headers.authorization,
+      userAgent: event.headers['user-agent']
     });
 
-    console.log('🔍 DEBUG: About to call verifyAuthFromRequest...');
+    // Verify authentication - EXACT same pattern as create-holiday-request
+    const userToken = await verifyAuthFromRequest(event);
+    requireAccessToken(userToken);
 
-    // Verify authentication
-    let userToken;
-    try {
-      userToken = await verifyAuthFromRequest(event);
-      console.log('✅ DEBUG: verifyAuthFromRequest succeeded, userToken:', userToken?.userId);
-    } catch (authError) {
-      console.error('❌ DEBUG: verifyAuthFromRequest failed:', authError);
-      throw authError;
-    }
-
-    try {
-      requireAccessToken(userToken);
-      console.log('✅ DEBUG: requireAccessToken succeeded');
-    } catch (requireError) {
-      console.error('❌ DEBUG: requireAccessToken failed:', requireError);
-      throw requireError;
-    }
+    console.log('✅ UPLOAD-MEDICAL: Authentication successful for user:', userToken.userId);
     
     console.log('🏥 Processing medical certificate upload for user:', userToken.userId);
 
