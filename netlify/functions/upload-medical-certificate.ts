@@ -123,6 +123,13 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
+    // DEBUG: Log all headers and cookies for troubleshooting
+    console.log('🔍 DEBUG Headers:', {
+      cookie: event.headers.cookie,
+      authorization: event.headers.authorization,
+      userAgent: event.headers['user-agent']
+    });
+    
     // Verify authentication
     const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
