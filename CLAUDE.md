@@ -716,4 +716,9 @@ npx netlify db init
 - **Mobile optimization**: Touch-friendly calendar interface, offline capability for viewing
 - **Bundle splitting**: Separate admin dashboard from employee dashboard for faster loading
 - la documentazione di progetto è stata inserita nella cartella docs (/Users/maximiliangiurastante/Sviluppo/Claude/Omnia-Holiday-Tracker/docs) tranne le istruzioni base di claude code che corrispondono ai files CLAUDE.md, INITIAL.md, PLANNING.md, README.md, TASK-COMPLETED.md, TASK.md che restano nella root del progetto.
-- ogni volta che fai una modifica aggiorna la versione del package.json di + x.x.1 ad esempio da  "version": "2.8.7" a  "version": "2.8.8", a meno che non ti venga esplicitamente richiesto di dare una nuova numerazione
+- ogni volta che fai una modifica aggiorna la versione del package.json di + x.x.1 ad esempio da  "version": "2.8.7" a  "version": "2.8.8", a meno che non ti venga esplicitamente richiesto di dare una nuova numerazione. Regola versioning confermata:
+
+  - Solo l'ultima cifra viene incrementata automaticamente
+  - 2.9.9 → 2.9.10 (NON 2.10.0 o 3.0.0)
+  - Continuo fino a 2.9.99 o oltre se necessario
+  - Le prime due cifre vengono richieste formalmente da me, se serve incrementarle.
