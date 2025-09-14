@@ -13,10 +13,11 @@ const uploadCertificateSchema = z.object({
   fileData: z.string().optional() // Base64 data opzionale
 });
 
-// CORS headers - Match working get-profile function
+// CORS headers - Match working create-holiday-request function
 const headers = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Origin': 'https://holiday.omniaelectronics.com',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 };
@@ -125,14 +126,35 @@ export const handler: Handler = async (event, context) => {
   try {
     // DEBUG: Log all headers and cookies for troubleshooting
     console.log('🔍 DEBUG Headers:', {
-      cookie: event.headers.cookie,
-      authorization: event.headers.authorization,
-      userAgent: event.headers['user-agent']
+      cookie: event.headers.cookie ? 'Present' : 'Missing',
+      cookieLength: event.headers.cookie?.length || 0,
+      authorization: event.headers.authorization ? 'Present' : 'Missing',
+      authLength: event.headers.authorization?.length || 0,
+      authPrefix: event.headers.authorization?.substring(0, 20) + '...',
+      userAgent: event.headers['user-agent']?.substring(0, 50) + '...',
+      origin: event.headers.origin,
+      referer: event.headers.referer
     });
-    
+
+    console.log('🔍 DEBUG: About to call verifyAuthFromRequest...');
+
     // Verify authentication
-    const userToken = await verifyAuthFromRequest(event);
-    requireAccessToken(userToken);
+    let userToken;
+    try {
+      userToken = await verifyAuthFromRequest(event);
+      console.log('✅ DEBUG: verifyAuthFromRequest succeeded, userToken:', userToken?.userId);
+    } catch (authError) {
+      console.error('❌ DEBUG: verifyAuthFromRequest failed:', authError);
+      throw authError;
+    }
+
+    try {
+      requireAccessToken(userToken);
+      console.log('✅ DEBUG: requireAccessToken succeeded');
+    } catch (requireError) {
+      console.error('❌ DEBUG: requireAccessToken failed:', requireError);
+      throw requireError;
+    }
     
     console.log('🏥 Processing medical certificate upload for user:', userToken.userId);
 
