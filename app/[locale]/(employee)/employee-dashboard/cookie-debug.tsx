@@ -47,7 +47,7 @@ export function CookieDebug() {
       const result = await response.json();
       console.log('🔍 Direct auth test:', result);
       
-      setCookieInfo(prev => ({
+      setCookieInfo((prev: any) => ({
         ...prev,
         directAuthTest: {
           status: response.status,
@@ -56,7 +56,7 @@ export function CookieDebug() {
       }));
     } catch (error) {
       console.error('❌ Direct auth test failed:', error);
-      setCookieInfo(prev => ({
+      setCookieInfo((prev: any) => ({
         ...prev,
         directAuthTest: {
           error: error.message
