@@ -216,8 +216,9 @@ export function MultiStepHolidayRequest({
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
+          // Always include credentials to send cookies
+          credentials: 'include',
         })
 
         if (response.ok) {
@@ -401,11 +402,10 @@ export function MultiStepHolidayRequest({
       const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        // Include credentials only in production where cookies work properly
-        ...(isDevelopment ? {} : { credentials: 'include' }),
+        // Always include credentials to send cookies
+        credentials: 'include',
         body: JSON.stringify(formattedData)
       })
 
@@ -457,10 +457,10 @@ export function MultiStepHolidayRequest({
             const uploadResponse = await fetch(`${baseUrl}/.netlify/functions/upload-medical-certificate`, {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               },
-              ...(isDevelopment ? {} : { credentials: 'include' }),
+              // Always include credentials to send cookies
+              credentials: 'include',
               body: JSON.stringify(uploadData)
             });
 
