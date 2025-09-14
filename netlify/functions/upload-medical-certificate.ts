@@ -130,8 +130,24 @@ export const handler: Handler = async (event, context) => {
     });
 
     // Verify authentication - EXACT same pattern as create-holiday-request
-    const userToken = await verifyAuthFromRequest(event);
-    requireAccessToken(userToken);
+    let userToken;
+    try {
+      console.log('🔍 UPLOAD-MEDICAL: Step 1 - Calling verifyAuthFromRequest...');
+      userToken = await verifyAuthFromRequest(event);
+      console.log('✅ UPLOAD-MEDICAL: Step 1 SUCCESS - verifyAuthFromRequest worked');
+    } catch (authError: any) {
+      console.error('❌ UPLOAD-MEDICAL: Step 1 FAILED - verifyAuthFromRequest error:', authError);
+      throw new Error(`Authentication step 1 failed: ${authError.message}`);
+    }
+
+    try {
+      console.log('🔍 UPLOAD-MEDICAL: Step 2 - Calling requireAccessToken...');
+      requireAccessToken(userToken);
+      console.log('✅ UPLOAD-MEDICAL: Step 2 SUCCESS - requireAccessToken worked');
+    } catch (requireError: any) {
+      console.error('❌ UPLOAD-MEDICAL: Step 2 FAILED - requireAccessToken error:', requireError);
+      throw new Error(`Authentication step 2 failed: ${requireError.message}`);
+    }
 
     console.log('✅ UPLOAD-MEDICAL: Authentication successful for user:', userToken.userId);
     
@@ -213,14 +229,29 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Handle authentication errors
+    // Handle authentication errors - provide detailed debug info
     if (error instanceof Error && error.message.includes('token')) {
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({
           error: 'Non autorizzato',
-          message: 'Token di autenticazione non valido o scaduto'
+          message: 'Token di autenticazione non valido o scaduto',
+          debug: {
+            errorMessage: error.message,
+            errorName: error.constructor.name,
+            hasAuthHeader: !!event.headers.authorization,
+            hasCookieHeader: !!event.headers.cookie,
+            authHeaderLength: event.headers.authorization?.length || 0,
+            cookieLength: event.headers.cookie?.length || 0,
+            environment: {
+              nodeEnv: process.env.NODE_ENV,
+              hasJwtSecret: !!process.env.JWT_SECRET,
+              netlify: process.env.NETLIFY,
+              context: process.env.CONTEXT
+            },
+            timestamp: new Date().toISOString()
+          }
         })
       };
     }
