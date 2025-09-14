@@ -13,8 +13,15 @@ interface MedicalCertificateMetadata {
   holidayRequestId: string;
 }
 
-// Initialize Netlify Blobs with proper configuration
+// Cache for initialized store to avoid multiple initializations
+let storeCache: any = null;
+
+// Initialize Netlify Blobs with proper configuration (lazy initialization)
 const initializeNetlifyBlobs = async () => {
+  // Return cached store if already initialized
+  if (storeCache) {
+    return storeCache;
+  }
   console.log('🔍 Initializing Netlify Blobs with manual configuration...');
 
   // Debug environment
@@ -82,6 +89,8 @@ const initializeNetlifyBlobs = async () => {
       console.warn('⚠️ Could not verify store connection, but will proceed:', testError);
     }
 
+    // Cache the store for reuse
+    storeCache = store;
     return store;
   } catch (error) {
     console.error('❌ Netlify Blobs initialization failed:', error);
