@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
-// Use safe version to avoid Netlify Blobs initialization errors
-import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates-safe';
+// Use v2 version that works properly with Netlify Blobs in production
+import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates-v2';
 import { getSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
 
 // CORS headers

@@ -2,8 +2,8 @@ import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
-// Use safe version to avoid Netlify Blobs initialization errors
-import { storeMedicalCertificate } from '../../lib/storage/medical-certificates-safe';
+// Use v2 version that works properly with Netlify Blobs in production
+import { storeMedicalCertificate } from '../../lib/storage/medical-certificates-v2';
 import { storeSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
 
 // Validation schemas
