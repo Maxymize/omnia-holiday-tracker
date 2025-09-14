@@ -398,6 +398,9 @@ export function MultiStepHolidayRequest({
                            window.location.hostname === '127.0.0.1' ||
                            window.location.port === '3001';
 
+      // DEBUG: Log cookie state before first request
+      console.log('🍪 DEBUG: Cookie state before CREATE request:', document.cookie);
+      
       // Make API call to create holiday request
       const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
         method: 'POST',
@@ -408,6 +411,8 @@ export function MultiStepHolidayRequest({
         credentials: 'include',
         body: JSON.stringify(formattedData)
       })
+      
+      console.log('✅ DEBUG: CREATE request completed, response status:', response.status);
 
       const result = await response.json()
 
@@ -426,6 +431,8 @@ export function MultiStepHolidayRequest({
         // Upload medical certificate if provided
         if (data.type === 'sick' && selectedFile && data.medicalCertificateOption === 'upload') {
           try {
+            // DEBUG: Log cookie state before upload request
+            console.log('🍪 DEBUG: Cookie state before UPLOAD request:', document.cookie);
             console.log('Uploading medical certificate:', selectedFile.name);
             
             // Convert file to base64
