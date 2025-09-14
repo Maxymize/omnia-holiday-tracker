@@ -1,6 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
-import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates';
+import { retrieveMedicalCertificate } from '../../lib/storage/medical-certificates-fixed';
 import { getSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
 
 // CORS headers

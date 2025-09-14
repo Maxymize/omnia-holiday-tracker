@@ -49,6 +49,7 @@ export const holidays = pgTable('holidays', {
   approvedBy: uuid('approved_by').references(() => users.id),
   approvedAt: timestamp('approved_at'),
   rejectionReason: text('rejection_reason'),
+  medicalCertificateFileId: text('medical_certificate_file_id'), // External file ID reference
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -99,7 +100,7 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
   employees: many(users),
 }));
 
-export const holidaysRelations = relations(holidays, ({ one }) => ({
+export const holidaysRelations = relations(holidays, ({ one, many }) => ({
   user: one(users, {
     fields: [holidays.userId],
     references: [users.id],
@@ -108,6 +109,37 @@ export const holidaysRelations = relations(holidays, ({ one }) => ({
     fields: [holidays.approvedBy],
     references: [users.id],
     relationName: 'approver',
+  }),
+  medicalCertificates: many(medicalCertificates),
+}));
+
+// Medical Certificates Table for secure file storage
+export const medicalCertificates = pgTable('medical_certificates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  fileId: text('file_id').notNull().unique(), // External file identifier
+  holidayRequestId: uuid('holiday_request_id').notNull().references(() => holidays.id),
+  originalFileName: text('original_file_name').notNull(),
+  mimeType: text('mime_type').notNull(),
+  fileSize: integer('file_size').notNull(),
+  encryptedData: text('encrypted_data').notNull(), // Base64 encrypted file content
+  encryptionMethod: text('encryption_method').notNull().default('XOR'), // Encryption type used
+  uploadedBy: uuid('uploaded_by').notNull().references(() => users.id),
+  uploadedAt: timestamp('uploaded_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at'), // Optional expiration date
+  downloadCount: integer('download_count').notNull().default(0), // Track downloads for audit
+  lastDownloadAt: timestamp('last_download_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const medicalCertificatesRelations = relations(medicalCertificates, ({ one }) => ({
+  holidayRequest: one(holidays, {
+    fields: [medicalCertificates.holidayRequestId],
+    references: [holidays.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [medicalCertificates.uploadedBy],
+    references: [users.id],
   }),
 }));
 
@@ -215,6 +247,9 @@ export type NewSetting = typeof settings.$inferInsert;
 
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+
+export type MedicalCertificate = typeof medicalCertificates.$inferSelect;
+export type NewMedicalCertificate = typeof medicalCertificates.$inferInsert;
 
 // Enums for TypeScript
 export type UserRole = typeof userRoleEnum.enumValues[number];
