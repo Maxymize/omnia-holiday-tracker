@@ -881,7 +881,8 @@ export async function getHolidayWithEmployeeDetails(holidayId: string): Promise<
         updatedAt: data.holidayCreatedAt, // Using same date for simplicity
         approvedAt: data.holidayApprovedAt,
         approvedBy: null, // Will be set separately
-        rejectionReason: data.holidayRejectionReason
+        rejectionReason: data.holidayRejectionReason,
+        medicalCertificateFileId: null // Added for TypeScript compatibility
       },
       employee: {
         id: data.employeeId,
