@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
 import { storeMedicalCertificate } from '../../lib/storage/medical-certificates';
+import { storeSimpleMedicalCertificate } from '../../lib/storage/medical-certificates-simple';
 
 // Validation schemas
 const uploadCertificateSchema = z.object({
@@ -71,16 +72,42 @@ async function processCertificateUpload(
     });
 
     // Store the certificate securely with encryption
-    const storageResult = await storeMedicalCertificate(
-      fileBuffer,
-      fileName,
-      fileType,
-      uploadedBy,
-      holidayRequestId
-    );
+    console.log('🔍 Attempting primary storage (Netlify Blobs)...');
+    let storageResult;
 
-    if (!storageResult.success) {
-      throw new Error(`Errore di storage: ${storageResult.message}`);
+    try {
+      storageResult = await storeMedicalCertificate(
+        fileBuffer,
+        fileName,
+        fileType,
+        uploadedBy,
+        holidayRequestId
+      );
+
+      if (!storageResult.success) {
+        throw new Error(storageResult.message);
+      }
+
+      console.log('✅ Primary storage (Netlify Blobs) successful');
+
+    } catch (primaryError) {
+      console.log('❌ Primary storage failed, trying simple fallback storage...');
+      console.error('Primary storage error:', primaryError);
+
+      // Fallback to simple storage
+      storageResult = await storeSimpleMedicalCertificate(
+        fileBuffer,
+        fileName,
+        fileType,
+        uploadedBy,
+        holidayRequestId
+      );
+
+      if (!storageResult.success) {
+        throw new Error(`Both storage methods failed. Primary: ${primaryError instanceof Error ? primaryError.message : 'Unknown'}. Fallback: ${storageResult.message}`);
+      }
+
+      console.log('✅ Fallback storage successful with file ID:', storageResult.fileId);
     }
 
     console.log('✅ Certificate stored securely with ID:', storageResult.fileId);
