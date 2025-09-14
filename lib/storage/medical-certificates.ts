@@ -60,7 +60,12 @@ const initializeStorage = async () => {
       };
     } catch (filesystemError) {
       console.error('❌ Filesystem also failed:', filesystemError);
-      throw new Error('Both Netlify Blobs and filesystem storage failed');
+      
+      // Include debug info in the error message since console.log doesn't appear in logs
+      const blobsErrorMsg = error instanceof Error ? error.message : String(error);
+      const fsErrorMsg = filesystemError instanceof Error ? filesystemError.message : String(filesystemError);
+      
+      throw new Error(`DEBUG: Blobs failed: "${blobsErrorMsg}" | Filesystem failed: "${fsErrorMsg}" | Node env: ${process.env.NODE_ENV} | Netlify: ${process.env.NETLIFY} | Context: ${process.env.CONTEXT}`);
     }
   }
 };
