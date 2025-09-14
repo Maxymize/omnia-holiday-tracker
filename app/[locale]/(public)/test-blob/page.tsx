@@ -131,7 +131,7 @@ export default function TestBlobPage() {
         <p><strong>Test Blob Upload:</strong> Testa la funzionalità di Netlify Blobs senza autenticazione.</p>
         <p><strong>Test Authentication:</strong> Testa se i cookie vengono inviati correttamente alle funzioni.</p>
         <p>Se Blobs funziona ma Authentication fallisce, il problema è nei cookie/autenticazione.</p>
-        <p>Assicurati di essere loggato prima di testare l'autenticazione.</p>
+        <p>Assicurati di essere loggato prima di testare l&apos;autenticazione.</p>
       </div>
     </div>
   );
