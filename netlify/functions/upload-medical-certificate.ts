@@ -2,7 +2,8 @@ import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
-// Use database storage for reliability (Netlify Blobs not available)
+// Try Netlify Blobs with manual config, fallback to database if needed
+import { storeMedicalCertificateWithBlobs } from '../../lib/storage/medical-certificates-blobs-manual';
 import { storeMedicalCertificateInDB } from '../../lib/storage/medical-certificates-db';
 
 // Validation schemas
@@ -71,22 +72,43 @@ async function processCertificateUpload(
       actualBufferSize: fileBuffer.length
     });
 
-    // Store the certificate in database with encryption
-    console.log('🔍 Storing medical certificate in database...');
-    const storageResult = await storeMedicalCertificateInDB(
-      fileBuffer,
-      fileName,
-      fileType,
-      uploadedBy,
-      holidayRequestId,
-      uploadedBy // Using email as uploadedById for now
-    );
+    // Try Netlify Blobs first with manual configuration
+    console.log('🔍 Attempting Netlify Blobs storage with manual config...');
+    let storageResult;
 
-    if (!storageResult.success) {
-      throw new Error(storageResult.message);
+    try {
+      storageResult = await storeMedicalCertificateWithBlobs(
+        fileBuffer,
+        fileName,
+        fileType,
+        uploadedBy,
+        holidayRequestId
+      );
+
+      if (!storageResult.success) {
+        throw new Error(storageResult.message);
+      }
+
+      console.log('✅ Netlify Blobs storage successful');
+    } catch (blobError) {
+      console.error('❌ Netlify Blobs failed, falling back to database:', blobError);
+
+      // Fallback to database storage
+      storageResult = await storeMedicalCertificateInDB(
+        fileBuffer,
+        fileName,
+        fileType,
+        uploadedBy,
+        holidayRequestId,
+        uploadedBy // Using email as uploadedById for now
+      );
+
+      if (!storageResult.success) {
+        throw new Error(`Both storage methods failed. Blobs: ${blobError instanceof Error ? blobError.message : 'Unknown'}. DB: ${storageResult.message}`);
+      }
+
+      console.log('✅ Database storage successful (fallback)');
     }
-
-    console.log('✅ Database storage successful');
 
     console.log('✅ Certificate stored securely with ID:', storageResult.fileId);
 

@@ -1,5 +1,6 @@
 import { Handler } from '@netlify/functions';
 import { getStore } from '@netlify/blobs';
+import type { Store } from '@netlify/blobs';
 
 export const handler: Handler = async (event, context) => {
   const headers = {
@@ -21,10 +22,44 @@ export const handler: Handler = async (event, context) => {
       error: null as any
     };
 
+    let configType = 'unknown';
+
     try {
-      // Try to get a store
-      const store = getStore('test-store');
-      envInfo.hasBlobs = true;
+      // Check for environment variables
+      const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
+      const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
+
+      console.log('🔍 Manual config check:', {
+        siteID: !!siteID,
+        siteIDLength: siteID?.length,
+        token: !!token,
+        tokenLength: token?.length,
+        tokenPrefix: token?.substring(0, 10)
+      });
+
+      // Try automatic config first
+      let store: Store;
+      configType = 'automatic';
+
+      try {
+        store = getStore('test-store');
+        envInfo.hasBlobs = true;
+      } catch (autoError) {
+        console.log('❌ Automatic config failed, trying manual...');
+
+        if (!siteID || !token) {
+          throw new Error(`Manual config also not possible. SiteID: ${!!siteID}, Token: ${!!token}`);
+        }
+
+        // Try manual config
+        store = getStore({
+          name: 'test-store',
+          siteID: siteID,
+          token: token
+        } as any);
+        envInfo.hasBlobs = true;
+        configType = 'manual';
+      }
 
       // Try to write a test value
       const testKey = `test-${Date.now()}`;
@@ -46,7 +81,8 @@ export const handler: Handler = async (event, context) => {
           testResult: {
             key: testKey,
             value: value,
-            status: 'write/read/delete successful'
+            status: 'write/read/delete successful',
+            configType: configType
           }
         })
       };

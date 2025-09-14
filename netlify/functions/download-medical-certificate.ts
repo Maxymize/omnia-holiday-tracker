@@ -1,6 +1,7 @@
 import { Handler } from '@netlify/functions';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
-// Use database storage for reliability (Netlify Blobs not available)
+// Try Netlify Blobs with manual config, fallback to database if needed
+import { retrieveMedicalCertificateWithBlobs } from '../../lib/storage/medical-certificates-blobs-manual';
 import { retrieveMedicalCertificateFromDB } from '../../lib/storage/medical-certificates-db';
 
 // CORS headers
@@ -50,22 +51,37 @@ export const handler: Handler = async (event, context) => {
 
     console.log('📋 Download request for fileId:', fileId);
 
-    // Retrieve and decrypt the medical certificate from database
-    console.log('🔍 Retrieving medical certificate from database...');
-    const retrievalResult = await retrieveMedicalCertificateFromDB(fileId, userToken.email);
+    // Try Netlify Blobs first, then database
+    console.log('🔍 Attempting retrieval from Netlify Blobs...');
+    let retrievalResult: any;
 
-    if (!retrievalResult.success) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({
-          error: 'Certificato non trovato',
-          message: retrievalResult.error || 'Certificate not found in database'
-        })
-      };
+    try {
+      retrievalResult = await retrieveMedicalCertificateWithBlobs(fileId, userToken.email);
+
+      if (!retrievalResult.success) {
+        throw new Error(retrievalResult.error || 'Blobs retrieval failed');
+      }
+
+      console.log('✅ Netlify Blobs retrieval successful');
+    } catch (blobError) {
+      console.error('❌ Netlify Blobs failed, trying database:', blobError);
+
+      // Fallback to database
+      retrievalResult = await retrieveMedicalCertificateFromDB(fileId, userToken.email);
+
+      if (!retrievalResult.success) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Certificato non trovato',
+            message: `Not found in Blobs or DB. Blobs: ${blobError instanceof Error ? blobError.message : 'Unknown'}. DB: ${retrievalResult.error || 'Not found'}`
+          })
+        };
+      }
+
+      console.log('✅ Database retrieval successful (fallback)');
     }
-
-    console.log('✅ Database retrieval successful');
 
     if (!retrievalResult.fileBuffer) {
       return {
@@ -78,16 +94,16 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    // Get file metadata from database result
-    const originalName = retrievalResult.fileName || 'medical_certificate.pdf';
-    const mimeType = retrievalResult.mimeType || 'application/octet-stream';
+    // Get file metadata from either source
+    const originalName = retrievalResult.metadata?.originalName || retrievalResult.fileName || 'medical_certificate.pdf';
+    const mimeType = retrievalResult.metadata?.mimeType || retrievalResult.mimeType || 'application/octet-stream';
 
     console.log('✅ Certificate decrypted successfully:', {
       fileId,
       originalName: originalName,
       size: retrievalResult.fileBuffer.length,
       requestedBy: userToken.email,
-      storageType: 'database'
+      storageType: retrievalResult.metadata ? 'netlify-blobs' : 'database'
     });
     
     // Set appropriate content type header
