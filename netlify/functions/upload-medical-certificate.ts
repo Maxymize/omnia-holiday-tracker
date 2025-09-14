@@ -112,6 +112,10 @@ async function processCertificateUpload(
 
     console.log('✅ Certificate stored securely with ID:', storageResult.fileId);
 
+    if (!storageResult.fileId) {
+      throw new Error('File ID non generato durante il salvataggio');
+    }
+
     return {
       success: true,
       fileId: storageResult.fileId,
@@ -217,6 +221,10 @@ export const handler: Handler = async (event, context) => {
     console.log('✅ Certificate upload successful:', uploadResult.fileId);
 
     // Update the holiday request with the file ID
+    if (!uploadResult.fileId) {
+      throw new Error('File ID non ricevuto dal processo di upload');
+    }
+
     const dbUpdateSuccess = await updateHolidayRequestWithFileId(
       validatedData.holidayRequestId,
       uploadResult.fileId
