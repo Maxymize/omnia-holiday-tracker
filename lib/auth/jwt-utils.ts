@@ -270,7 +270,7 @@ export function createTokenCookies(accessToken: string, refreshToken: string) {
   const isProduction = process.env.NODE_ENV === 'production';
   
   return [
-    `auth-token=${accessToken}; HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Strict; Max-Age=3600; Path=/`,
-    `refresh-token=${refreshToken}; HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Strict; Max-Age=604800; Path=/`
+    `auth-token=${accessToken}; HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Lax; Max-Age=3600; Path=/`,
+    `refresh-token=${refreshToken}; HttpOnly; ${isProduction ? 'Secure;' : ''} SameSite=Lax; Max-Age=604800; Path=/`
   ];
 }
