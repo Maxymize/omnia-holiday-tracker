@@ -31,15 +31,28 @@ const isNetlifyEnvironment = () => {
 
 // Initialize storage - ALWAYS try Netlify Blobs first, fallback to filesystem
 const initializeStorage = async () => {
+  // Debug: Log environment variables first
+  console.log('🔍 Environment debug before storage initialization:', {
+    NODE_ENV: process.env.NODE_ENV,
+    NETLIFY: process.env.NETLIFY,
+    NETLIFY_SITE_ID: process.env.NETLIFY_SITE_ID,
+    CONTEXT: process.env.CONTEXT,
+    isNetlifyDeployment: !!process.env.NETLIFY || !!process.env.NETLIFY_SITE_ID
+  });
+
   // First: always try Netlify Blobs regardless of environment
   try {
     console.log('🔍 ALWAYS attempting to import @netlify/blobs first...');
     const { getStore } = await import('@netlify/blobs');
     console.log('✅ Successfully imported @netlify/blobs');
+
+    // Try to initialize the store
+    const store = getStore('medical-certificates');
+    console.log('✅ Netlify Blobs store created successfully');
     console.log('✅ Using Netlify Blobs storage');
     return {
       type: 'blobs',
-      store: getStore('medical-certificates')
+      store: store
     };
   } catch (error) {
     console.error('❌ @netlify/blobs failed, trying filesystem fallback:', error);
