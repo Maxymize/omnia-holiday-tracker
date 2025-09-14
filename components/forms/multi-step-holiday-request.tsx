@@ -400,12 +400,17 @@ export function MultiStepHolidayRequest({
 
       // DEBUG: Log cookie state before first request
       console.log('🍪 DEBUG: Cookie state before CREATE request:', document.cookie);
-      
+
+      // Get auth token from localStorage
+      const token = localStorage.getItem('accessToken');
+      console.log('🔐 DEBUG: Auth token from localStorage:', token ? 'Present' : 'Missing');
+
       // Make API call to create holiday request
       const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         // Always include credentials to send cookies
         credentials: 'include',
@@ -464,7 +469,8 @@ export function MultiStepHolidayRequest({
             const uploadResponse = await fetch(`${baseUrl}/.netlify/functions/upload-medical-certificate`, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
               },
               // Always include credentials to send cookies
               credentials: 'include',
