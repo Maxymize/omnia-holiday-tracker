@@ -13,10 +13,11 @@ const uploadCertificateSchema = z.object({
   fileData: z.string().optional() // Base64 data opzionale
 });
 
-// CORS headers
+// CORS headers - FIXED for credentials support
 const headers = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Origin': 'https://holiday.omniaelectronics.com',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 };
