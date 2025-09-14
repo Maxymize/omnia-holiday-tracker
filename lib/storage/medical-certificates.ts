@@ -29,41 +29,39 @@ const isNetlifyEnvironment = () => {
   return shouldUseBlobs;
 };
 
-// Initialize storage based on environment
+// Initialize storage - ALWAYS try Netlify Blobs first, fallback to filesystem
 const initializeStorage = async () => {
-  if (isNetlifyEnvironment()) {
+  // First: always try Netlify Blobs regardless of environment
+  try {
+    console.log('🔍 ALWAYS attempting to import @netlify/blobs first...');
+    const { getStore } = await import('@netlify/blobs');
+    console.log('✅ Successfully imported @netlify/blobs');
+    console.log('✅ Using Netlify Blobs storage');
+    return {
+      type: 'blobs',
+      store: getStore('medical-certificates')
+    };
+  } catch (error) {
+    console.error('❌ @netlify/blobs failed, trying filesystem fallback:', error);
+    console.error('❌ Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : 'No stack'
+    });
+    
+    // Second: fallback to filesystem (but this will fail in Netlify production)
     try {
-      console.log('🔍 Attempting to import @netlify/blobs...');
-      // Dynamic import for Netlify Blobs (only in production)
-      const { getStore } = await import('@netlify/blobs');
-      console.log('✅ Successfully imported @netlify/blobs');
-      console.log('✅ Using Netlify Blobs for production storage');
-      return {
-        type: 'blobs',
-        store: getStore('medical-certificates')
-      };
-    } catch (error) {
-      console.error('❌ Failed to initialize Netlify Blobs, falling back to filesystem:', error);
-      console.error('❌ Error details:', {
-        name: error instanceof Error ? error.name : 'Unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : 'No stack'
-      });
-      // Fall back to filesystem storage
+      console.log('🔍 Attempting filesystem fallback...');
       await fs.mkdir(STORAGE_DIR, { recursive: true });
+      console.log('✅ Using filesystem storage');
       return {
         type: 'filesystem',
         store: null
       };
+    } catch (filesystemError) {
+      console.error('❌ Filesystem also failed:', filesystemError);
+      throw new Error('Both Netlify Blobs and filesystem storage failed');
     }
-  } else {
-    // Development environment - use filesystem
-    console.log('🔍 Using filesystem storage for development');
-    await fs.mkdir(STORAGE_DIR, { recursive: true });
-    return {
-      type: 'filesystem',
-      store: null
-    };
   }
 };
 
