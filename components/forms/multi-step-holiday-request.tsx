@@ -438,6 +438,9 @@ export function MultiStepHolidayRequest({
           try {
             // DEBUG: Log cookie state before upload request
             console.log('🍪 DEBUG: Cookie state before UPLOAD request:', document.cookie);
+            console.log('🔐 DEBUG: Auth token before UPLOAD request:', authToken ? 'Present' : 'Missing');
+            console.log('🔐 DEBUG: Auth token length:', authToken?.length);
+            console.log('🔐 DEBUG: Auth token prefix:', authToken?.substring(0, 30) + '...');
             console.log('Uploading medical certificate:', selectedFile.name);
             
             // Convert file to base64
