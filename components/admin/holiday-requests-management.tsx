@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -69,7 +69,41 @@ export function HolidayRequestsManagement({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState<PendingHolidayRequest | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+  const [certificateMetadata, setCertificateMetadata] = useState<Record<string, any>>({});
+
+  // Fetch medical certificate metadata when selected request changes
+  useEffect(() => {
+    if (selectedRequest && selectedRequest.type === 'sick') {
+      const certInfo = getMedicalCertificateInfo(selectedRequest);
+      if (certInfo.fileId && !certificateMetadata[certInfo.fileId]) {
+        const fetchMetadata = async () => {
+          try {
+            const token = localStorage.getItem('accessToken');
+            const baseUrl = window.location.origin;
+            const response = await fetch(
+              `${baseUrl}/.netlify/functions/get-medical-certificate-info?fileId=${certInfo.fileId}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              setCertificateMetadata(prev => ({
+                ...prev,
+                [certInfo.fileId!]: data
+              }));
+            }
+          } catch (error) {
+            console.error('Failed to fetch certificate metadata:', error);
+          }
+        };
+        fetchMetadata();
+      }
+    }
+  }, [selectedRequest, certificateMetadata]);
+
   // Sorting state
   const [sortConfig, setSortConfig] = useState<{
     key: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta' | null;
@@ -169,16 +203,16 @@ export function HolidayRequestsManagement({
     if (!request.notes) {
       return { hasUploadedCertificate: false, fileId: null, fileName: null };
     }
-    
+
     // Look for pattern: "Medical Certificate: {fileId}"
     const match = request.notes.match(/Medical Certificate:\s*([^\n\r]+)/);
     if (match) {
       const fileId = match[1].trim();
-      // Generate a display filename from the fileId
-      const fileName = `medical_cert_${fileId.substring(0, 8)}.pdf`;
+      // We'll fetch the actual filename when downloading
+      const fileName = null; // Will be fetched dynamically
       return { hasUploadedCertificate: true, fileId, fileName };
     }
-    
+
     return { hasUploadedCertificate: false, fileId: null, fileName: null };
   };
 
@@ -752,6 +786,12 @@ export function HolidayRequestsManagement({
                                       <div className="mt-2">
                                         {(() => {
                                           const certInfo = getMedicalCertificateInfo(selectedRequest);
+                                          const metadata = certificateMetadata[certInfo.fileId || ''];
+
+                                          const displayFileName = metadata?.originalName ||
+                                            (metadata?.fileExtension ? `medical_cert_${certInfo.fileId?.substring(0, 8)}.${metadata.fileExtension}` :
+                                            `medical_cert_${certInfo.fileId?.substring(0, 8)}.pdf`);
+
                                           return certInfo.hasUploadedCertificate ? (
                                           <div className="flex items-start justify-between p-3 bg-green-50 border border-green-200 rounded-lg gap-3">
                                             <div className="flex items-start space-x-3 min-w-0 flex-1">
@@ -761,7 +801,7 @@ export function HolidayRequestsManagement({
                                                   {t('admin.requests.detailsModal.fileUploaded')}:
                                                 </p>
                                                 <p className="text-sm text-green-700 break-all font-mono bg-green-100 px-2 py-1 rounded mt-1">
-                                                  {certInfo.fileName}
+                                                  {displayFileName}
                                                 </p>
                                                 <p className="text-xs text-green-600 mt-1">
                                                   {t('admin.requests.detailsModal.certificatePresent')}
@@ -777,7 +817,34 @@ export function HolidayRequestsManagement({
                                                   try {
                                                     const token = localStorage.getItem('accessToken');
                                                     const baseUrl = window.location.origin;
-                                                    
+
+                                                    // First get metadata if not cached
+                                                    let certData = metadata;
+                                                    if (!certData) {
+                                                      const infoResponse = await fetch(
+                                                        `${baseUrl}/.netlify/functions/get-medical-certificate-info?fileId=${certInfo.fileId}`,
+                                                        {
+                                                          headers: {
+                                                            'Authorization': `Bearer ${token}`
+                                                          }
+                                                        }
+                                                      );
+
+                                                      if (!infoResponse.ok) {
+                                                        throw new Error('Failed to get certificate info');
+                                                      }
+
+                                                      certData = await infoResponse.json();
+                                                      // Cache it for future use
+                                                      setCertificateMetadata(prev => ({
+                                                        ...prev,
+                                                        [certInfo.fileId!]: certData
+                                                      }));
+                                                    }
+
+                                                    const actualFileName = certData.originalName || `medical_cert_${certInfo.fileId.substring(0, 8)}.${certData.fileExtension || 'pdf'}`;
+
+                                                    // Now download the actual file
                                                     const response = await fetch(
                                                       `${baseUrl}/.netlify/functions/download-medical-certificate?fileId=${certInfo.fileId}`,
                                                       {
@@ -788,14 +855,14 @@ export function HolidayRequestsManagement({
                                                     );
 
                                                     if (response.ok) {
-                                                      // Create a blob from the response
+                                                      // Create a blob from the response with the correct MIME type
                                                       const blob = await response.blob();
                                                       const url = window.URL.createObjectURL(blob);
-                                                      
+
                                                       // Create a download link and click it
                                                       const a = document.createElement('a');
                                                       a.href = url;
-                                                      a.download = certInfo.fileName || 'certificato-medico.pdf';
+                                                      a.download = actualFileName;
                                                       document.body.appendChild(a);
                                                       a.click();
                                                       document.body.removeChild(a);

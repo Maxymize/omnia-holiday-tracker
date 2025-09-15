@@ -101,16 +101,19 @@ export const handler: Handler = async (event, context) => {
     console.log('✅ Certificate decrypted successfully:', {
       fileId,
       originalName: originalName,
+      mimeType: mimeType,
       size: retrievalResult.fileBuffer.length,
       requestedBy: userToken.email,
       storageType: retrievalResult.metadata ? 'netlify-blobs' : 'database'
     });
-    
-    // Set appropriate content type header
-    const contentType = mimeType || 'application/octet-stream';
-    
-    // Generate safe filename for download
-    const safeFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    // Set appropriate content type header based on actual MIME type
+    const contentType = mimeType;
+
+    // Generate safe filename for download, preserving the original extension
+    const fileExtension = originalName.split('.').pop() || 'pdf';
+    const baseFileName = originalName.replace(/\.[^.]*$/, '').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const safeFileName = `${baseFileName}.${fileExtension}`;
 
     return {
       statusCode: 200,
