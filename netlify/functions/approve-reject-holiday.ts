@@ -20,6 +20,8 @@ const headers = {
 
 export const handler: Handler = async (event, context) => {
   console.log('🔍 Approve/Reject Holiday Function called at:', new Date().toISOString());
+  console.log('Environment:', process.env.NODE_ENV || 'production');
+  console.log('Runtime:', process.version);
   console.log('Method:', event.httpMethod);
   console.log('Headers present:', Object.keys(event.headers || {}));
   console.log('Body length:', event.body?.length || 0);
@@ -45,9 +47,15 @@ export const handler: Handler = async (event, context) => {
 
     // Verify authentication
     console.log('🔐 Verifying authentication...');
-    const userToken = await verifyAuthFromRequest(event);
-    requireAccessToken(userToken);
-    console.log('✅ Authentication verified for:', userToken.email);
+    let userToken;
+    try {
+      userToken = await verifyAuthFromRequest(event);
+      requireAccessToken(userToken);
+      console.log('✅ Authentication verified for:', userToken.email);
+    } catch (authError: any) {
+      console.error('❌ Authentication failed:', authError.message);
+      throw authError;
+    }
 
     // Check admin permissions
     if (userToken.role !== 'admin') {
@@ -89,16 +97,20 @@ export const handler: Handler = async (event, context) => {
       adminId: adminUser.id
     });
 
-    await updateHolidayStatusWithAudit(
-      validatedData.holidayId,
-      status,
-      adminUser.id,
-      validatedData.notes,
-      ipAddress,
-      userAgent
-    );
-
-    console.log('✅ Holiday status updated successfully');
+    try {
+      await updateHolidayStatusWithAudit(
+        validatedData.holidayId,
+        status,
+        adminUser.id,
+        validatedData.notes,
+        ipAddress,
+        userAgent
+      );
+      console.log('✅ Holiday status updated successfully');
+    } catch (dbError: any) {
+      console.error('❌ Database update failed:', dbError.message);
+      throw dbError;
+    }
 
     completionTimestamp = new Date().toISOString();
     console.log('Holiday approval/rejection completed:', {
@@ -195,11 +207,18 @@ export const handler: Handler = async (event, context) => {
         data: updatedHoliday
       });
 
-      return {
+      console.log('✅ Response body created successfully, length:', responseBody.length);
+      console.log('🚀 About to return success response');
+
+      const finalResponse = {
         statusCode: 200,
         headers,
         body: responseBody
       };
+
+      console.log('📦 Final response prepared');
+      return finalResponse;
+
     } catch (jsonError) {
       console.error('❌ Error creating response JSON:', jsonError);
       return {
