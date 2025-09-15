@@ -117,41 +117,41 @@ export const handler: Handler = async (event, context) => {
         // Don't throw error here - the approval was successful, just skip email
       } else {
         const { holiday, employee } = holidayWithEmployee;
-      
-      console.log('✅ Found employee details for email:', {
-        employeeId: employee.id,
-        employeeName: employee.name,
-        employeeEmail: employee.email,
-        holidayId: holiday.id,
-        holidayDates: `${holiday.startDate} to ${holiday.endDate}`
-      });
-      
-      const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
-      
-      const emailAction = validatedData.action === 'approve' ? 'holiday_request_approved' : 'holiday_request_rejected';
-      
-      const emailNotificationData = {
-        action: emailAction,
-        userData: {
-          name: employee.name,
-          email: employee.email
-        },
-        holidayData: {
-          id: holiday.id,
-          startDate: holiday.startDate,
-          endDate: holiday.endDate,
-          type: holiday.type,
-          workingDays: holiday.workingDays,
-          status: status,
-          approvedBy: adminUser.name,
-          rejectedBy: validatedData.action === 'reject' ? adminUser.name : undefined,
-          rejectionReason: validatedData.action === 'reject' ? validatedData.notes : undefined
-        },
-        adminData: {
-          name: adminUser.name,
-          email: adminUser.email
-        }
-      };
+
+        console.log('✅ Found employee details for email:', {
+          employeeId: employee.id,
+          employeeName: employee.name,
+          employeeEmail: employee.email,
+          holidayId: holiday.id,
+          holidayDates: `${holiday.startDate} to ${holiday.endDate}`
+        });
+
+        const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
+
+        const emailAction = validatedData.action === 'approve' ? 'holiday_request_approved' : 'holiday_request_rejected';
+
+        const emailNotificationData = {
+          action: emailAction,
+          userData: {
+            name: employee.name,
+            email: employee.email
+          },
+          holidayData: {
+            id: holiday.id,
+            startDate: holiday.startDate,
+            endDate: holiday.endDate,
+            type: holiday.type,
+            workingDays: holiday.workingDays,
+            status: status,
+            approvedBy: adminUser.name,
+            rejectedBy: validatedData.action === 'reject' ? adminUser.name : undefined,
+            rejectionReason: validatedData.action === 'reject' ? validatedData.notes : undefined
+          },
+          adminData: {
+            name: adminUser.name,
+            email: adminUser.email
+          }
+        };
 
         console.log('Sending email notification for holiday decision...');
 
@@ -234,12 +234,14 @@ export const handler: Handler = async (event, context) => {
 
     // Generic error response
     console.error('Unhandled error type:', error);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: 'Errore interno del server',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        message: error.message || 'Unknown error'
       })
     };
   }

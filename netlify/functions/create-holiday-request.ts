@@ -51,6 +51,10 @@ function calculateWorkingDays(startDate: Date, endDate: Date): number {
 }
 
 export const handler: Handler = async (event, context) => {
+  console.log('🚀 CREATE-HOLIDAY-REQUEST function called at:', new Date().toISOString());
+  console.log('- Method:', event.httpMethod);
+  console.log('- Headers present:', Object.keys(event.headers || {}));
+
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
