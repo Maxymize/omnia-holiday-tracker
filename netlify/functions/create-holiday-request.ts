@@ -298,7 +298,13 @@ export const handler: Handler = async (event, context) => {
     // Send email notification for new holiday request (don't block on email failures)
     try {
       const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
-      
+
+      console.log('📧 Email notification configuration:');
+      console.log('- Base URL:', baseUrl);
+      console.log('- SITE_URL env:', process.env.SITE_URL);
+      console.log('- URL env:', process.env.URL);
+      console.log('- Full function URL:', `${baseUrl}/.netlify/functions/email-notifications`);
+
       const emailNotificationData = {
         action: 'holiday_request_submitted',
         userData: {
@@ -316,22 +322,40 @@ export const handler: Handler = async (event, context) => {
         }
       };
 
-      console.log('Sending email notification for new holiday request...');
-      
+      console.log('📤 Sending email notification for new holiday request...');
+      console.log('- To admin email (will be determined by email-notifications function)');
+      console.log('- Employee:', user.name, '(', user.email, ')');
+      console.log('- Holiday dates:', validatedData.startDate, 'to', validatedData.endDate);
+
       const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(emailNotificationData)
       });
 
+      console.log('📬 Email notification response:', {
+        status: emailResponse.status,
+        statusText: emailResponse.statusText,
+        ok: emailResponse.ok
+      });
+
       if (emailResponse.ok) {
-        console.log('✅ Holiday request email notification sent successfully');
+        const responseData = await emailResponse.json();
+        console.log('✅ Holiday request email notification sent successfully:', responseData);
       } else {
         const emailError = await emailResponse.text();
-        console.error('⚠️ Failed to send holiday request email notification:', emailError);
+        console.error('⚠️ Failed to send holiday request email notification:', {
+          status: emailResponse.status,
+          statusText: emailResponse.statusText,
+          error: emailError
+        });
       }
-    } catch (emailError) {
-      console.error('⚠️ Email notification error (continuing with request creation):', emailError);
+    } catch (emailError: any) {
+      console.error('⚠️ Email notification error (continuing with request creation):', {
+        message: emailError.message,
+        stack: emailError.stack,
+        name: emailError.name
+      });
     }
 
     // Add audit log for auto-approval if applicable

@@ -108,7 +108,7 @@ export function HolidayRequestsManagement({
   const [sortConfig, setSortConfig] = useState<{
     key: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta' | null;
     direction: 'asc' | 'desc';
-  }>({ key: null, direction: 'asc' });
+  }>({ key: 'richiesta', direction: 'desc' }); // Default sort by request date, newest first
 
   // Sorting function
   const handleSort = (column: 'periodo' | 'tipo' | 'stato' | 'giorni' | 'richiesta') => {

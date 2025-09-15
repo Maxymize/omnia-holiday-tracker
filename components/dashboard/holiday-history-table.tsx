@@ -48,7 +48,7 @@ export function HolidayHistoryTable({
   const [sortConfig, setSortConfig] = useState<{
     key: 'richiesta' | 'periodo' | 'giorni' | 'tipo' | 'stato' | null;
     direction: 'asc' | 'desc';
-  }>({ key: null, direction: 'asc' });
+  }>({ key: 'richiesta', direction: 'desc' }); // Default sort by request date, newest first
 
   // Helper to get token from localStorage
   const getToken = () => localStorage.getItem('accessToken');

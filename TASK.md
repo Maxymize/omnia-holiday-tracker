@@ -98,6 +98,27 @@
 - [x] Add multi-language support for leave type labels (IT/EN/ES)
 - [x] Display admin-configured allowances in UI
 
+### 5.5 Medical Certificate Storage System with Netlify Blobs ✅
+**Priority**: High | **Est**: 8 hours | **Status**: COMPLETED (v2.9.42-43)
+- [x] Implement secure file upload/download system for medical certificates
+- [x] AES-256 encryption for sensitive medical documents
+- [x] Netlify Blobs integration with manual configuration (siteID + token)
+- [x] Database fallback system for high availability
+- [x] File type validation (PDF, JPG, PNG, GIF, WebP, DOC, DOCX)
+- [x] Automatic file expiration and cleanup (90 days default)
+- [x] Preserve original filename and MIME type through storage cycle
+- [x] Admin download functionality with proper file type headers
+- [x] Create comprehensive best practices documentation
+
+### 5.6 UI/UX Improvements and Bug Fixes ✅
+**Priority**: Medium | **Est**: 2 hours | **Status**: COMPLETED (v2.9.44-45)
+- [x] Clean up debug console logs for production readiness
+- [x] Fix missing translation keys (forms.multiStepForm.steps.review.title)
+- [x] Implement default sorting by request date (newest first) for:
+  - [x] Admin holiday requests management table
+  - [x] Employee holiday history table
+- [x] Improve user experience with cleaner console output
+
 ---
 
 ## 🧪 PHASE 6: Testing & Quality Assurance (FUTURE)

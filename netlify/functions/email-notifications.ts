@@ -86,11 +86,14 @@ export const handler = async (event: any) => {
         console.log('📧 Sending email directly via Resend API');
         console.log('- To:', emailData.to);
         console.log('- Subject:', emailData.subject);
-        
+        console.log('- API Key configured:', !!process.env.RESEND_API_KEY);
+        console.log('- FROM_EMAIL:', process.env.FROM_EMAIL);
+
         if (!process.env.RESEND_API_KEY) {
+          console.error('❌ RESEND_API_KEY is not configured in environment variables');
           throw new Error('RESEND_API_KEY not configured');
         }
-        
+
         // Use fetch directly to avoid dynamic import issues
         const emailRequest = {
           from: process.env.FROM_EMAIL || 'holidays@omniaelectronics.com',
@@ -98,7 +101,13 @@ export const handler = async (event: any) => {
           subject: emailData.subject,
           html: emailData.htmlContent
         };
-        
+
+        console.log('📤 Sending request to Resend API with:', {
+          from: emailRequest.from,
+          to: emailRequest.to,
+          subject: emailRequest.subject
+        });
+
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -107,22 +116,30 @@ export const handler = async (event: any) => {
           },
           body: JSON.stringify(emailRequest)
         });
-        
+
         const result = await response.json();
-        
+
         if (!response.ok) {
-          console.error('❌ Resend API error:', result);
-          throw new Error(`Resend API error: ${result.message || 'Unknown error'}`);
+          console.error('❌ Resend API error response:', {
+            status: response.status,
+            statusText: response.statusText,
+            result: result
+          });
+          throw new Error(`Resend API error: ${result.message || result.name || 'Unknown error'}`);
         }
-        
+
         console.log('✅ Email sent successfully, Message ID:', result.id);
-        return { 
+        return {
           emailResponse: { ok: true },
           emailResult: { success: true, messageId: result.id }
         };
-        
+
       } catch (error: any) {
-        console.error('❌ Direct email send failed:', error);
+        console.error('❌ Direct email send failed:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
         throw new Error(`Failed to send email: ${error.message}`);
       }
     };
