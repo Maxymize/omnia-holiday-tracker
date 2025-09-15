@@ -6,9 +6,13 @@
 import { getStore } from '@netlify/blobs';
 import type { Store } from '@netlify/blobs';
 import { encryptFile, decryptFile, generateFileId, isValidMedicalCertificateType, isValidFileSize } from '../utils/crypto';
+import { neon } from '@neondatabase/serverless';
 
 // Storage configuration
 const RETENTION_DAYS = parseInt(process.env.MEDICAL_CERT_RETENTION_DAYS || '2555'); // ~7 years default
+
+// Initialize SQL client
+const sql = neon(process.env.NETLIFY_DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || '');
 
 // Medical certificate metadata interface
 interface MedicalCertificateMetadata {
@@ -31,7 +35,7 @@ interface StoredCertificate {
 /**
  * Get the Netlify Blobs store with manual configuration
  */
-function getMedicalCertificateStore(): Store {
+export function getMedicalCertificateStore(): Store {
   // Get configuration from environment
   const siteID = process.env.NETLIFY_SITE_ID || process.env.SITE_ID;
   const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
@@ -130,10 +134,46 @@ export async function storeMedicalCertificateWithBlobs(
       expiresAt: metadata.expiresAt
     });
 
+    // Also store metadata in database for document management
+    try {
+      await sql`
+        INSERT INTO medical_certificates (
+          id,
+          original_name,
+          mime_type,
+          file_size,
+          uploaded_by,
+          uploaded_at,
+          holiday_request_id,
+          storage_type,
+          storage_location
+        ) VALUES (
+          ${fileId},
+          ${originalName},
+          ${mimeType},
+          ${fileBuffer.length},
+          ${uploadedBy},
+          ${metadata.uploadedAt},
+          ${holidayRequestId},
+          'netlify_blobs',
+          ${fileId}
+        )
+      `;
+
+      console.log('✅ Medical certificate metadata stored in database:', {
+        fileId,
+        originalName,
+        uploadedBy
+      });
+    } catch (dbError) {
+      console.error('⚠️ Failed to store certificate metadata in database:', dbError);
+      // Don't fail the entire operation since the file is already stored in Blobs
+    }
+
     return {
       fileId,
       success: true,
-      message: 'Medical certificate stored securely in Netlify Blobs'
+      message: 'Medical certificate stored securely in Netlify Blobs and database'
     };
 
   } catch (error) {

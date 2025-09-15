@@ -377,7 +377,7 @@ export function DocumentManagement() {
                       <Checkbox
                         checked={selectedDocuments.size === documents.length && documents.length > 0}
                         onCheckedChange={handleSelectAll}
-                        className="h-4 w-4"
+                        className="scale-50"
                       />
                     </th>
                     <th className="p-4 text-left">{t('admin.documents.table.type')}</th>
@@ -427,7 +427,7 @@ export function DocumentManagement() {
                         <Checkbox
                           checked={selectedDocuments.has(document.id)}
                           onCheckedChange={() => handleSelect(document.id)}
-                          className="h-4 w-4"
+                          className="scale-50"
                         />
                       </td>
                       <td className="p-4">
