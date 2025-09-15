@@ -37,6 +37,8 @@ export const handler: Handler = async (event, context) => {
     };
   }
 
+  let completionTimestamp = '';
+
   try {
     console.log('📋 Request body:', event.body);
 
@@ -97,11 +99,12 @@ export const handler: Handler = async (event, context) => {
 
     console.log('✅ Holiday status updated successfully');
 
+    completionTimestamp = new Date().toISOString();
     console.log('Holiday approval/rejection completed:', {
       holidayId: validatedData.holidayId,
       action: validatedData.action,
       approvedBy: userToken.email,
-      timestamp: new Date().toISOString()
+      timestamp: completionTimestamp
     });
 
     // Send email notification to employee (don't block on email failures)
@@ -173,23 +176,40 @@ export const handler: Handler = async (event, context) => {
     }
 
     // Response with updated holiday status
+    console.log('📝 Preparing response...');
     const updatedHoliday = {
       id: validatedData.holidayId,
       status: status,
       approvedBy: userToken.email,
-      approvedAt: new Date().toISOString(),
-      notes: validatedData.notes
+      approvedAt: completionTimestamp,
+      notes: validatedData.notes || null
     };
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
+    console.log('📤 Sending success response with data:', updatedHoliday);
+
+    try {
+      const responseBody = JSON.stringify({
         success: true,
         message: `Richiesta ferie ${validatedData.action === 'approve' ? 'approvata' : 'rifiutata'} con successo`,
         data: updatedHoliday
-      })
-    };
+      });
+
+      return {
+        statusCode: 200,
+        headers,
+        body: responseBody
+      };
+    } catch (jsonError) {
+      console.error('❌ Error creating response JSON:', jsonError);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `Richiesta ferie ${validatedData.action === 'approve' ? 'approvata' : 'rifiutata'} con successo`
+        })
+      };
+    }
 
   } catch (error: any) {
     console.error('❌ Approve/reject holiday error:', {
