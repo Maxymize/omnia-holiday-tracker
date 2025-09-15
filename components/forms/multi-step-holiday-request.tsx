@@ -316,6 +316,51 @@ export function MultiStepHolidayRequest({
     }
   }
 
+  // Helper function to validate file with translations
+  const validateFileWithTranslations = (file: File, currentStorage: number) => {
+    const validation = validateFileUpload(file, currentStorage)
+
+    if (!validation.isValid && validation.errorType) {
+      let errorMessage = ''
+
+      switch (validation.errorType) {
+        case 'FILE_TOO_LARGE':
+          errorMessage = t('forms.holidays.request.multiStep.fileTooLarge', {
+            size: formatFileSize(validation.fileSize || 0),
+            maxSize: formatFileSize(validation.maxSize || 0)
+          })
+          break
+        case 'INVALID_TYPE':
+          errorMessage = t('forms.holidays.request.multiStep.invalidFileFormat')
+          break
+        case 'STORAGE_FULL':
+          errorMessage = 'Upload rifiutato: supererebbe il limite di storage'
+          break
+        default:
+          errorMessage = 'Errore sconosciuto'
+      }
+
+      return { isValid: false, error: errorMessage }
+    }
+
+    if (validation.warningType) {
+      let warningMessage = ''
+
+      switch (validation.warningType) {
+        case 'CRITICAL_LIMIT':
+          warningMessage = `Attenzione: storage quasi al limite (${validation.usagePercentage}%)`
+          break
+        case 'NEAR_LIMIT':
+          warningMessage = `Avviso: utilizzo storage elevato (${validation.usagePercentage}%)`
+          break
+      }
+
+      return { isValid: true, warning: warningMessage }
+    }
+
+    return { isValid: true }
+  }
+
   // Calculate real-time vacation days using user.holidayAllowance and stats.usedDays
   const holidayAllowance = user?.holidayAllowance || 25 // Use real user allowance
   const usedDays = stats?.usedDays || 0 // Use real used days from stats
@@ -893,7 +938,7 @@ export function MultiStepHolidayRequest({
                                 if (file) {
                                   // Use new validation utility with storage check
                                   const currentStorage = storageUsage?.totalSizeBytes || 0
-                                  const validation = validateFileUpload(file, currentStorage)
+                                  const validation = validateFileWithTranslations(file, currentStorage)
 
                                   if (!validation.isValid) {
                                     toast.error("File non valido", validation.error || "Errore sconosciuto")
@@ -931,7 +976,7 @@ export function MultiStepHolidayRequest({
                                   {!dragActive && ` ${t('forms.holidays.request.multiStep.dragFile')}`}
                                 </p>
                                 <p className={`text-xs ${dragActive ? 'text-blue-500' : 'text-gray-500'}`}>
-                                  PDF, JPG, PNG, GIF, WebP - Max 5GB per file
+                                  PDF, JPG, PNG, GIF, WebP - Max 4MB per file
                                 </p>
                               </div>
                             </div>
@@ -946,7 +991,7 @@ export function MultiStepHolidayRequest({
                                 if (file) {
                                   // Use new validation utility with storage check
                                   const currentStorage = storageUsage?.totalSizeBytes || 0
-                                  const validation = validateFileUpload(file, currentStorage)
+                                  const validation = validateFileWithTranslations(file, currentStorage)
 
                                   if (!validation.isValid) {
                                     toast.error("File non valido", validation.error || "Errore sconosciuto")
@@ -1002,7 +1047,7 @@ export function MultiStepHolidayRequest({
                           </div>
                         </FormControl>
                         <FormDescription>
-                          Formati supportati: PDF, JPG, PNG, GIF, WebP. Dimensione massima: 5GB per file.
+                          {t('forms.holidays.request.multiStep.supportedFormats')}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

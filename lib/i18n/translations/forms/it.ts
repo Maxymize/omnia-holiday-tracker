@@ -98,7 +98,9 @@ const formsIt = {
         uploadDesc: 'Seleziona e carica il certificato medico in formato PDF, DOC, DOCX, o immagine (JPG/PNG)',
         commitmentConfirmed: 'Impegno Confermato',
         commitmentText: 'Ti impegni a fornire il certificato medico via email alla direzione aziendale entro 3 giorni lavorativi dalla presentazione di questa richiesta.',
-        invalidFileFormat: 'Formato file non valido. Sono supportati solo PDF, DOC, DOCX, JPG e PNG.'
+        invalidFileFormat: 'Formato file non valido. Sono supportati solo PDF, DOC, DOCX, JPG e PNG.',
+        supportedFormats: 'Formati supportati: PDF, JPG, PNG, GIF, WebP. Dimensione massima: 4MB per file.',
+        fileTooLarge: 'File troppo grande ({{size}}). Dimensione massima consentita: {{maxSize}}.'
       }
     },
     pageContent: {

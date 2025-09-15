@@ -55,14 +55,19 @@ export function calculateStorageUsagePercentage(currentUsage: number): number {
 // Validazione per upload di file singolo
 export function validateFileUpload(file: File, currentStorageUsed: number): {
   isValid: boolean;
-  error?: string;
-  warning?: string;
+  errorType?: 'FILE_TOO_LARGE' | 'INVALID_TYPE' | 'STORAGE_FULL';
+  fileSize?: number;
+  maxSize?: number;
+  warningType?: 'NEAR_LIMIT' | 'CRITICAL_LIMIT';
+  usagePercentage?: number;
 } {
   // Controlla dimensione singolo file
   if (file.size > NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE) {
     return {
       isValid: false,
-      error: `File troppo grande (${formatFileSize(file.size)}). Dimensione massima consentita: ${formatFileSize(NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE)}. Nota: il limite è dovuto ai constraint delle Netlify Functions, non dello storage.`
+      errorType: 'FILE_TOO_LARGE',
+      fileSize: file.size,
+      maxSize: NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE
     };
   }
 
@@ -70,7 +75,7 @@ export function validateFileUpload(file: File, currentStorageUsed: number): {
   if (!NETLIFY_BLOBS_LIMITS.ALLOWED_MIME_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: 'Tipo di file non supportato. Formati consentiti: PDF, JPG, PNG, GIF, WebP'
+      errorType: 'INVALID_TYPE'
     };
   }
 
@@ -78,7 +83,7 @@ export function validateFileUpload(file: File, currentStorageUsed: number): {
   if (currentStorageUsed + file.size > NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE) {
     return {
       isValid: false,
-      error: `Upload rifiutato: supererebbe il limite di storage (${formatFileSize(NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE)})`
+      errorType: 'STORAGE_FULL'
     };
   }
 
@@ -88,14 +93,16 @@ export function validateFileUpload(file: File, currentStorageUsed: number): {
   if (newUsagePercentage > NETLIFY_BLOBS_LIMITS.CRITICAL_THRESHOLD) {
     return {
       isValid: true,
-      warning: `Attenzione: storage quasi al limite (${Math.round(newUsagePercentage * 100)}%)`
+      warningType: 'CRITICAL_LIMIT',
+      usagePercentage: Math.round(newUsagePercentage * 100)
     };
   }
 
   if (newUsagePercentage > NETLIFY_BLOBS_LIMITS.WARNING_THRESHOLD) {
     return {
       isValid: true,
-      warning: `Avviso: utilizzo storage elevato (${Math.round(newUsagePercentage * 100)}%)`
+      warningType: 'NEAR_LIMIT',
+      usagePercentage: Math.round(newUsagePercentage * 100)
     };
   }
 

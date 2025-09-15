@@ -98,7 +98,9 @@ const formsEn = {
         uploadDesc: 'Select and upload the medical certificate in PDF, DOC, DOCX, or image format (JPG/PNG)',
         commitmentConfirmed: 'Commitment Confirmed',
         commitmentText: 'You commit to provide the medical certificate via email to company management within 3 working days of submitting this request.',
-        invalidFileFormat: 'Invalid file format. Only PDF, DOC, DOCX, JPG and PNG are supported.'
+        invalidFileFormat: 'Invalid file format. Only PDF, DOC, DOCX, JPG and PNG are supported.',
+        supportedFormats: 'Supported formats: PDF, JPG, PNG, GIF, WebP. Maximum size: 4MB per file.',
+        fileTooLarge: 'File too large ({{size}}). Maximum allowed size: {{maxSize}}.'
       }
     },
     pageContent: {
