@@ -319,7 +319,7 @@ export function DocumentManagement() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <strong>{t('admin.documents.storage.critical')}:</strong> {t('admin.documents.storage.criticalMessage', {
-              percentage: storageUsage.usagePercentage
+              percentage: storageUsage.usagePercentage.toString()
             })}
           </AlertDescription>
         </Alert>
@@ -330,7 +330,7 @@ export function DocumentManagement() {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             <strong>{t('admin.documents.storage.warning')}:</strong> {t('admin.documents.storage.warningMessage', {
-              percentage: storageUsage.usagePercentage,
+              percentage: storageUsage.usagePercentage.toString(),
               remaining: storageUsage.formatted.remainingSpace
             })}
           </AlertDescription>
