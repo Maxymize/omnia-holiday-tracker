@@ -292,6 +292,59 @@ export const handler: Handler = async (event, context) => {
 
     console.log('✅ Holiday request updated with certificate:', validatedData.holidayRequestId);
 
+    // Check storage usage after upload and trigger alerts if needed
+    try {
+      console.log('📊 Checking storage usage after upload for automatic alerts...');
+
+      // Get updated storage usage
+      const storageStats = await sql`
+        SELECT COALESCE(SUM(file_size), 0) as total_size_bytes
+        FROM medical_certificates
+      `;
+
+      const currentUsage = parseInt(storageStats[0]?.total_size_bytes || '0');
+      const NETLIFY_BLOBS_LIMITS = {
+        FREE_TIER_STORAGE: 100 * 1024 * 1024 * 1024, // 100 GB in bytes
+        WARNING_THRESHOLD: 0.8,
+        CRITICAL_THRESHOLD: 0.95
+      };
+
+      const usagePercentage = Math.round((currentUsage / NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE) * 100);
+      const isNearLimit = usagePercentage >= (NETLIFY_BLOBS_LIMITS.WARNING_THRESHOLD * 100);
+      const isCritical = usagePercentage >= (NETLIFY_BLOBS_LIMITS.CRITICAL_THRESHOLD * 100);
+
+      console.log(`📊 Post-upload storage: ${usagePercentage}% (${(currentUsage / (1024 * 1024 * 1024)).toFixed(2)} GB)`);
+
+      // Trigger automatic alert if thresholds are reached
+      if (isNearLimit || isCritical) {
+        console.log(`🚨 Storage threshold reached (${usagePercentage}%), triggering automatic admin alerts...`);
+
+        // Call the storage quota alert function
+        const alertUrl = `${process.env.NETLIFY_SITE_URL || 'http://localhost:3000'}/.netlify/functions/send-storage-quota-alert`;
+
+        // Fire and forget - don't wait for email response to avoid blocking upload response
+        fetch(alertUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }).then(response => {
+          if (response.ok) {
+            console.log('✅ Automatic storage alert triggered successfully');
+          } else {
+            console.error('❌ Failed to trigger automatic storage alert:', response.status);
+          }
+        }).catch(alertError => {
+          console.error('❌ Error triggering automatic storage alert:', alertError);
+        });
+      } else {
+        console.log(`✅ Storage usage (${usagePercentage}%) is within normal limits, no alerts needed`);
+      }
+    } catch (storageCheckError) {
+      console.error('⚠️ Failed to check storage usage after upload (non-critical):', storageCheckError);
+      // Don't fail the upload if storage check fails
+    }
+
     return {
       statusCode: 200,
       headers,
