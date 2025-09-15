@@ -9,8 +9,12 @@
 
 // Costanti per i limiti di Netlify Blobs
 export const NETLIFY_BLOBS_LIMITS = {
-  // Limite massimo per singolo file: 5 GB
-  MAX_FILE_SIZE: 5 * 1024 * 1024 * 1024, // 5 GB in bytes
+  // Limite pratico per upload via Netlify Functions: 4MB
+  // (considerando base64 encoding ~33% overhead + buffer)
+  MAX_FILE_SIZE: 4 * 1024 * 1024, // 4 MB in bytes (limite pratico Functions)
+
+  // Limite teorico Netlify Blobs: 5 GB (non utilizzabile via Functions)
+  THEORETICAL_MAX_FILE_SIZE: 5 * 1024 * 1024 * 1024, // 5 GB in bytes
 
   // Quota gratuita stimata: 100 GB
   FREE_TIER_STORAGE: 100 * 1024 * 1024 * 1024, // 100 GB in bytes
@@ -58,7 +62,7 @@ export function validateFileUpload(file: File, currentStorageUsed: number): {
   if (file.size > NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE) {
     return {
       isValid: false,
-      error: `File troppo grande. Dimensione massima consentita: ${formatFileSize(NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE)}`
+      error: `File troppo grande (${formatFileSize(file.size)}). Dimensione massima consentita: ${formatFileSize(NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE)}. Nota: il limite è dovuto ai constraint delle Netlify Functions, non dello storage.`
     };
   }
 

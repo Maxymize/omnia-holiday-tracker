@@ -249,6 +249,21 @@ export const handler: Handler = async (event, context) => {
       contentLength: validatedData.contentLength
     });
 
+    // Check file size against Netlify Functions limits first
+    if (validatedData.contentLength > NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE) {
+      console.log(`🚫 File too large for Netlify Functions: ${validatedData.contentLength} bytes > ${NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE} bytes`);
+      return {
+        statusCode: 413, // Payload Too Large
+        headers,
+        body: JSON.stringify({
+          error: 'File troppo grande',
+          message: `File di ${(validatedData.contentLength / (1024 * 1024)).toFixed(1)} MB supera il limite di ${(NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE / (1024 * 1024)).toFixed(0)} MB. Limite dovuto ai constraint delle Netlify Functions.`,
+          maxSize: NETLIFY_BLOBS_LIMITS.MAX_FILE_SIZE,
+          actualSize: validatedData.contentLength
+        })
+      };
+    }
+
     // Check storage quota before processing upload
     const storageCheck = await checkStorageQuota(validatedData.contentLength);
     if (!storageCheck.allowed) {
