@@ -587,6 +587,7 @@ export const handler: Handler = async (event, context) => {
       console.log('⚠️ No active admin users found, sending to fallback admin email');
       // Fallback to environment admin email if no admins in database
       const fallbackAdmin = {
+        id: 'fallback-admin',
         email: process.env.ADMIN_EMAIL || 'max.giurastante@omniaservices.net',
         name: 'Administrator',
         preferredLanguage: 'it'

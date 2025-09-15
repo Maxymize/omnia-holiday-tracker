@@ -1,6 +1,6 @@
 {
   "name": "omnia-holiday-tracker",
-  "version": "2.10.8",
+  "version": "2.10.9",
   "private": true,
   "scripts": {
     "dev": "next dev -p 8888",
