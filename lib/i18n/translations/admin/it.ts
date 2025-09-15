@@ -830,9 +830,19 @@ const adminTranslations = {
     title: 'Gestione Documenti',
     description: 'Gestisci tutti i certificati medici caricati dai dipendenti',
     totalCount: '{count} documenti totali',
+    totalDocuments: 'documenti totali',
     selectedCount: '{count} selezionati',
     noDocuments: 'Nessun documento caricato',
     deleteSelected: 'Elimina selezionati',
+    storage: {
+      critical: 'Storage Critico',
+      criticalMessage: 'Hai utilizzato {percentage}% dello spazio disponibile. Il caricamento di nuovi documenti potrebbe fallire. Elimina documenti obsoleti per liberare spazio.',
+      warning: 'Avviso Storage',
+      warningMessage: 'Hai utilizzato {percentage}% dello spazio disponibile ({remaining} rimanenti). Considera di eliminare documenti obsoleti.',
+      full: 'Storage Pieno',
+      fullMessage: 'Lo spazio di archiviazione è completamente utilizzato. Contattare gli amministratori per liberare spazio.',
+      loadingInfo: 'Caricamento info storage...'
+    },
     table: {
       type: 'Tipo',
       fileName: 'Nome File',

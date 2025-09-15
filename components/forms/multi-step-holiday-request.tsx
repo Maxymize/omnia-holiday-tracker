@@ -21,6 +21,7 @@ import { useAuth } from "@/lib/hooks/useAuth"
 import { useHolidays } from "@/lib/hooks/useHolidays"
 import { useTranslation } from "@/lib/i18n/provider"
 import { toast } from "@/lib/utils/toast"
+import { validateFileUpload, formatFileSize } from "@/lib/utils/netlify-blobs-limits"
 
 // Enhanced validation schema for multi-step form
 const createHolidayRequestSchema = (t: any) => z.object({
@@ -126,6 +127,7 @@ export function MultiStepHolidayRequest({
   const [dragActive, setDragActive] = React.useState(false)
   const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
   const [userConfirmedSubmit, setUserConfirmedSubmit] = React.useState(false)
+  const [storageUsage, setStorageUsage] = React.useState<{ totalSizeBytes: number } | null>(null)
   
   const { user } = useAuth()
   const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
@@ -165,6 +167,34 @@ export function MultiStepHolidayRequest({
       setMedicalCertOption('upload')
     }
   }, [holidayType, medicalCertificateOptionValue, form])
+
+  // Fetch storage usage on component mount
+  React.useEffect(() => {
+    const fetchStorageUsage = async () => {
+      try {
+        const token = localStorage.getItem('accessToken')
+        const baseUrl = window.location.origin
+
+        const response = await fetch(`${baseUrl}/.netlify/functions/get-storage-usage`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.storage) {
+            setStorageUsage(data.storage)
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch storage usage:', error)
+      }
+    }
+
+    fetchStorageUsage()
+  }, [])
 
   const calculateWorkingDays = (start: Date, end: Date): number => {
     let count = 0
@@ -861,19 +891,17 @@ export function MultiStepHolidayRequest({
                                 const file = files[0]
                                 
                                 if (file) {
-                                  // Check file type
-                                  const allowedTypes = ['application/pdf', 'application/msword', 
-                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                    'image/jpeg', 'image/jpg', 'image/png']
-                                  
-                                  if (!allowedTypes.includes(file.type)) {
-                                    toast.error(t('forms.holidays.request.multiStep.invalidFileFormat'))
+                                  // Use new validation utility with storage check
+                                  const currentStorage = storageUsage?.totalSizeBytes || 0
+                                  const validation = validateFileUpload(file, currentStorage)
+
+                                  if (!validation.isValid) {
+                                    toast.error("File non valido", validation.error || "Errore sconosciuto")
                                     return
                                   }
-                                  
-                                  if (file.size > 5 * 1024 * 1024) {
-                                    toast.error("Il file è troppo grande. Dimensione massima consentita: 5MB.")
-                                    return
+
+                                  if (validation.warning) {
+                                    toast.warning("Avviso storage", validation.warning)
                                   }
                                   
                                   setSelectedFile(file)
@@ -903,7 +931,7 @@ export function MultiStepHolidayRequest({
                                   {!dragActive && ` ${t('forms.holidays.request.multiStep.dragFile')}`}
                                 </p>
                                 <p className={`text-xs ${dragActive ? 'text-blue-500' : 'text-gray-500'}`}>
-                                  {t('forms.holidays.request.multiStep.fileFormats')}
+                                  PDF, JPG, PNG, GIF, WebP - Max 5GB per file
                                 </p>
                               </div>
                             </div>
@@ -916,10 +944,20 @@ export function MultiStepHolidayRequest({
                               onChange={(e) => {
                                 const file = e.target.files?.[0]
                                 if (file) {
-                                  if (file.size > 5 * 1024 * 1024) {
-                                    toast.error("Il file è troppo grande. Dimensione massima consentita: 5MB.")
+                                  // Use new validation utility with storage check
+                                  const currentStorage = storageUsage?.totalSizeBytes || 0
+                                  const validation = validateFileUpload(file, currentStorage)
+
+                                  if (!validation.isValid) {
+                                    toast.error("File non valido", validation.error || "Errore sconosciuto")
+                                    e.target.value = '' // Clear the input
                                     return
                                   }
+
+                                  if (validation.warning) {
+                                    toast.warning("Avviso storage", validation.warning)
+                                  }
+
                                   setSelectedFile(file)
                                   field.onChange(file)
                                   
@@ -964,7 +1002,7 @@ export function MultiStepHolidayRequest({
                           </div>
                         </FormControl>
                         <FormDescription>
-                          {t('forms.holidays.request.multiStep.uploadDesc')}
+                          Formati supportati: PDF, JPG, PNG, GIF, WebP. Dimensione massima: 5GB per file.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

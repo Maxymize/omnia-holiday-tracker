@@ -2,9 +2,14 @@ import { Handler } from '@netlify/functions';
 import { z } from 'zod';
 import { verifyAuthFromRequest, requireAccessToken } from '../../lib/auth/jwt-utils';
 import { updateHolidayRequestWithFileId } from '../../lib/db/operations';
+import { neon } from '@neondatabase/serverless';
+
+// Initialize SQL client
+const sql = neon(process.env.NETLIFY_DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || '');
 // Try Netlify Blobs with manual config, fallback to database if needed
 import { storeMedicalCertificateWithBlobs } from '../../lib/storage/medical-certificates-blobs-manual';
 import { storeMedicalCertificateInDB } from '../../lib/storage/medical-certificates-db';
+import { isStorageFull, NETLIFY_BLOBS_LIMITS } from '../../lib/utils/netlify-blobs-limits';
 
 // Validation schemas
 const uploadCertificateSchema = z.object({
@@ -23,6 +28,42 @@ const headers = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 };
+
+// Helper function to check current storage usage
+async function checkStorageQuota(fileSize: number): Promise<{ allowed: boolean; error?: string }> {
+  try {
+    // Get current storage usage from database
+    const storageStats = await sql`
+      SELECT COALESCE(SUM(file_size), 0) as total_size_bytes
+      FROM medical_certificates
+    `;
+
+    const currentUsage = parseInt(storageStats[0]?.total_size_bytes || '0');
+    const newTotal = currentUsage + fileSize;
+
+    console.log('📊 Storage check:', {
+      currentUsage: `${(currentUsage / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+      fileSize: `${(fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+      newTotal: `${(newTotal / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+      limit: `${(NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE / (1024 * 1024 * 1024)).toFixed(2)} GB`,
+      wouldExceed: newTotal > NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE
+    });
+
+    // Check if new upload would exceed storage limit
+    if (newTotal > NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE) {
+      return {
+        allowed: false,
+        error: `Upload rifiutato: superamento limite storage (${(NETLIFY_BLOBS_LIMITS.FREE_TIER_STORAGE / (1024 * 1024 * 1024)).toFixed(0)} GB). Spazio utilizzato: ${(currentUsage / (1024 * 1024 * 1024)).toFixed(2)} GB, dimensione file: ${(fileSize / (1024 * 1024 * 1024)).toFixed(2)} GB.`
+      };
+    }
+
+    return { allowed: true };
+  } catch (error) {
+    console.error('❌ Storage quota check failed:', error);
+    // Allow upload if we can't check storage (fail open)
+    return { allowed: true };
+  }
+}
 
 // Process file upload with secure encryption
 async function processCertificateUpload(
@@ -207,6 +248,20 @@ export const handler: Handler = async (event, context) => {
       holidayRequestId: validatedData.holidayRequestId,
       contentLength: validatedData.contentLength
     });
+
+    // Check storage quota before processing upload
+    const storageCheck = await checkStorageQuota(validatedData.contentLength);
+    if (!storageCheck.allowed) {
+      console.log('🚫 Upload blocked due to storage limit exceeded');
+      return {
+        statusCode: 413, // Payload Too Large
+        headers,
+        body: JSON.stringify({
+          error: 'Limite di storage superato',
+          message: storageCheck.error
+        })
+      };
+    }
 
     // Process the certificate upload
     const uploadResult = await processCertificateUpload(

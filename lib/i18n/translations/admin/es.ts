@@ -838,9 +838,19 @@ const adminTranslations = {
     title: 'Gestión de Documentos',
     description: 'Gestiona todos los certificados médicos subidos por los empleados',
     totalCount: '{count} documentos totales',
+    totalDocuments: 'documentos totales',
     selectedCount: '{count} seleccionados',
     noDocuments: 'No hay documentos subidos',
     deleteSelected: 'Eliminar seleccionados',
+    storage: {
+      critical: 'Almacenamiento Crítico',
+      criticalMessage: 'Has usado {percentage}% del espacio disponible. La subida de nuevos documentos puede fallar. Por favor, elimina documentos antiguos para liberar espacio.',
+      warning: 'Aviso de Almacenamiento',
+      warningMessage: 'Has usado {percentage}% del espacio disponible ({remaining} restante). Considera limpiar documentos antiguos.',
+      full: 'Almacenamiento Lleno',
+      fullMessage: 'El espacio de almacenamiento está completamente utilizado. Contacta con los administradores para liberar espacio.',
+      loadingInfo: 'Cargando info de almacenamiento...'
+    },
     table: {
       type: 'Tipo',
       fileName: 'Nombre del Archivo',

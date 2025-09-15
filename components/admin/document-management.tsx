@@ -17,7 +17,8 @@ import {
   Calendar,
   User,
   HardDrive,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 
 interface MedicalDocument {
@@ -35,6 +36,22 @@ interface MedicalDocument {
   holidayRequestId: string;
 }
 
+interface StorageUsage {
+  totalFiles: number;
+  totalSizeBytes: number;
+  usagePercentage: number;
+  remainingBytes: number;
+  freeLimit: number;
+  isNearLimit: boolean;
+  isCritical: boolean;
+  isFull: boolean;
+  formatted: {
+    totalSize: string;
+    remainingSpace: string;
+    freeLimit: string;
+  };
+}
+
 type SortField = 'uploadedAt' | 'uploadedBy' | 'fileName' | 'fileSize';
 type SortOrder = 'asc' | 'desc';
 
@@ -47,6 +64,8 @@ export function DocumentManagement() {
   const [sortField, setSortField] = useState<SortField>('uploadedAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [storageUsage, setStorageUsage] = useState<StorageUsage | null>(null);
+  const [storageLoading, setStorageLoading] = useState(false);
 
   // Load documents
   const fetchDocuments = async () => {
@@ -75,6 +94,38 @@ export function DocumentManagement() {
       setError(err instanceof Error ? err.message : 'Failed to load documents');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load storage usage
+  const fetchStorageUsage = async () => {
+    try {
+      setStorageLoading(true);
+
+      const token = localStorage.getItem('accessToken');
+      const baseUrl = window.location.origin;
+
+      const response = await fetch(`${baseUrl}/.netlify/functions/get-storage-usage`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to load storage usage:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.storage) {
+        setStorageUsage(data.storage);
+      }
+    } catch (err) {
+      console.warn('Error fetching storage usage:', err);
+      // Non-critical error, don't show to user
+    } finally {
+      setStorageLoading(false);
     }
   };
 
@@ -195,6 +246,7 @@ export function DocumentManagement() {
   // Load documents on component mount
   useEffect(() => {
     fetchDocuments();
+    fetchStorageUsage();
   }, [sortField, sortOrder]);
 
   return (
@@ -202,15 +254,88 @@ export function DocumentManagement() {
       {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {t('admin.documents.title')}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {t('admin.documents.description')}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {t('admin.documents.title')}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {t('admin.documents.description')}
+              </p>
+            </div>
+
+            {/* Storage Usage Summary */}
+            <div className="flex items-center gap-4 text-sm">
+              {storageUsage && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="h-4 w-4" />
+                    <span>
+                      {storageUsage.totalFiles} {t('admin.documents.totalDocuments')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {storageUsage.isCritical && <AlertCircle className="h-4 w-4 text-red-500" />}
+                    {storageUsage.isNearLimit && !storageUsage.isCritical && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
+                    <span className={`${
+                      storageUsage.isCritical ? 'text-red-600 font-semibold' :
+                      storageUsage.isNearLimit ? 'text-yellow-600 font-semibold' :
+                      'text-muted-foreground'
+                    }`}>
+                      {storageUsage.formatted.totalSize} / {storageUsage.formatted.freeLimit}
+                      <span className="ml-1">({storageUsage.usagePercentage}%)</span>
+                    </span>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchStorageUsage}
+                    disabled={storageLoading}
+                    className="h-8 w-8 p-0"
+                    title="Aggiorna"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${storageLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </>
+              )}
+
+              {storageLoading && !storageUsage && (
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span className="text-muted-foreground">{t('admin.documents.storage.loadingInfo')}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </CardHeader>
       </Card>
+
+      {/* Storage Warnings */}
+      {storageUsage?.isCritical && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>{t('admin.documents.storage.critical')}:</strong> {t('admin.documents.storage.criticalMessage', {
+              percentage: storageUsage.usagePercentage
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {storageUsage?.isNearLimit && !storageUsage?.isCritical && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>{t('admin.documents.storage.warning')}:</strong> {t('admin.documents.storage.warningMessage', {
+              percentage: storageUsage.usagePercentage,
+              remaining: storageUsage.formatted.remainingSpace
+            })}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Error Alert */}
       {error && (
@@ -228,47 +353,6 @@ export function DocumentManagement() {
         </Alert>
       )}
 
-      {/* Actions Bar */}
-      {documents.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">
-                  {t('admin.documents.totalCount', { count: documents.length.toString() })}
-                </span>
-                {selectedDocuments.size > 0 && (
-                  <span className="text-sm text-blue-600">
-                    {t('admin.documents.selectedCount', { count: selectedDocuments.size.toString() })}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchDocuments()}
-                  disabled={loading}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  {t('common.refresh')}
-                </Button>
-                {selectedDocuments.size > 0 && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(Array.from(selectedDocuments))}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {t('admin.documents.deleteSelected')}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Documents Table */}
       <Card>

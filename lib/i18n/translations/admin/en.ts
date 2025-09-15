@@ -838,9 +838,19 @@ const adminTranslations = {
     title: 'Document Management',
     description: 'Manage all medical certificates uploaded by employees',
     totalCount: '{count} total documents',
+    totalDocuments: 'total documents',
     selectedCount: '{count} selected',
     noDocuments: 'No documents uploaded',
     deleteSelected: 'Delete selected',
+    storage: {
+      critical: 'Storage Critical',
+      criticalMessage: 'You have used {percentage}% of available space. Upload of new documents may fail. Please delete old documents to free up space.',
+      warning: 'Storage Warning',
+      warningMessage: 'You have used {percentage}% of available space ({remaining} remaining). Consider cleaning up old documents.',
+      full: 'Storage Full',
+      fullMessage: 'The storage space is completely used. Contact administrators to free up space.',
+      loadingInfo: 'Loading storage info...'
+    },
     table: {
       type: 'Type',
       fileName: 'File Name',
