@@ -19,9 +19,10 @@ const headers = {
 };
 
 export const handler: Handler = async (event, context) => {
-  console.log('🔍 Approve/Reject Holiday Function called');
+  console.log('🔍 Approve/Reject Holiday Function called at:', new Date().toISOString());
   console.log('Method:', event.httpMethod);
   console.log('Headers present:', Object.keys(event.headers || {}));
+  console.log('Body length:', event.body?.length || 0);
 
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
