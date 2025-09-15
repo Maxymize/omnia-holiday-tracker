@@ -107,16 +107,16 @@ export const handler: Handler = async (event, context) => {
     // Send email notification to employee (don't block on email failures)
     try {
       console.log('🔍 Fetching holiday and employee details for email notification...');
-      
+      console.log('- Holiday ID:', validatedData.holidayId);
+
       // Get holiday details with employee information
       const holidayWithEmployee = await getHolidayWithEmployeeDetails(validatedData.holidayId);
-      
+
       if (!holidayWithEmployee) {
-        console.error('❌ Holiday or employee not found for email notification');
-        throw new Error('Holiday or employee not found');
-      }
-      
-      const { holiday, employee } = holidayWithEmployee;
+        console.error('❌ Holiday or employee not found for email notification - skipping email');
+        // Don't throw error here - the approval was successful, just skip email
+      } else {
+        const { holiday, employee } = holidayWithEmployee;
       
       console.log('✅ Found employee details for email:', {
         employeeId: employee.id,
@@ -153,19 +153,20 @@ export const handler: Handler = async (event, context) => {
         }
       };
 
-      console.log('Sending email notification for holiday decision...');
-      
-      const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(emailNotificationData)
-      });
+        console.log('Sending email notification for holiday decision...');
 
-      if (emailResponse.ok) {
-        console.log('✅ Holiday decision email notification sent successfully');
-      } else {
-        const emailError = await emailResponse.text();
-        console.error('⚠️ Failed to send holiday decision email notification:', emailError);
+        const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailNotificationData)
+        });
+
+        if (emailResponse.ok) {
+          console.log('✅ Holiday decision email notification sent successfully');
+        } else {
+          const emailError = await emailResponse.text();
+          console.error('⚠️ Failed to send holiday decision email notification:', emailError);
+        }
       }
     } catch (emailError) {
       console.error('⚠️ Email notification error (continuing with approval/rejection):', emailError);

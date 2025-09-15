@@ -296,6 +296,7 @@ export const handler: Handler = async (event, context) => {
     console.log('New holiday request created in database:', newHoliday.id);
 
     // Send email notification for new holiday request (don't block on email failures)
+    console.log('🔔 Starting email notification process...');
     try {
       const baseUrl = process.env.SITE_URL || process.env.URL || 'https://omnia-holiday-tracker.netlify.app';
 
@@ -326,6 +327,7 @@ export const handler: Handler = async (event, context) => {
       console.log('- To admin email (will be determined by email-notifications function)');
       console.log('- Employee:', user.name, '(', user.email, ')');
       console.log('- Holiday dates:', validatedData.startDate, 'to', validatedData.endDate);
+      console.log('- Request data:', JSON.stringify(emailNotificationData));
 
       const emailResponse = await fetch(`${baseUrl}/.netlify/functions/email-notifications`, {
         method: 'POST',
@@ -333,30 +335,43 @@ export const handler: Handler = async (event, context) => {
         body: JSON.stringify(emailNotificationData)
       });
 
-      console.log('📬 Email notification response:', {
+      console.log('📬 Email notification response received:', {
         status: emailResponse.status,
         statusText: emailResponse.statusText,
         ok: emailResponse.ok
       });
 
+      let responseText = '';
+      try {
+        responseText = await emailResponse.text();
+        console.log('📄 Response body:', responseText);
+      } catch (e) {
+        console.error('Failed to read response text:', e);
+      }
+
       if (emailResponse.ok) {
-        const responseData = await emailResponse.json();
-        console.log('✅ Holiday request email notification sent successfully:', responseData);
+        try {
+          const responseData = responseText ? JSON.parse(responseText) : {};
+          console.log('✅ Holiday request email notification sent successfully:', responseData);
+        } catch (e) {
+          console.log('✅ Email sent but response not JSON:', responseText);
+        }
       } else {
-        const emailError = await emailResponse.text();
         console.error('⚠️ Failed to send holiday request email notification:', {
           status: emailResponse.status,
           statusText: emailResponse.statusText,
-          error: emailError
+          error: responseText
         });
       }
     } catch (emailError: any) {
-      console.error('⚠️ Email notification error (continuing with request creation):', {
+      console.error('❌ Email notification error (continuing with request creation):', {
         message: emailError.message,
         stack: emailError.stack,
-        name: emailError.name
+        name: emailError.name,
+        cause: emailError.cause
       });
     }
+    console.log('🔔 Email notification process completed');
 
     // Add audit log for auto-approval if applicable
     if (initialStatus === 'approved') {
