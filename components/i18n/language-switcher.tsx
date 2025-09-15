@@ -31,17 +31,13 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     document.cookie = `session-language=${newLocale}; path=/; max-age=${60 * 60 * 24 * 30}`;
     document.cookie = `language-override=true; path=/; max-age=${60 * 60 * 24 * 30}`;
     
-    console.log('🍪 LanguageSwitcher cookies set:', {
-      sessionLanguage: newLocale,
-      override: true,
-      allCookies: document.cookie
-    });
+    // Language preference saved successfully
 
     const segments = pathname.split('/');
     segments[1] = newLocale;
     const newPath = segments.join('/');
     
-    console.log('🚀 LanguageSwitcher navigating to:', newPath);
+    // Navigating to new language path
     router.push(newPath);
   };
 

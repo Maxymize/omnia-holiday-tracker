@@ -398,12 +398,8 @@ export function MultiStepHolidayRequest({
                            window.location.hostname === '127.0.0.1' ||
                            window.location.port === '3001';
 
-      // DEBUG: Log cookie state before first request
-      console.log('🍪 DEBUG: Cookie state before CREATE request:', document.cookie);
-
       // Get auth token from localStorage
       const authToken = localStorage.getItem('accessToken');
-      console.log('🔐 DEBUG: Auth token from localStorage:', authToken ? 'Present' : 'Missing');
 
       // Make API call to create holiday request
       const response = await fetch(`${baseUrl}/.netlify/functions/create-holiday-request`, {
@@ -417,7 +413,7 @@ export function MultiStepHolidayRequest({
         body: JSON.stringify(formattedData)
       })
       
-      console.log('✅ DEBUG: CREATE request completed, response status:', response.status);
+      // Request completed
 
       const result = await response.json()
 
@@ -436,11 +432,6 @@ export function MultiStepHolidayRequest({
         // Upload medical certificate if provided
         if (data.type === 'sick' && selectedFile && data.medicalCertificateOption === 'upload') {
           try {
-            // DEBUG: Log cookie state before upload request
-            console.log('🍪 DEBUG: Cookie state before UPLOAD request:', document.cookie);
-            console.log('🔐 DEBUG: Auth token before UPLOAD request:', authToken ? 'Present' : 'Missing');
-            console.log('🔐 DEBUG: Auth token length:', authToken?.length);
-            console.log('🔐 DEBUG: Auth token prefix:', authToken?.substring(0, 30) + '...');
             console.log('Uploading medical certificate:', selectedFile.name);
             
             // Convert file to base64
@@ -1212,8 +1203,7 @@ export function MultiStepHolidayRequest({
                 <Button 
                   type="button" 
                   onClick={async () => {
-                    // FIXED: Direct call to handleSubmit instead of form event
-                    console.log('🚀 User clicked submit button - calling handleSubmit directly');
+                    // Submit the request
                     setUserConfirmedSubmit(true);
                     const formData = form.getValues();
                     await handleSubmit(formData);

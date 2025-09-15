@@ -219,21 +219,16 @@ export function EmployeeManagement({
   };
 
   const openAllowanceDialog = (employee: Employee) => {
-    console.log('🔧 DEBUG: openAllowanceDialog called for employee:', employee.name, 'Current allowance:', employee.holidayAllowance);
     setEditingEmployee(employee);
     setNewAllowance(employee.holidayAllowance || 25);
     setAllowanceReason('');
     setShowAllowanceDialog(true);
-    console.log('🔧 DEBUG: Dialog state set to true, should open now');
   };
 
   const handleUpdateAllowance = async () => {
-    console.log('🔧 DEBUG: handleUpdateAllowance called');
     if (!editingEmployee) {
-      console.log('❌ DEBUG: No editing employee set');
       return;
     }
-    console.log('🔧 DEBUG: Updating employee:', editingEmployee.name, 'from', editingEmployee.holidayAllowance, 'to', newAllowance);
 
     setAllowanceLoading(true);
     try {

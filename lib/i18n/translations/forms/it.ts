@@ -235,6 +235,10 @@ const formsIt = {
         title: 'Riepilogo',
         description: 'Conferma e invia',
       },
+      review: {
+        title: 'Riepilogo',
+        description: 'Conferma e invia',
+      },
       dates: {
         title: 'Date',
         description: 'Seleziona date',

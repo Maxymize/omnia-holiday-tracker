@@ -33,11 +33,7 @@ export function LanguageSelector() {
     document.cookie = `session-language=${newLocale}; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
     document.cookie = `language-override=true; path=/; max-age=${60 * 60 * 24 * 30}`; // 30 days
     
-    console.log('🍪 Cookies set:', {
-      sessionLanguage: newLocale,
-      override: true,
-      allCookies: document.cookie
-    });
+    // Language preference saved successfully
     
     // Get the current path without the locale
     const segments = pathname.split('/');

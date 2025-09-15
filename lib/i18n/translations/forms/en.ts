@@ -235,6 +235,10 @@ const formsEn = {
         title: 'Summary',
         description: 'Confirm and submit',
       },
+      review: {
+        title: 'Summary',
+        description: 'Confirm and submit',
+      },
       dates: {
         title: 'Dates',
         description: 'Select dates',
