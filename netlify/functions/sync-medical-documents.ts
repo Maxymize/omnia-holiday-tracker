@@ -105,13 +105,31 @@ export const handler: Handler = async (event, context) => {
           continue;
         }
 
-        // Try to get blob metadata (some might have it)
+        // Try to get blob metadata and actual file data
         console.log(`🔍 Processing blob: ${blob.key}`);
         const blobData = await store.get(blob.key);
 
         if (!blobData) {
           console.log(`⚠️ Could not retrieve blob data for ${blob.key}`);
           continue;
+        }
+
+        // Get actual file size from the blob data
+        let fileSize = 0;
+        try {
+          // Handle different blob data types
+          if (blobData && typeof blobData === 'object' && 'byteLength' in blobData) {
+            fileSize = (blobData as ArrayBuffer).byteLength;
+          } else if (typeof blobData === 'string') {
+            fileSize = new TextEncoder().encode(blobData).length;
+          } else if (blobData && typeof (blobData as any).size === 'number') {
+            fileSize = (blobData as any).size;
+          } else if (blobData && typeof (blobData as any).length === 'number') {
+            fileSize = (blobData as any).length;
+          }
+          console.log(`📏 File size for ${blob.key}: ${fileSize} bytes`);
+        } catch (error) {
+          console.log(`⚠️ Could not determine file size for ${blob.key}:`, error);
         }
 
         // Since we don't have original metadata, we'll create generic records
@@ -149,7 +167,7 @@ export const handler: Handler = async (event, context) => {
             ${'00000000-0000-0000-0000-000000000000'}, -- Placeholder UUID
             ${blob.key}, -- Using blob key as filename for now
             ${mimeType},
-            ${blob.size || 0},
+            ${fileSize}, -- Actual file size from blob data
             'legacy_document', -- Placeholder for encrypted data
             'NONE', -- No encryption for legacy docs
             ${'00000000-0000-0000-0000-000000000000'}, -- Placeholder user UUID
@@ -162,12 +180,12 @@ export const handler: Handler = async (event, context) => {
         syncedCount++;
         syncResults.push({
           fileId: blob.key,
-          size: blob.size,
+          size: fileSize, // Actual file size from blob data
           mimeType: mimeType,
           status: 'synced'
         });
 
-        console.log(`✅ Synced: ${blob.key} (${blob.size} bytes)`);
+        console.log(`✅ Synced: ${blob.key} (${fileSize} bytes)`);
 
       } catch (error) {
         console.error(`❌ Failed to sync ${blob.key}:`, error);
