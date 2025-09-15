@@ -169,7 +169,17 @@
 
 ---
 
-**Latest Completed Work** (Version 2.9.58 - EMAIL NOTIFICATION & HASH ROUTING OPTIMIZATION):
+**Latest Completed Work** (Version 2.10.0 - ADMIN DOCUMENT MANAGEMENT SYSTEM):
+- ✅ **Document Management Section**: New admin dashboard "Documenti" section positioned between "Richieste" and "Le Mie Richieste"
+- ✅ **Multi-Language Hash Routing**: Complete hash routing system with language-aware URLs (#documenti, #documents, #documentos)
+- ✅ **Document Table Interface**: Full-featured table with file type icons, sorting, bulk operations, and individual document actions
+- ✅ **Database Integration**: Safe medical_certificates table creation with proper field mapping (snake_case ↔ camelCase)
+- ✅ **API Functions**: Complete get-medical-documents and delete-medical-documents API with authentication and validation
+- ✅ **Translation System**: Comprehensive translations for IT/EN/ES covering all UI elements, table headers, and messages
+- ✅ **File Type Detection**: Automatic icon mapping for PDF (red), images (blue), and other file types with proper MIME type handling
+- ✅ **Testing & Validation**: Functional testing with sample documents confirming table display, sorting, and data retrieval
+
+**Previous Work** (Version 2.9.58 - EMAIL NOTIFICATION & HASH ROUTING OPTIMIZATION):
 - ✅ **Email Button 404 Fix**: Fixed all email notification buttons that were pointing to non-existent `/admin/holidays` URLs
 - ✅ **Hash Routing Implementation**: Complete admin dashboard hash routing system with multi-language support (IT/EN/ES)
 - ✅ **Language Switch Preservation**: Language switcher now preserves current admin dashboard tab context when switching languages

@@ -23,6 +23,7 @@ const adminTranslations = {
     calendar: 'Calendar',
     employees: 'Employees',
     requests: 'Requests',
+    documents: 'Documents',
     myRequests: 'My Requests',
     departments: 'Departments',
     reports: 'Reports',
@@ -31,6 +32,7 @@ const adminTranslations = {
     calendarDesc: 'General holidays view',
     employeesDesc: 'User management',
     requestsDesc: 'Holiday approvals',
+    documentsDesc: 'Medical certificates management',
     myRequestsDesc: 'My holidays and statistics',
     departmentsDesc: 'Department management',
     reportsDesc: 'Analysis and statistics',
@@ -831,6 +833,22 @@ const adminTranslations = {
       downloadError: 'Error downloading certificate',
       defaultCertName: 'medical-certificate',
     },
+  },
+  documents: {
+    title: 'Document Management',
+    description: 'Manage all medical certificates uploaded by employees',
+    totalCount: '{count} total documents',
+    selectedCount: '{count} selected',
+    noDocuments: 'No documents uploaded',
+    deleteSelected: 'Delete selected',
+    table: {
+      type: 'Type',
+      fileName: 'File Name',
+      size: 'Size',
+      uploadDate: 'Upload Date',
+      uploadedBy: 'Uploaded by',
+      actions: 'Actions'
+    }
   },
 } as const;
 

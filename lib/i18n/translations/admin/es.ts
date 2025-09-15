@@ -23,6 +23,7 @@ const adminTranslations = {
     calendar: 'Calendario',
     employees: 'Empleados',
     requests: 'Solicitudes',
+    documents: 'Documentos',
     myRequests: 'Mis Solicitudes',
     departments: 'Departamentos',
     reports: 'Reportes',
@@ -31,6 +32,7 @@ const adminTranslations = {
     calendarDesc: 'Vista general de vacaciones',
     employeesDesc: 'Gestión de usuarios',
     requestsDesc: 'Aprobaciones de vacaciones',
+    documentsDesc: 'Gestión de certificados médicos',
     myRequestsDesc: 'Mis vacaciones y estadísticas',
     departmentsDesc: 'Gestión de departamentos',
     reportsDesc: 'Análisis y estadísticas',
@@ -831,6 +833,22 @@ const adminTranslations = {
       downloadError: 'Error al descargar el certificado',
       defaultCertName: 'certificado-medico',
     },
+  },
+  documents: {
+    title: 'Gestión de Documentos',
+    description: 'Gestiona todos los certificados médicos subidos por los empleados',
+    totalCount: '{count} documentos totales',
+    selectedCount: '{count} seleccionados',
+    noDocuments: 'No hay documentos subidos',
+    deleteSelected: 'Eliminar seleccionados',
+    table: {
+      type: 'Tipo',
+      fileName: 'Nombre del Archivo',
+      size: 'Tamaño',
+      uploadDate: 'Fecha de Subida',
+      uploadedBy: 'Subido por',
+      actions: 'Acciones'
+    }
   },
 } as const;
 

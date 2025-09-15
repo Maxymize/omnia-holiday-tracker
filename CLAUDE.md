@@ -722,3 +722,4 @@ npx netlify db init
   - 2.9.9 → 2.9.10 (NON 2.10.0 o 3.0.0)
   - Continuo fino a 2.9.99 o oltre se necessario
   - Le prime due cifre vengono richieste formalmente da me, se serve incrementarle.
+- attento a non corrompere il db attuale quando fai le nuove migrazioni

@@ -5,6 +5,71 @@
 
 ---
 
+## ✅ VERSION 2.10.0 - ADMIN DOCUMENT MANAGEMENT SYSTEM (COMPLETED - September 15, 2025)
+
+### 🎯 New "Documenti" Admin Section Implementation ✅
+**Priority**: Major Feature | **Status**: COMPLETED | **Version**: 2.10.0
+**Context**: Complete implementation of document management section for admin dashboard to view and manage all uploaded medical certificates
+
+#### Key Features Implemented:
+- ✅ **Document Management Section**: New admin dashboard "Documenti" section positioned between "Richieste" and "Le Mie Richieste"
+- ✅ **Multi-Language Hash Routing**: Complete hash routing system with language-aware URLs (#documenti, #documents, #documentos)
+- ✅ **Document Table Interface**: Full-featured table with file type icons, sorting, bulk operations, and individual document actions
+- ✅ **Database Integration**: Safe medical_certificates table creation with proper field mapping (snake_case ↔ camelCase)
+- ✅ **API Functions**: Complete get-medical-documents and delete-medical-documents API with authentication and validation
+- ✅ **Translation System**: Comprehensive translations for IT/EN/ES covering all UI elements, table headers, and messages
+
+#### Technical Implementation:
+- **components/admin/document-management.tsx**: Complete document management component with table interface
+- **netlify/functions/get-medical-documents.ts**: API for retrieving medical documents with user information
+- **netlify/functions/delete-medical-documents.ts**: API for bulk document deletion from database and Netlify Blobs
+- **netlify/functions/sync-medical-documents.ts**: API for syncing existing Netlify Blobs to database
+- **lib/utils/admin-hash-routing.ts**: Updated to include documents hash routing
+- **app/[locale]/(admin)/admin-dashboard/page.tsx**: Added DocumentManagement component integration
+- **components/dashboard/admin-sidebar.tsx**: Added documents navigation with FolderOpen icon
+
+#### Document Management Features:
+- **Table Display**: File type icons, names, sizes, upload dates, employee names, and actions
+- **File Type Detection**: Automatic icon mapping for PDF (FileText/red), images (Image/blue), other files (FileIcon/gray)
+- **Sorting**: By upload date (ascending/descending) and employee name (alphabetical)
+- **Bulk Operations**: Select all/individual documents for bulk deletion with confirmation
+- **Individual Actions**: Download and delete buttons for each document
+- **Empty State**: Proper "Nessun documento caricato" message with document icon
+
+#### Database Schema:
+- **medical_certificates table**: Safe creation without corrupting existing data
+- **Field Mapping**: Proper snake_case database ↔ camelCase TypeScript mapping
+- **Test Data**: Sample documents created for testing functionality
+- **Connection Safety**: Robust URL cleaning and validation for database connections
+
+#### Translation Coverage:
+- **Italian**: "Gestione Documenti", table headers, actions, messages
+- **English**: "Document Management", complete UI translation
+- **Spanish**: "Gestión de Documentos", full Spanish support
+- **Navigation**: Multi-language menu items with descriptions
+
+#### Files Created/Modified:
+- `components/admin/document-management.tsx` (Created)
+- `netlify/functions/get-medical-documents.ts` (Created)
+- `netlify/functions/delete-medical-documents.ts` (Created)
+- `netlify/functions/sync-medical-documents.ts` (Created)
+- `lib/utils/admin-hash-routing.ts` (Updated)
+- `app/[locale]/(admin)/admin-dashboard/page.tsx` (Updated)
+- `components/dashboard/admin-sidebar.tsx` (Updated)
+- `lib/i18n/translations/admin/it.ts` (Updated)
+- `lib/i18n/translations/admin/en.ts` (Updated)
+- `lib/i18n/translations/admin/es.ts` (Updated)
+- `package.json` (Version 2.9.64 → 2.10.0)
+
+#### Testing Results:
+- ✅ **Navigation**: Hash routing works correctly (#documenti, #documents, #documentos)
+- ✅ **API Functions**: get-medical-documents returns proper JSON with 3 test documents
+- ✅ **Table Display**: Shows file icons, names, sizes, dates, and employee information
+- ✅ **Database**: medical_certificates table created safely without data corruption
+- ✅ **Translation**: All languages display correctly with proper navigation
+
+---
+
 ## ✅ VERSION 2.9.58 - EMAIL NOTIFICATION & HASH ROUTING OPTIMIZATION (COMPLETED - September 15, 2025)
 
 ### 🎯 OmniaGroup Post-Deployment Feedback Implementation ✅

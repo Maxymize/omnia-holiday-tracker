@@ -3,7 +3,7 @@
  * Shared between admin dashboard and language switcher
  */
 
-export type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
+export type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'documents' | 'my-requests' | 'departments' | 'reports' | 'settings';
 
 // Hash to tab mapping for URL routing (supports all languages)
 export const hashToTab: Record<string, AdminTabType> = {
@@ -12,6 +12,7 @@ export const hashToTab: Record<string, AdminTabType> = {
   '#calendario': 'calendar',
   '#dipendenti': 'employees',
   '#richieste': 'requests',
+  '#documenti': 'documents',
   '#le-mie-richieste': 'my-requests',
   '#dipartimenti': 'departments',
   '#report': 'reports',
@@ -21,6 +22,7 @@ export const hashToTab: Record<string, AdminTabType> = {
   '#calendar': 'calendar',
   '#employees': 'employees',
   '#requests': 'requests',
+  '#documents': 'documents',
   '#my-requests': 'my-requests',
   '#departments': 'departments',
   '#reports': 'reports',
@@ -29,6 +31,7 @@ export const hashToTab: Record<string, AdminTabType> = {
   '#resumen': 'overview',
   '#empleados': 'employees',
   '#solicitudes': 'requests',
+  '#documentos': 'documents',
   '#mis-solicitudes': 'my-requests',
   '#departamentos': 'departments',
   '#informes': 'reports',
@@ -43,6 +46,7 @@ export const getTabHash = (tab: AdminTabType, locale: string = 'it'): string => 
       calendar: '#calendario',
       employees: '#dipendenti',
       requests: '#richieste',
+      documents: '#documenti',
       'my-requests': '#le-mie-richieste',
       departments: '#dipartimenti',
       reports: '#report',
@@ -53,6 +57,7 @@ export const getTabHash = (tab: AdminTabType, locale: string = 'it'): string => 
       calendar: '#calendar',
       employees: '#employees',
       requests: '#requests',
+      documents: '#documents',
       'my-requests': '#my-requests',
       departments: '#departments',
       reports: '#reports',
@@ -63,6 +68,7 @@ export const getTabHash = (tab: AdminTabType, locale: string = 'it'): string => 
       calendar: '#calendario',
       employees: '#empleados',
       requests: '#solicitudes',
+      documents: '#documentos',
       'my-requests': '#mis-solicitudes',
       departments: '#departamentos',
       reports: '#informes',

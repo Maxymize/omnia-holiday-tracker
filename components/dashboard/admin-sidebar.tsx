@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { 
+import {
   TrendingUp,
-  Calendar, 
-  Users, 
+  Calendar,
+  Users,
   FileText,
   Settings,
   Building2,
@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   Shield,
   CalendarCheck,
-  UserCog
+  UserCog,
+  FolderOpen
 } from 'lucide-react';
 
 export interface AdminStats {
@@ -34,7 +35,7 @@ export interface AdminStats {
   employeesOnHolidayToday?: number;
 }
 
-type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
+type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'documents' | 'my-requests' | 'departments' | 'reports' | 'settings';
 
 interface AdminSidebarProps {
   adminStats?: AdminStats;
@@ -92,6 +93,12 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
       icon: FileText,
       description: t('admin.navigation.requestsDesc'),
       badge: adminStats?.pendingRequests && adminStats.pendingRequests > 0 ? adminStats.pendingRequests : undefined
+    },
+    {
+      id: 'documents',
+      label: t('admin.navigation.documents'),
+      icon: FolderOpen,
+      description: t('admin.navigation.documentsDesc')
     },
     {
       id: 'my-requests',

@@ -14,6 +14,7 @@ import { SystemSettingsComponent } from '@/components/admin/system-settings';
 import { AdminReports } from '@/components/admin/admin-reports';
 import { DepartmentManagement } from '@/components/admin/department-management';
 import { MyRequestsAdmin } from '@/components/admin/my-requests-admin';
+import { DocumentManagement } from '@/components/admin/document-management';
 import { RecentActivities } from '@/components/admin/recent-activities';
 import { NotificationHeader } from '@/components/ui/notification-header';
 import { CustomizableHeader } from '@/components/layout/customizable-header';
@@ -437,6 +438,10 @@ export default function AdminDashboard() {
               onDeleteRequest={deleteHolidayRequest}
               onRefresh={fetchAllAdminData}
             />
+          )}
+
+          {activeTab === 'documents' && (
+            <DocumentManagement />
           )}
 
           {activeTab === 'my-requests' && (
