@@ -6,11 +6,78 @@
  */
 
 import { neon } from '@neondatabase/serverless';
-import { 
+import {
   getUserPreferredLanguageByEmail,
   generateLocalizedEmail,
-  generateEmailHTML 
+  generateEmailHTML
 } from '../../lib/email/language-utils';
+
+// Database URL cleanup function (same as in lib/db/index.ts)
+function getCleanDatabaseUrl(): string {
+  // Support multiple database URL environment variables
+  let databaseUrl = process.env.NETLIFY_DATABASE_URL_UNPOOLED ||
+                    process.env.DATABASE_URL_UNPOOLED ||
+                    process.env.NETLIFY_DATABASE_URL ||
+                    process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error('No database URL found in environment variables');
+  }
+
+  console.log('🔧 Selected database URL source:',
+    process.env.NETLIFY_DATABASE_URL_UNPOOLED ? 'NETLIFY_DATABASE_URL_UNPOOLED' :
+    process.env.DATABASE_URL_UNPOOLED ? 'DATABASE_URL_UNPOOLED' :
+    process.env.NETLIFY_DATABASE_URL ? 'NETLIFY_DATABASE_URL' :
+    'DATABASE_URL'
+  );
+
+  // Clean up the connection string for Neon client compatibility
+  if (databaseUrl.startsWith('postgres://') && !databaseUrl.startsWith('postgresql://')) {
+    console.log('🔧 Converting postgres:// to postgresql://');
+    databaseUrl = databaseUrl.replace('postgres://', 'postgresql://');
+  }
+
+  // Remove channel_binding parameter if present
+  if (databaseUrl.includes('channel_binding')) {
+    console.log('🔧 Removing channel_binding parameter from connection string');
+
+    try {
+      const url = new URL(databaseUrl);
+      url.searchParams.delete('channel_binding');
+
+      if (!url.searchParams.has('sslmode')) {
+        url.searchParams.set('sslmode', 'require');
+      }
+
+      databaseUrl = url.toString();
+      console.log('✅ Successfully cleaned URL using URL API');
+
+    } catch (urlError: any) {
+      console.log('⚠️ URL API parsing failed, using fallback string replacement');
+
+      // Fallback: remove channel_binding parameter
+      databaseUrl = databaseUrl
+        .replace(/channel_binding=require&/g, '')
+        .replace(/&channel_binding=require/g, '')
+        .replace(/\?channel_binding=require&/g, '?')
+        .replace(/\?channel_binding=require$/g, '');
+
+      // Clean up any double separators
+      databaseUrl = databaseUrl
+        .replace(/&&/g, '&')
+        .replace(/\?\?/g, '?')
+        .replace(/\?&/g, '?');
+    }
+  }
+
+  // Final validation - ensure no spaces in URL
+  if (databaseUrl.includes(' ')) {
+    console.log('⚠️ WARNING: Database URL contains spaces, attempting to fix...');
+    databaseUrl = databaseUrl.replace(/\s+/g, '');
+  }
+
+  return databaseUrl;
+}
 
 export const handler = async (event: any) => {
   const headers = {
@@ -44,7 +111,11 @@ export const handler = async (event: any) => {
     console.log('User data:', userData);
     console.log('Holiday data:', holidayData);
 
-    const sql = neon(process.env.DATABASE_URL!);
+    // Get clean database URL
+    const cleanDatabaseUrl = getCleanDatabaseUrl();
+    console.log('🔧 Using cleaned database URL for email function');
+
+    const sql = neon(cleanDatabaseUrl);
     // Use production domain for emails, even in development
     // This ensures email links always point to production
     const baseUrl = process.env.SITE_URL || 'https://holiday.omniaelectronics.com';
