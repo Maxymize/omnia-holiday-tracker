@@ -39,6 +39,74 @@ import {
 
 type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
 
+// Hash to tab mapping for URL routing (supports all languages)
+const hashToTab: Record<string, AdminTabType> = {
+  // Italian
+  '#panoramica': 'overview',
+  '#calendario': 'calendar',
+  '#dipendenti': 'employees',
+  '#richieste': 'requests',
+  '#le-mie-richieste': 'my-requests',
+  '#dipartimenti': 'departments',
+  '#report': 'reports',
+  '#impostazioni': 'settings',
+  // English
+  '#overview': 'overview',
+  '#calendar': 'calendar',
+  '#employees': 'employees',
+  '#requests': 'requests',
+  '#my-requests': 'my-requests',
+  '#departments': 'departments',
+  '#reports': 'reports',
+  '#settings': 'settings',
+  // Spanish
+  '#resumen': 'overview',
+  '#empleados': 'employees',
+  '#solicitudes': 'requests',
+  '#mis-solicitudes': 'my-requests',
+  '#departamentos': 'departments',
+  '#informes': 'reports',
+  '#configuracion': 'settings'
+};
+
+// Tab to hash mapping for URL updates (using current locale)
+const getTabHash = (tab: AdminTabType, locale: string = 'it'): string => {
+  const hashes = {
+    it: {
+      overview: '#panoramica',
+      calendar: '#calendario',
+      employees: '#dipendenti',
+      requests: '#richieste',
+      'my-requests': '#le-mie-richieste',
+      departments: '#dipartimenti',
+      reports: '#report',
+      settings: '#impostazioni'
+    },
+    en: {
+      overview: '#overview',
+      calendar: '#calendar',
+      employees: '#employees',
+      requests: '#requests',
+      'my-requests': '#my-requests',
+      departments: '#departments',
+      reports: '#reports',
+      settings: '#settings'
+    },
+    es: {
+      overview: '#resumen',
+      calendar: '#calendario',
+      employees: '#empleados',
+      requests: '#solicitudes',
+      'my-requests': '#mis-solicitudes',
+      departments: '#departamentos',
+      reports: '#informes',
+      settings: '#configuracion'
+    }
+  };
+
+  return hashes[locale as keyof typeof hashes]?.[tab] || hashes.it[tab] || '#panoramica';
+};
+
 interface Activity {
   id: string;
   type: 'holiday_request' | 'employee_registration' | 'holiday_approved' | 'holiday_rejected';
@@ -59,6 +127,46 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<AdminTabType>('overview');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Hash routing logic
+  useEffect(() => {
+    // Function to handle hash changes and set active tab
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      console.log('🔗 Hash changed:', hash);
+
+      if (hash && hashToTab[hash]) {
+        const newTab = hashToTab[hash];
+        console.log('📍 Switching to tab:', newTab);
+        setActiveTab(newTab);
+      } else if (!hash) {
+        // No hash, default to overview
+        setActiveTab('overview');
+      }
+    };
+
+    // Set initial tab from URL hash on component mount
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    // Cleanup listener on unmount
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  // Update URL hash when tab changes (but prevent recursive calls)
+  const updateUrlHash = (tab: AdminTabType) => {
+    const currentLocale = window.location.pathname.split('/')[1] || 'it';
+    const newHash = getTabHash(tab, currentLocale);
+
+    if (window.location.hash !== newHash) {
+      // Use replaceState to avoid adding history entries for tab switches
+      window.history.replaceState(null, '', window.location.pathname + newHash);
+    }
+  };
 
   // Fetch admin data
   const {
@@ -95,7 +203,9 @@ export default function AdminDashboard() {
   };
 
   const handleTabChange = (tab: AdminTabType) => {
+    console.log('🎯 Tab change requested:', tab);
     setActiveTab(tab);
+    updateUrlHash(tab); // Update URL hash when tab changes
     if (adminError) {
       clearError();
     }

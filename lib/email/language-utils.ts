@@ -196,29 +196,30 @@ export function generateEmailHTML(
     .success-box { background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 5px; }
   `;
   
-  // Get appropriate button URL based on template
+  // Get appropriate button URL based on template with proper locale routing
   let buttonUrl = baseUrl;
   let buttonText = common.buttons.viewDashboard;
-  
+
   switch (templateName) {
     case 'employee_registration':
-      buttonUrl = `${baseUrl}/admin/employees`;
+      // Admin: gestione dipendenti
+      buttonUrl = `${baseUrl}/${emailData.locale}/admin-dashboard#dipendenti`;
       buttonText = translations.buttonText || common.buttons.manageRequests;
       break;
     case 'holiday_request_submitted':
-      buttonUrl = `${baseUrl}/admin/holidays`;
+      // Admin: gestione richieste ferie
+      buttonUrl = `${baseUrl}/${emailData.locale}/admin-dashboard#richieste`;
       buttonText = translations.buttonText || common.buttons.manageRequests;
       break;
     case 'holiday_request_approved':
-      buttonUrl = `${baseUrl}/dashboard`;
+    case 'holiday_request_rejected':
+      // Employee: dashboard personale
+      buttonUrl = `${baseUrl}/${emailData.locale}/employee-dashboard`;
       buttonText = translations.buttonText || common.buttons.viewDashboard;
       break;
-    case 'holiday_request_rejected':
-      buttonUrl = `${baseUrl}/dashboard`;
-      buttonText = translations.buttonText || common.buttons.newRequest;
-      break;
     case 'employee_approved':
-      buttonUrl = `${baseUrl}`;
+      // Employee: sistema di login
+      buttonUrl = `${baseUrl}/${emailData.locale}/login`;
       buttonText = translations.buttonText || common.buttons.loginSystem;
       break;
   }
