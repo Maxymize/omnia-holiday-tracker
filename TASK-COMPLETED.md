@@ -5,6 +5,57 @@
 
 ---
 
+## ✅ VERSION 2.9.58 - EMAIL NOTIFICATION & HASH ROUTING OPTIMIZATION (COMPLETED - September 15, 2025)
+
+### 🎯 OmniaGroup Post-Deployment Feedback Implementation ✅
+**Priority**: Critical | **Status**: COMPLETED | **Version**: 2.9.58
+**Context**: OmniaGroup provided feedback after platform presentation identifying email link issues and language switching problems
+
+#### Key Issues Resolved:
+- ✅ **Email Button 404 Errors**: Fixed email notification buttons pointing to non-existent `/admin/holidays` URLs
+- ✅ **Hash Routing System**: Implemented complete admin dashboard hash routing with multi-language support
+- ✅ **Language Switch Context Loss**: Fixed language switching that was losing current admin dashboard tab
+- ✅ **Email-Language Integration**: Ensured email buttons link to correct language-specific sections
+- ✅ **Runtime Build Error**: Resolved Radix UI module resolution error blocking development
+
+#### Technical Implementation:
+- **lib/utils/admin-hash-routing.ts**: Created centralized hash routing utility with multi-language mappings
+- **lib/email/language-utils.ts**: Updated email generation with locale-aware hash URLs
+- **app/[locale]/(admin)/admin-dashboard/page.tsx**: Added hash routing with URL synchronization
+- **components/i18n/language-switcher.tsx**: Enhanced to preserve hash during language changes
+- **Build System**: Fixed Next.js build cache issue affecting Radix UI components
+
+#### Hash Routing Features:
+- **Multi-language Support**: Hash routing works in Italian, English, and Spanish
+  - Italian: `#panoramica`, `#richieste`, `#le-mie-richieste`, etc.
+  - English: `#overview`, `#requests`, `#my-requests`, etc.
+  - Spanish: `#resumen`, `#solicitudes`, `#mis-solicitudes`, etc.
+- **URL Synchronization**: Browser hash updates reflect current dashboard tab
+- **Language Translation**: Hash automatically translates when switching languages
+- **Email Integration**: Email buttons point to correct language-specific hash sections
+
+#### User Experience Improvements:
+- **Direct Navigation**: Email buttons now lead directly to relevant admin sections
+- **Context Preservation**: Language switching maintains current dashboard location
+- **Consistent URLs**: Shareable URLs that maintain dashboard state across sessions
+- **Seamless Experience**: No more loss of context when switching languages or following email links
+
+#### Files Modified:
+- `lib/utils/admin-hash-routing.ts` (Created)
+- `lib/email/language-utils.ts` (Enhanced)
+- `app/[locale]/(admin)/admin-dashboard/page.tsx` (Hash routing added)
+- `components/i18n/language-switcher.tsx` (Hash translation added)
+- `package.json` (Version 2.9.57 → 2.9.58)
+
+#### Testing Results:
+- ✅ Hash routing working correctly in all languages
+- ✅ Email buttons successfully link to correct dashboard sections
+- ✅ Language switching preserves current tab context
+- ✅ No runtime errors or build issues
+- ✅ User profile language correctly determines email language and button URLs
+
+---
+
 ## ✅ VERSION 2.9.55 - CRITICAL PRODUCTION FIXES (COMPLETED - September 15, 2025)
 
 ### 🚨 Production System Stability Restoration ✅

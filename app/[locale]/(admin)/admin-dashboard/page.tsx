@@ -23,11 +23,11 @@ import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import Image from 'next/image';
-import { 
-  Calendar, 
-  BarChart3, 
-  Users, 
-  Settings, 
+import {
+  Calendar,
+  BarChart3,
+  Users,
+  Settings,
   FileText,
   UserCheck,
   Clock,
@@ -36,76 +36,7 @@ import {
   Building2,
   UserCog
 } from 'lucide-react';
-
-type AdminTabType = 'overview' | 'calendar' | 'employees' | 'requests' | 'my-requests' | 'departments' | 'reports' | 'settings';
-
-// Hash to tab mapping for URL routing (supports all languages)
-const hashToTab: Record<string, AdminTabType> = {
-  // Italian
-  '#panoramica': 'overview',
-  '#calendario': 'calendar',
-  '#dipendenti': 'employees',
-  '#richieste': 'requests',
-  '#le-mie-richieste': 'my-requests',
-  '#dipartimenti': 'departments',
-  '#report': 'reports',
-  '#impostazioni': 'settings',
-  // English
-  '#overview': 'overview',
-  '#calendar': 'calendar',
-  '#employees': 'employees',
-  '#requests': 'requests',
-  '#my-requests': 'my-requests',
-  '#departments': 'departments',
-  '#reports': 'reports',
-  '#settings': 'settings',
-  // Spanish
-  '#resumen': 'overview',
-  '#empleados': 'employees',
-  '#solicitudes': 'requests',
-  '#mis-solicitudes': 'my-requests',
-  '#departamentos': 'departments',
-  '#informes': 'reports',
-  '#configuracion': 'settings'
-};
-
-// Tab to hash mapping for URL updates (using current locale)
-const getTabHash = (tab: AdminTabType, locale: string = 'it'): string => {
-  const hashes = {
-    it: {
-      overview: '#panoramica',
-      calendar: '#calendario',
-      employees: '#dipendenti',
-      requests: '#richieste',
-      'my-requests': '#le-mie-richieste',
-      departments: '#dipartimenti',
-      reports: '#report',
-      settings: '#impostazioni'
-    },
-    en: {
-      overview: '#overview',
-      calendar: '#calendar',
-      employees: '#employees',
-      requests: '#requests',
-      'my-requests': '#my-requests',
-      departments: '#departments',
-      reports: '#reports',
-      settings: '#settings'
-    },
-    es: {
-      overview: '#resumen',
-      calendar: '#calendario',
-      employees: '#empleados',
-      requests: '#solicitudes',
-      'my-requests': '#mis-solicitudes',
-      departments: '#departamentos',
-      reports: '#informes',
-      settings: '#configuracion'
-    }
-  };
-
-  return hashes[locale as keyof typeof hashes]?.[tab] || hashes.it[tab] || '#panoramica';
-};
+import { AdminTabType, hashToTab, getTabHash } from '@/lib/utils/admin-hash-routing';
 
 interface Activity {
   id: string;

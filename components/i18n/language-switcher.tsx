@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/provider';
 import { locales, localeNames } from '@/lib/i18n/config';
+import { translateHash, isAdminDashboard } from '@/lib/utils/admin-hash-routing';
 
 interface LanguageSwitcherProps {
   className?: string;
@@ -15,7 +16,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
 
   const handleLanguageChange = (newLocale: string) => {
     console.log('🎯 LanguageSwitcher clicked:', { currentLocale: locale, newLocale, pathname });
-    
+
     // Import session language functions
     const setSessionLanguage = (language: string) => {
       if (typeof window !== 'undefined') {
@@ -26,18 +27,31 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
 
     // Set session language override
     setSessionLanguage(newLocale);
-    
+
     // Set cookies for session language (temporary preference)
     document.cookie = `session-language=${newLocale}; path=/; max-age=${60 * 60 * 24 * 30}`;
     document.cookie = `language-override=true; path=/; max-age=${60 * 60 * 24 * 30}`;
-    
-    // Language preference saved successfully
 
+    // Build new path with locale
     const segments = pathname.split('/');
     segments[1] = newLocale;
-    const newPath = segments.join('/');
-    
-    // Navigating to new language path
+    let newPath = segments.join('/');
+
+    // Handle admin dashboard hash translation
+    if (isAdminDashboard(pathname) && typeof window !== 'undefined') {
+      const currentHash = window.location.hash;
+      console.log('🔄 Admin dashboard detected, current hash:', currentHash);
+
+      if (currentHash) {
+        // Translate hash to new language
+        const translatedHash = translateHash(currentHash, newLocale);
+        newPath += translatedHash;
+        console.log('🎯 Translated path with hash:', newPath);
+      }
+    }
+
+    // Navigating to new language path with preserved hash
+    console.log('🚀 Navigating to:', newPath);
     router.push(newPath);
   };
 
