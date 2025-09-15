@@ -444,18 +444,21 @@ export function useAdminData() {
 
     try {
       const baseUrl = getBaseUrl();
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, 
-        createFetchConfig('POST', token || undefined, {
+      // Don't rely on localStorage token - cookies will be sent automatically with credentials: 'include'
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`,
+        createFetchConfig('POST', undefined, {
           holidayId: requestId,
           action: 'approve'
         }));
 
       const data = await response.json();
-      
+
       if (!response.ok) {
+        console.error('Holiday approval failed:', { status: response.status, error: data.error });
         throw new Error(data.error || 'Failed to approve holiday request');
       }
+
+      console.log('Holiday request approved successfully:', requestId);
 
       // Refresh all requests
       await fetchAllRequests();
@@ -472,19 +475,22 @@ export function useAdminData() {
 
     try {
       const baseUrl = getBaseUrl();
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`, 
-        createFetchConfig('POST', token || undefined, {
+      // Don't rely on localStorage token - cookies will be sent automatically with credentials: 'include'
+      const response = await fetch(`${baseUrl}/.netlify/functions/approve-reject-holiday`,
+        createFetchConfig('POST', undefined, {
           holidayId: requestId,
           action: 'reject',
           notes: reason
         }));
 
       const data = await response.json();
-      
+
       if (!response.ok) {
+        console.error('Holiday rejection failed:', { status: response.status, error: data.error });
         throw new Error(data.error || 'Failed to reject holiday request');
       }
+
+      console.log('Holiday request rejected successfully:', requestId);
 
       // Refresh all requests
       await fetchAllRequests();
