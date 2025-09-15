@@ -19,6 +19,10 @@ const headers = {
 };
 
 export const handler: Handler = async (event, context) => {
+  console.log('🔍 Approve/Reject Holiday Function called');
+  console.log('Method:', event.httpMethod);
+  console.log('Headers present:', Object.keys(event.headers || {}));
+
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
@@ -34,12 +38,17 @@ export const handler: Handler = async (event, context) => {
   }
 
   try {
+    console.log('📋 Request body:', event.body);
+
     // Verify authentication
+    console.log('🔐 Verifying authentication...');
     const userToken = await verifyAuthFromRequest(event);
     requireAccessToken(userToken);
+    console.log('✅ Authentication verified for:', userToken.email);
 
     // Check admin permissions
     if (userToken.role !== 'admin') {
+      console.log('❌ User is not admin:', userToken.role);
       return {
         statusCode: 403,
         headers,
@@ -49,22 +58,33 @@ export const handler: Handler = async (event, context) => {
 
     // Parse and validate request body
     const body = JSON.parse(event.body || '{}');
+    console.log('📝 Parsed body:', body);
     const validatedData = approveRejectSchema.parse(body);
+    console.log('✅ Data validated:', validatedData);
 
     // Get admin user details
+    console.log('👤 Fetching admin user details for:', userToken.email);
     const adminUser = await getUserByEmail(userToken.email);
     if (!adminUser) {
+      console.log('❌ Admin user not found in database:', userToken.email);
       return {
         statusCode: 401,
         headers,
         body: JSON.stringify({ error: 'Amministratore non trovato nel database' })
       };
     }
+    console.log('✅ Admin user found:', adminUser.id, adminUser.name);
 
     // Update holiday status in database with audit logging
     const status = validatedData.action === 'approve' ? 'approved' : 'rejected';
     const ipAddress = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
     const userAgent = event.headers['user-agent'] || 'unknown';
+
+    console.log('📝 Updating holiday status:', {
+      holidayId: validatedData.holidayId,
+      status: status,
+      adminId: adminUser.id
+    });
 
     await updateHolidayStatusWithAudit(
       validatedData.holidayId,
@@ -74,6 +94,8 @@ export const handler: Handler = async (event, context) => {
       ipAddress,
       userAgent
     );
+
+    console.log('✅ Holiday status updated successfully');
 
     console.log('Holiday approval/rejection completed:', {
       holidayId: validatedData.holidayId,
@@ -168,23 +190,30 @@ export const handler: Handler = async (event, context) => {
       })
     };
 
-  } catch (error) {
-    console.error('Approve/reject holiday error:', error);
+  } catch (error: any) {
+    console.error('❌ Approve/reject holiday error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
+      console.log('Validation error details:', error.issues);
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
-          error: 'Dati non validi', 
-          details: error.issues 
+        body: JSON.stringify({
+          error: 'Dati non validi',
+          details: error.issues
         })
       };
     }
 
     // Handle authentication errors
     if (error instanceof Error && error.message.includes('Token')) {
+      console.log('Authentication error:', error.message);
       return {
         statusCode: 401,
         headers,
@@ -192,11 +221,25 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    // Handle database errors
+    if (error.message && (error.message.includes('database') || error.message.includes('Holiday not found'))) {
+      console.log('Database error:', error.message);
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: 'Richiesta ferie non trovata o errore database' })
+      };
+    }
+
     // Generic error response
+    console.error('Unhandled error type:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Errore interno del server' })
+      body: JSON.stringify({
+        error: 'Errore interno del server',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      })
     };
   }
 };
