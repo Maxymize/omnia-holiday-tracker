@@ -39,7 +39,7 @@ export default function HolidayRequestPage() {
       const baseUrl = window.location.origin;
 
       const token = localStorage.getItem('accessToken');
-      
+
       const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays`, {
         method: 'GET',
         headers: {
@@ -50,7 +50,8 @@ export default function HolidayRequestPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setExistingHolidays(data.data || []);
+        const holidays = Array.isArray(data.data?.holidays) ? data.data.holidays : [];
+        setExistingHolidays(holidays);
       }
     } catch (error) {
       console.error('Error fetching existing holidays:', error);
@@ -207,7 +208,6 @@ export default function HolidayRequestPage() {
             </Card>
           ) : (
             <MultiStepHolidayRequest
-              existingHolidays={existingHolidays}
               onSubmit={handleSubmit}
               onCancel={handleCancel}
               isLoading={isSubmitting}

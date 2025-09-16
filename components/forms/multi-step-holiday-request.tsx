@@ -128,7 +128,8 @@ export function MultiStepHolidayRequest({
   const [isSubmittingRequest, setIsSubmittingRequest] = React.useState(false)
   const [userConfirmedSubmit, setUserConfirmedSubmit] = React.useState(false)
   const [storageUsage, setStorageUsage] = React.useState<{ totalSizeBytes: number } | null>(null)
-  
+  const [userHolidays, setUserHolidays] = React.useState<Holiday[]>([])
+
   const { user } = useAuth()
   const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
   const { t, locale } = useTranslation()
@@ -196,19 +197,87 @@ export function MultiStepHolidayRequest({
     fetchStorageUsage()
   }, [])
 
+  // Fetch user holidays for date picker occupied dates
+  React.useEffect(() => {
+    const fetchUserHolidays = async () => {
+      if (!user?.id) return
+
+      try {
+        const baseUrl = window.location.origin
+        const token = localStorage.getItem('accessToken')
+
+        const response = await fetch(`${baseUrl}/.netlify/functions/get-holidays`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const holidays = Array.isArray(data.data?.holidays) ? data.data.holidays : []
+          setUserHolidays(holidays)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user holidays for date picker:', error)
+      }
+    }
+
+    fetchUserHolidays()
+  }, [user?.id])
+
   const calculateWorkingDays = (start: Date, end: Date): number => {
     let count = 0
     const current = new Date(start)
-    
+
     while (current <= end) {
       if (!isWeekend(current)) {
         count++
       }
       current.setDate(current.getDate() + 1)
     }
-    
+
     return count
   }
+
+  // Convert user holidays to occupied dates for DatePicker
+  const getOccupiedDates = React.useMemo(() => {
+    const occupiedDates: Array<{
+      date: Date
+      type: 'vacation' | 'sick' | 'personal'
+      status: 'pending' | 'approved' | 'rejected'
+      title?: string
+    }> = []
+
+    // Use only userHolidays since existingHolidays prop is not being passed anymore
+    const safeUserHolidays = Array.isArray(userHolidays) ? userHolidays : []
+    const combinedHolidays = safeUserHolidays
+
+    for (const holiday of combinedHolidays) {
+      if (!holiday || !holiday.startDate || !holiday.endDate) continue
+
+      const startDate = new Date(holiday.startDate)
+      const endDate = new Date(holiday.endDate)
+      const current = new Date(startDate)
+
+      // Validate dates
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) continue
+
+      // Generate all dates in the range
+      while (current <= endDate) {
+        occupiedDates.push({
+          date: new Date(current),
+          type: (holiday as any).type || 'vacation',
+          status: holiday.status as 'pending' | 'approved' | 'rejected',
+          title: `${(holiday as any).type || 'vacation'} - ${holiday.status}`
+        })
+        current.setDate(current.getDate() + 1)
+      }
+    }
+
+    return occupiedDates
+  }, [userHolidays])
 
   const checkForConflicts = useCallback(async (start: Date, end: Date) => {
     // Create current check ID to prevent stale checks
@@ -218,8 +287,8 @@ export function MultiStepHolidayRequest({
     setConflictWarning(null)
 
     try {
-      // Ensure existingHolidays is an array
-      const holidaysArray = Array.isArray(existingHolidays) ? existingHolidays : []
+      // Use userHolidays instead of existingHolidays
+      const holidaysArray = Array.isArray(userHolidays) ? userHolidays : []
       
       // Check against existing holidays prop first
       const hasLocalConflict = holidaysArray.some(holiday => {
@@ -273,7 +342,7 @@ export function MultiStepHolidayRequest({
     } finally {
       setIsCheckingConflicts(false)
     }
-  }, [existingHolidays, user?.id])
+  }, [userHolidays, user?.id])
 
   // Debounced conflict checking to prevent infinite loops
   React.useEffect(() => {
@@ -624,6 +693,7 @@ export function MultiStepHolidayRequest({
                           maxDate={addDays(new Date(), 365)}
                           locale={locale}
                           className="w-full"
+                          occupiedDates={getOccupiedDates}
                         />
                       </FormControl>
                       <FormMessage />
@@ -651,6 +721,7 @@ export function MultiStepHolidayRequest({
                           locale={locale}
                           className="w-full"
                           disabled={!startDate}
+                          occupiedDates={getOccupiedDates}
                         />
                       </FormControl>
                       <FormMessage />

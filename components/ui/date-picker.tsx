@@ -13,6 +13,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
+interface OccupiedDate {
+  date: Date
+  type: 'vacation' | 'sick' | 'personal'
+  status: 'pending' | 'approved' | 'rejected'
+  title?: string
+}
+
 interface DatePickerProps {
   date?: Date
   onDateChange?: (date: Date | undefined) => void
@@ -22,6 +29,7 @@ interface DatePickerProps {
   locale?: string
   minDate?: Date
   maxDate?: Date
+  occupiedDates?: OccupiedDate[]
 }
 
 export function DatePicker({
@@ -33,6 +41,7 @@ export function DatePicker({
   locale = "it",
   minDate,
   maxDate,
+  occupiedDates = [],
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -46,6 +55,52 @@ export function DatePicker({
       default:
         return it
     }
+  }
+
+  // Create modifiers for occupied dates
+  const modifiers = React.useMemo(() => {
+    const vacationApproved = occupiedDates
+      .filter(d => d.type === 'vacation' && d.status === 'approved')
+      .map(d => d.date)
+
+    const vacationPending = occupiedDates
+      .filter(d => d.type === 'vacation' && d.status === 'pending')
+      .map(d => d.date)
+
+    const sickApproved = occupiedDates
+      .filter(d => d.type === 'sick' && d.status === 'approved')
+      .map(d => d.date)
+
+    const sickPending = occupiedDates
+      .filter(d => d.type === 'sick' && d.status === 'pending')
+      .map(d => d.date)
+
+    const personalApproved = occupiedDates
+      .filter(d => d.type === 'personal' && d.status === 'approved')
+      .map(d => d.date)
+
+    const personalPending = occupiedDates
+      .filter(d => d.type === 'personal' && d.status === 'pending')
+      .map(d => d.date)
+
+    return {
+      vacationApproved,
+      vacationPending,
+      sickApproved,
+      sickPending,
+      personalApproved,
+      personalPending,
+    }
+  }, [occupiedDates])
+
+  // Create modifiers classNames for styling
+  const modifiersClassNames = {
+    vacationApproved: 'bg-green-100 hover:bg-green-200 text-green-800 font-medium',
+    vacationPending: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium',
+    sickApproved: 'bg-red-100 hover:bg-red-200 text-red-800 font-medium',
+    sickPending: 'bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium',
+    personalApproved: 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium',
+    personalPending: 'bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium',
   }
 
   return (
@@ -81,6 +136,8 @@ export function DatePicker({
             if (maxDate && date > maxDate) return true
             return false
           }}
+          modifiers={modifiers}
+          modifiersClassNames={modifiersClassNames}
           initialFocus
           locale={getLocale()}
         />
