@@ -285,7 +285,7 @@ export const handler: Handler = async (event, context) => {
       validatedData.holidayRequestId,
       validatedData.contentLength,
       validatedData.fileData || '',
-      userToken.email
+      userToken.userId
     );
 
     console.log('✅ Certificate upload successful:', uploadResult.fileId);
