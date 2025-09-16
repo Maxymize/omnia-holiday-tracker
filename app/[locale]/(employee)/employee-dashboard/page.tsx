@@ -71,7 +71,8 @@ function EmployeeDashboardContent() {
     error: holidaysError,
     refreshHolidays,
     getUpcomingHolidays,
-    getRecentHolidays 
+    getRecentHolidays,
+    getCompletedHolidays
   } = useHolidays();
 
   // Handle tab changes from URL params
@@ -325,6 +326,7 @@ function EmployeeDashboardContent() {
                         <div>
                           <p className="text-sm text-gray-600">{t('dashboard.stats.availableDays')}</p>
                           <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
+                          <p className="text-xs text-gray-500">{t('dashboard.stats.toRequest')}</p>
                           {stats.leaveTypes && (
                             <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                               <div>🏖️ {stats.leaveTypes.vacation.availableDays} {t('dashboard.stats.vacation')}</div>
@@ -344,10 +346,30 @@ function EmployeeDashboardContent() {
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <CalendarCheck className="h-5 w-5 text-blue-600" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm text-gray-600">{t('dashboard.stats.takenDays')}</p>
                           <p className="text-2xl font-bold text-blue-600">{stats.takenDays}</p>
                           <p className="text-xs text-gray-500">{t('dashboard.stats.takenDaysDesc')}</p>
+                          {/* Breakdown by leave type */}
+                          {stats.leaveTypes && (
+                            <div className="mt-3 space-y-1">
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏖️</span>
+                                <span className="font-semibold">{stats.leaveTypes.vacation.takenDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.vacation')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>👤</span>
+                                <span className="font-semibold">{stats.leaveTypes.personal.takenDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.personal')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏥</span>
+                                <span className="font-semibold">{stats.leaveTypes.sick.takenDays === -1 ? '∞' : stats.leaveTypes.sick.takenDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.sick')}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -360,10 +382,30 @@ function EmployeeDashboardContent() {
                         <div className="p-2 bg-amber-100 rounded-lg">
                           <CalendarDays className="h-5 w-5 text-amber-600" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm text-gray-600">{t('dashboard.stats.bookedDays')}</p>
                           <p className="text-2xl font-bold text-amber-600">{stats.bookedDays}</p>
                           <p className="text-xs text-gray-500">{t('dashboard.stats.bookedDaysDesc')}</p>
+                          {/* Breakdown by leave type */}
+                          {stats.leaveTypes && (
+                            <div className="mt-3 space-y-1">
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏖️</span>
+                                <span className="font-semibold">{stats.leaveTypes.vacation.bookedDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.vacation')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>👤</span>
+                                <span className="font-semibold">{stats.leaveTypes.personal.bookedDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.personal')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏥</span>
+                                <span className="font-semibold">{stats.leaveTypes.sick.bookedDays === -1 ? '∞' : stats.leaveTypes.sick.bookedDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.sick')}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -376,10 +418,30 @@ function EmployeeDashboardContent() {
                         <div className="p-2 bg-purple-100 rounded-lg">
                           <CalendarClock className="h-5 w-5 text-purple-600" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm text-gray-600">{t('dashboard.stats.pendingDays')}</p>
                           <p className="text-2xl font-bold text-purple-600">{stats.pendingDays}</p>
                           <p className="text-xs text-gray-500">{t('dashboard.stats.pendingDaysDesc')}</p>
+                          {/* Breakdown by leave type */}
+                          {stats.leaveTypes && (
+                            <div className="mt-3 space-y-1">
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏖️</span>
+                                <span className="font-semibold">{stats.leaveTypes.vacation.pendingDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.vacation')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>👤</span>
+                                <span className="font-semibold">{stats.leaveTypes.personal.pendingDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.personal')}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 text-xs">
+                                <span>🏥</span>
+                                <span className="font-semibold">{stats.leaveTypes.sick.pendingDays === -1 ? '∞' : stats.leaveTypes.sick.pendingDays}</span>
+                                <span className="text-gray-500">{t('dashboard.stats.sick')}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -428,8 +490,8 @@ function EmployeeDashboardContent() {
                     onCreateRequest={handleCreateRequest}
                     onHolidayClick={handleHolidayClick}
                   />
-                  <CompletedHolidays 
-                    holidays={getRecentHolidays()} 
+                  <CompletedHolidays
+                    holidays={getCompletedHolidays()}
                     loading={false}
                     onHolidayClick={handleHolidayClick}
                   />

@@ -165,6 +165,7 @@ const dashboardTranslations = {
     vacation: 'vacation',
     personal: 'personal',
     sick: 'sick leave',
+    toRequest: 'to request',
   },
   calendar: {
     monthView: 'Month view',

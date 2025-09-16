@@ -1,9 +1,11 @@
 {
   "name": "omnia-holiday-tracker",
-  "version": "2.12.0",
+  "version": "2.13.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 8888",
+    "dev:clean": "npm run clean:cache && netlify dev --port 3000",
+    "clean:cache": "rm -rf .next && rm -rf node_modules/.cache && rm -rf .netlify",
     "build": "next build",
     "start": "next start -p 8888",
     "lint": "next lint",

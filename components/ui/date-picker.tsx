@@ -134,6 +134,14 @@ export function DatePicker({
           disabled={(date) => {
             if (minDate && date < minDate) return true
             if (maxDate && date > maxDate) return true
+
+            // Disable dates that are already occupied by any holiday type (approved or pending)
+            const isOccupied = occupiedDates.some(occupiedDate => {
+              return occupiedDate.date.toDateString() === date.toDateString() &&
+                     (occupiedDate.status === 'approved' || occupiedDate.status === 'pending')
+            })
+            if (isOccupied) return true
+
             return false
           }}
           modifiers={modifiers}
@@ -156,6 +164,7 @@ interface DateRangePickerProps {
   locale?: string
   minDate?: Date
   maxDate?: Date
+  occupiedDates?: OccupiedDate[]
 }
 
 export function DateRangePicker({
@@ -168,6 +177,7 @@ export function DateRangePicker({
   locale = "it",
   minDate,
   maxDate,
+  occupiedDates = [],
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -227,6 +237,14 @@ export function DateRangePicker({
           disabled={(date) => {
             if (minDate && date < minDate) return true
             if (maxDate && date > maxDate) return true
+
+            // Disable dates that are already occupied by any holiday type (approved or pending)
+            const isOccupied = occupiedDates.some(occupiedDate => {
+              return occupiedDate.date.toDateString() === date.toDateString() &&
+                     (occupiedDate.status === 'approved' || occupiedDate.status === 'pending')
+            })
+            if (isOccupied) return true
+
             return false
           }}
           numberOfMonths={2}

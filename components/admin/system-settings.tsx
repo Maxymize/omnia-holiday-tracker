@@ -27,6 +27,7 @@ import { LeaveTypeSettings } from './leave-type-settings';
 import { LogoCustomization } from './logo-customization';
 import { LoginLogoCustomization } from './login-logo-customization';
 import { CompanyNameSetting } from './company-name-setting';
+import { TimezoneSettings } from './timezone-settings';
 
 // Status Button Component
 interface StatusButtonProps {
@@ -746,6 +747,11 @@ const SystemSettingsComponent = memo(function SystemSettingsComponent({
           <LogoCustomization />
           <LoginLogoCustomization />
         </div>
+      </div>
+
+      {/* Timezone Settings - NEW SECTION */}
+      <div className="mt-6">
+        <TimezoneSettings />
       </div>
 
       {/* Leave Type Settings - NEW SECTION */}

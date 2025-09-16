@@ -5,6 +5,45 @@
 
 ---
 
+## ✅ VERSION 2.13.0 - DASHBOARD IMPROVEMENTS & TIMEZONE MANAGEMENT (COMPLETED - September 17, 2025)
+
+### 🎯 Major Dashboard UX Enhancement & Timezone System ✅
+**Priority**: High | **Status**: COMPLETED | **Version**: 2.13.0
+**Context**: Critical data consistency fixes, UX improvements, and comprehensive timezone management for global teams
+
+#### Data Consistency Fixes (v2.12.19-2.12.25):
+- ✅ **Fixed Empty Completed Holidays**: Resolved issue where "Ferie Godute" showed 0 items despite stats showing 8 taken days
+- ✅ **Automatic Data Fetching**: Implemented fallback to fetch holidays from all years when current year incomplete
+- ✅ **API Structure Fix**: Corrected nested response structure access (data.data.holidays)
+- ✅ **Server-Client Consistency**: Aligned server-side statistics calculation with client-side filtering logic
+- ✅ **Complete Data Integrity**: Ensured 100% consistency between dashboard cards and detailed lists
+
+#### Admin Sidebar Improvements (v2.12.26-2.12.28):
+- ✅ **Navigation Reorganization**: Moved "Le Mie Richieste" to personal section for better UX
+- ✅ **Scroll Fix**: Added independent sidebar scrolling with overflow-y-auto
+- ✅ **Improved Separation**: Clear distinction between personal and administrative functions
+
+#### Timezone Management System (v2.12.29-2.12.36):
+- ✅ **Enhanced Clock Display**: Added date in DD/MM/YYYY format alongside time
+- ✅ **Automatic Detection**: Browser timezone auto-detection with visual indicators
+- ✅ **Manual Override**: 13+ common timezone options for global teams
+- ✅ **Admin Settings Panel**: Comprehensive timezone configuration in settings
+- ✅ **Real-time Sync**: Cross-component synchronization via custom events
+- ✅ **Unified Design**: Single-block layout with StatusButton pattern
+- ✅ **Full i18n Support**: Complete translations in IT/EN/ES
+- ✅ **Consistent UI**: Replaced toggles with Enabled/Disabled buttons
+
+#### Files Modified:
+- **lib/hooks/useHolidays.ts**: Complete data fetching logic overhaul
+- **netlify/functions/get-leave-stats.ts**: Server statistics calculation fix
+- **components/dashboard/admin-sidebar.tsx**: Navigation structure improvement
+- **components/ui/live-clock.tsx**: Enhanced timezone-aware clock component
+- **lib/hooks/useTimezoneSettings.ts**: Custom hook for timezone management
+- **components/admin/timezone-settings.tsx**: Admin settings panel
+- **lib/i18n/translations/**: Full translations for all languages
+
+---
+
 ## ✅ VERSION 2.12.0 - POSTHOG ANALYTICS INTEGRATION (COMPLETED - September 16, 2025)
 
 ### 🎯 PostHog Analytics & Business Intelligence System ✅

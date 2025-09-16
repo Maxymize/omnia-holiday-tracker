@@ -106,23 +106,59 @@ export const handler: Handler = async (event, context) => {
       return startDate.getFullYear() === currentYear;
     });
 
-    // Calculate today's date for past/future distinction
+    // Calculate today's date for past/future distinction in local timezone
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Get today's date in YYYY-MM-DD format in local timezone
+    const todayDateString = today.getFullYear() + '-' +
+                          String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                          String(today.getDate()).padStart(2, '0');
+
+    // Debug: Log current date information
+    console.log('=== DATE COMPARISON DEBUG ===');
+    console.log('Current date (system):', today.toISOString());
+    console.log('Current date (local):', today.toLocaleDateString());
+    console.log('Today as date string:', todayDateString);
+    console.log('Current year filter:', currentYear);
+
+    // Helper function to normalize date strings for comparison
+    const normalizeDate = (dateString: string) => {
+      // For date-only strings (YYYY-MM-DD), create UTC date to avoid timezone issues
+      // Parse YYYY-MM-DD format directly
+      const [year, month, day] = dateString.split('-').map(Number);
+      // Create date in UTC to avoid timezone shifts
+      const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0)); // month is 0-based
+      return date;
+    };
+
+    // Also normalize today for comparison
+    const normalizedToday = normalizeDate(todayDateString);
 
     // Calculate statistics by leave type
     const calculateStatsForType = (type: 'vacation' | 'sick' | 'personal') => {
       const typeHolidays = yearHolidays.filter(h => h.type === type);
       const approvedHolidays = typeHolidays.filter(h => h.status === 'approved');
-      
-      // Days already taken (end date is in the past)
+
+      console.log(`--- Calculating stats for ${type} ---`);
+      console.log(`Total ${type} holidays for year:`, typeHolidays.length);
+      console.log(`Approved ${type} holidays:`, approvedHolidays.length);
+
+      // Days already taken (end date is in the past or today)
       const takenDays = approvedHolidays
-        .filter(h => new Date(h.endDate) < today)
+        .filter(h => {
+          const endDate = normalizeDate(h.endDate);
+          return endDate <= normalizedToday;
+        })
         .reduce((sum, h) => sum + h.workingDays, 0);
 
-      // Days booked for future (start date is today or in the future)  
+      // Days booked for future (start date is in the future)
       const bookedDays = approvedHolidays
-        .filter(h => new Date(h.startDate) >= today)
+        .filter(h => {
+          const startDate = normalizeDate(h.startDate);
+          const endDate = normalizeDate(h.endDate);
+          // Only count as booked if it starts in the future (not today)
+          // and hasn't already been counted as taken
+          return startDate > normalizedToday;
+        })
         .reduce((sum, h) => sum + h.workingDays, 0);
 
       // Total approved days
@@ -139,9 +175,11 @@ export const handler: Handler = async (event, context) => {
                        leaveAllowances.sick; // -1 = unlimited
 
       // Calculate available days
-      const availableDays = allowance === -1 
+      const availableDays = allowance === -1
         ? -1 // unlimited for sick days
         : Math.max(0, allowance - usedDays - pendingDays);
+
+      console.log(`Final calculation for ${type}: taken=${takenDays}, booked=${bookedDays}, total=${usedDays}`);
 
       return {
         type,
@@ -155,7 +193,7 @@ export const handler: Handler = async (event, context) => {
         approvedRequests: approvedHolidays.length,
         pendingRequests: typeHolidays.filter(h => h.status === 'pending').length,
         rejectedRequests: typeHolidays.filter(h => h.status === 'rejected').length,
-        upcomingRequests: approvedHolidays.filter(h => new Date(h.startDate) > today).length
+        upcomingRequests: approvedHolidays.filter(h => normalizeDate(h.startDate) > normalizedToday).length
       };
     };
 

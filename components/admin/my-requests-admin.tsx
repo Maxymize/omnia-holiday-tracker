@@ -59,7 +59,8 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
     refreshHolidays,
     getHolidaysByStatus,
     getUpcomingHolidays,
-    getRecentHolidays
+    getRecentHolidays,
+    getCompletedHolidays
   } = useHolidays({ viewMode: 'own' });
 
   // Derive data from hooks
@@ -304,6 +305,7 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                     <div>
                       <p className="text-sm text-gray-600">{t('admin.myRequests.stats.availableDays')}</p>
                       <p className="text-2xl font-bold text-green-600">{stats.availableDays}</p>
+                      <p className="text-xs text-gray-500">{t('admin.myRequests.stats.toRequest')}</p>
                       {stats.leaveTypes && (
                         <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                           <div>🏖️ {stats.leaveTypes.vacation.availableDays} {t('admin.myRequests.stats.vacation')}</div>
@@ -323,10 +325,30 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <CalendarCheck className="h-5 w-5 text-blue-600" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-gray-600">{t('admin.myRequests.stats.takenDays')}</p>
                       <p className="text-2xl font-bold text-blue-600">{stats.takenDays || 0}</p>
                       <p className="text-xs text-gray-500">{t('admin.myRequests.stats.pastHolidays')}</p>
+                      {/* Breakdown by leave type */}
+                      {stats.leaveTypes && (
+                        <div className="mt-3 space-y-1">
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏖️</span>
+                            <span className="font-semibold">{stats.leaveTypes.vacation.takenDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.vacation')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>👤</span>
+                            <span className="font-semibold">{stats.leaveTypes.personal.takenDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.personal')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏥</span>
+                            <span className="font-semibold">{stats.leaveTypes.sick.takenDays === -1 ? '∞' : stats.leaveTypes.sick.takenDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.sick')}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -339,10 +361,30 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                     <div className="p-2 bg-amber-100 rounded-lg">
                       <CalendarDays className="h-5 w-5 text-amber-600" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-gray-600">{t('admin.myRequests.stats.bookedDays')}</p>
                       <p className="text-2xl font-bold text-amber-600">{stats.bookedDays || 0}</p>
                       <p className="text-xs text-gray-500">{t('admin.myRequests.stats.futureHolidays')}</p>
+                      {/* Breakdown by leave type */}
+                      {stats.leaveTypes && (
+                        <div className="mt-3 space-y-1">
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏖️</span>
+                            <span className="font-semibold">{stats.leaveTypes.vacation.bookedDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.vacation')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>👤</span>
+                            <span className="font-semibold">{stats.leaveTypes.personal.bookedDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.personal')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏥</span>
+                            <span className="font-semibold">{stats.leaveTypes.sick.bookedDays === -1 ? '∞' : stats.leaveTypes.sick.bookedDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.sick')}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -355,10 +397,30 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                     <div className="p-2 bg-purple-100 rounded-lg">
                       <CalendarClock className="h-5 w-5 text-purple-600" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-gray-600">{t('admin.myRequests.stats.pendingDays')}</p>
                       <p className="text-2xl font-bold text-purple-600">{stats.pendingDays || 0}</p>
                       <p className="text-xs text-gray-500">{t('admin.myRequests.stats.awaitingApproval')}</p>
+                      {/* Breakdown by leave type */}
+                      {stats.leaveTypes && (
+                        <div className="mt-3 space-y-1">
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏖️</span>
+                            <span className="font-semibold">{stats.leaveTypes.vacation.pendingDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.vacation')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>👤</span>
+                            <span className="font-semibold">{stats.leaveTypes.personal.pendingDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.personal')}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs">
+                            <span>🏥</span>
+                            <span className="font-semibold">{stats.leaveTypes.sick.pendingDays === -1 ? '∞' : stats.leaveTypes.sick.pendingDays}</span>
+                            <span className="text-gray-500">{t('admin.myRequests.stats.sick')}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -409,8 +471,8 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
                   setSelectedHoliday(holiday);
                 }}
               />
-              <CompletedHolidays 
-                holidays={getRecentHolidays()} 
+              <CompletedHolidays
+                holidays={getCompletedHolidays()}
                 loading={false}
                 onHolidayClick={(holiday) => {
                   setSelectedHoliday(holiday);
@@ -562,7 +624,8 @@ export function MyRequestsAdmin({ onRefresh }: MyRequestsAdminProps) {
             existingHolidays={holidays.map(holiday => ({
               startDate: holiday.startDate,
               endDate: holiday.endDate,
-              status: holiday.status
+              status: holiday.status,
+              type: holiday.type
             }))}
             onSubmit={async (data) => {
               // Show success message without auto-redirect

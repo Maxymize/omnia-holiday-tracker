@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import { useLogoSettings } from '@/lib/contexts/LogoContext';
+import { LiveClock } from '@/components/ui/live-clock';
+import { useTimezoneClockProps } from '@/lib/hooks/useTimezoneSettings';
 
 interface CustomizableHeaderProps {
   children?: React.ReactNode;
@@ -11,6 +13,7 @@ interface CustomizableHeaderProps {
 
 export function CustomizableHeader({ children, className = "", style }: CustomizableHeaderProps) {
   const { logoSettings, loading } = useLogoSettings();
+  const timezoneProps = useTimezoneClockProps();
 
   const renderLogo = () => {
     if (loading) {
@@ -67,11 +70,20 @@ export function CustomizableHeader({ children, className = "", style }: Customiz
           <div className="flex items-center">
             {renderLogo()}
           </div>
-          {children && (
-            <div className="flex items-center space-x-4">
-              {children}
+          <div className="flex items-center space-x-4">
+            {/* Live Clock */}
+            <div className="hidden lg:flex">
+              <LiveClock
+                compact
+                showSeconds={false}
+                showTimezone={true}
+                {...timezoneProps}
+              />
             </div>
-          )}
+
+            {/* Additional children (language switcher, etc.) */}
+            {children}
+          </div>
         </div>
       </div>
     </div>

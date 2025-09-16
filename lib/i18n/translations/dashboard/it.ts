@@ -165,6 +165,7 @@ const dashboardTranslations = {
     vacation: 'ferie',
     personal: 'permessi',
     sick: 'malattia',
+    toRequest: 'da richiedere',
   },
   calendar: {
     monthView: 'Vista mensile',

@@ -161,6 +161,65 @@
 
 ---
 
+## 🔄 ACTIVE DEVELOPMENT - VERSION 2.13.0
+
+### Dashboard Improvements & Timezone Management ✅
+**Priority**: High | **Est**: 8 hours | **Status**: COMPLETED (v2.13.0)
+**Summary**: Major dashboard improvements, data consistency fixes, and timezone management system
+
+#### Data Consistency & Dashboard Cards (v2.12.19-2.12.25)
+- [x] Fixed empty "Ferie Godute" section showing 0 holidays while stats showed 8 taken days
+- [x] Implemented automatic fetching of holidays from all years when completed holidays not found
+- [x] Corrected API response structure access (data.data.holidays)
+- [x] Fixed server-side statistics calculation to match client-side filtering
+- [x] Ensured complete data consistency between dashboard cards and detailed lists
+
+#### Admin Sidebar UX Improvements (v2.12.26-2.12.28)
+- [x] Moved "Le Mie Richieste" section to personal area under "Modifica Profilo"
+- [x] Separated personal admin functions from administrative functions
+- [x] Fixed sidebar scroll issue with overflow-y-auto for independent scrolling
+- [x] Improved navigation structure for better user experience
+
+#### Clock & Timezone System (v2.12.29-2.12.36)
+- [x] Enhanced LiveClock component with date display (DD/MM/YYYY format)
+- [x] Implemented automatic timezone detection from browser
+- [x] Added manual timezone override capability with 13+ common timezones
+- [x] Created comprehensive timezone settings panel in admin dashboard
+- [x] Implemented visual indicators for auto-detection vs manual selection
+- [x] Added real-time synchronization across all components
+- [x] Restructured settings to unified single block with StatusButton pattern
+- [x] Implemented full translations in Italian, English, and Spanish
+- [x] Replaced toggle switches with Enabled/Disabled buttons for consistency
+
+## 🔄 ACTIVE DEVELOPMENT - VERSION 2.12.18
+
+### Holiday Component Pagination Implementation ✅
+**Priority**: Medium | **Est**: 3 hours | **Status**: COMPLETED (v2.12.18)
+- [x] Add pagination with "Show more" functionality to UpcomingHolidays component
+- [x] Add pagination with "Show more" functionality to CompletedHolidays component
+- [x] Implement 5 items initial display with expand by 5 more items
+- [x] Add smooth loading states with spinner animation during expansion
+- [x] Create responsive design with mobile-first approach
+- [x] Maintain all existing functionality (onHolidayClick, team view modes)
+- [x] Use existing translation keys for "Show more" text in IT/EN/ES
+- [x] Color-coded "Show more" buttons (blue for upcoming, green for completed)
+- [x] Test build successfully and verify TypeScript compilation
+- [x] Update package.json version to 2.12.18
+
+## 🔄 ACTIVE DEVELOPMENT - VERSION 2.12.6
+
+### Live Clock Component Integration ✅
+**Priority**: Medium | **Est**: 2 hours | **Status**: COMPLETED (v2.12.6)
+- [x] Create elegant LiveClock component with date/time display and timezone info
+- [x] Implement multi-language support for Italian, English, and Spanish locales
+- [x] Add responsive design with compact mode for smaller screens
+- [x] Support 24-hour format with European styling conventions
+- [x] Integrate clock into CustomizableHeader used by both employee and admin dashboards
+- [x] Position clock in top-right area near other header elements
+- [x] Add proper Tailwind CSS styling matching project design system
+- [x] Test build and verify all components work correctly
+- [x] Update translations for all supported languages (IT/EN/ES)
+
 ## 🔄 ACTIVE DEVELOPMENT - VERSION 2.12.0
 
 ### PostHog Analytics Integration ✅

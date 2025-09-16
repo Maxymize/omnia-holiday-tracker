@@ -59,6 +59,23 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
     setIsMobileMenuOpen(false); // Close mobile menu on tab change
   };
 
+  // Personal section items (shown after profile edit button)
+  const personalItems: Array<{
+    id: AdminTabType;
+    label: string;
+    icon: any;
+    description: string;
+    badge?: number;
+  }> = [
+    {
+      id: 'my-requests',
+      label: t('admin.navigation.myRequests'),
+      icon: CalendarCheck,
+      description: t('admin.navigation.myRequestsDesc')
+    }
+  ];
+
+  // Administration section items
   const navigationItems: Array<{
     id: AdminTabType;
     label: string;
@@ -99,12 +116,6 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
       label: t('admin.navigation.documents'),
       icon: FolderOpen,
       description: t('admin.navigation.documentsDesc')
-    },
-    {
-      id: 'my-requests',
-      label: t('admin.navigation.myRequests'),
-      icon: CalendarCheck,
-      description: t('admin.navigation.myRequestsDesc')
     },
     {
       id: 'departments',
@@ -169,10 +180,49 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
             </Button>
           </div>
         )}
+
+        {/* Personal Section - Le Mie Richieste */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="space-y-1">
+            {personalItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabClick(item.id)}
+                  className={`
+                    w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors
+                    ${isActive
+                      ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                      : 'text-gray-700 hover:bg-gray-100'
+                    }
+                  `}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{item.label}</div>
+                      <div className="text-xs text-gray-600 truncate">{item.description}</div>
+                    </div>
+                  </div>
+                  {item.badge && item.badge > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-0.5"
+                    >
+                      {item.badge}
+                    </Badge>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-
-      {/* Navigation */}
+      {/* Administration Navigation */}
       <nav className="flex-1 p-4">
         <h4 className="text-xs font-medium text-gray-700 uppercase tracking-wider mb-3">
           {t('admin.navigation.sectionTitle')}
@@ -181,15 +231,15 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
-            
+
             return (
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
                 className={`
                   w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors
-                  ${isActive 
-                    ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                  ${isActive
+                    ? 'bg-purple-100 text-purple-700 border border-purple-200'
                     : 'text-gray-700 hover:bg-gray-100'
                   }
                 `}
@@ -202,8 +252,8 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
                   </div>
                 </div>
                 {item.badge && item.badge > 0 && (
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className="bg-red-100 text-red-800 border-red-200 text-xs px-2 py-0.5"
                   >
                     {item.badge}
@@ -252,7 +302,7 @@ export function AdminSidebar({ adminStats, activeTab = 'overview', onTabChange, 
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:w-80 lg:block">
-        <div className="flex flex-col h-full bg-white border-r border-gray-200 shadow-sm">
+        <div className="flex flex-col h-full bg-white border-r border-gray-200 shadow-sm overflow-y-auto overscroll-contain">
           <SidebarContent />
         </div>
       </div>

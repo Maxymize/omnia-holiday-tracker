@@ -20,15 +20,17 @@ interface CompletedHolidaysProps {
   className?: string;
 }
 
-export function CompletedHolidays({ 
-  holidays, 
-  loading = false, 
+export function CompletedHolidays({
+  holidays,
+  loading = false,
   showTeam = false,
   onHolidayClick,
-  className 
+  className
 }: CompletedHolidaysProps) {
   const { t, locale } = useTranslation();
   const [viewMode, setViewMode] = useState<'own' | 'team'>('own');
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   // Get date-fns locale
   const getDateLocale = () => {
@@ -39,27 +41,40 @@ export function CompletedHolidays({
     }
   };
 
-  // Filter and sort completed holidays (past approved holidays)
-  const now = new Date();
-  const completedHolidays = holidays
-    .filter(holiday => {
-      const endDate = new Date(holiday.endDate);
-      // Only show approved holidays that have ended
-      const isCompleted = holiday.status === 'approved' && endDate < now;
-      
-      if (!showTeam) return isCompleted;
-      
-      // If showing team, filter based on view mode
-      if (viewMode === 'own') {
-        return isCompleted && holiday.employeeId === 'current_user'; // Should be replaced with actual user ID
-      }
-      return isCompleted;
-    })
-    .sort((a, b) => {
-      // Sort by end date, most recent first
-      return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
-    })
-    .slice(0, 15); // Show max 15 most recent completed holidays
+  // For team view, we need to filter based on view mode
+  const allCompletedHolidays = showTeam
+    ? holidays.filter(holiday => {
+        if (viewMode === 'own') {
+          // For team view 'own' mode, filter to current user only
+          // This assumes holidays data from useHolidays already contains current user's holidays
+          return true; // Since useHolidays already filters to current user
+        }
+        return true; // Show all team holidays
+      })
+    : holidays; // For non-team view, use all provided holidays (already filtered by useHolidays)
+
+  // Get visible holidays based on pagination
+  const completedHolidays = allCompletedHolidays.slice(0, visibleCount);
+  const hasMore = allCompletedHolidays.length > visibleCount;
+  const remainingCount = allCompletedHolidays.length - visibleCount;
+
+  // Show more function
+  const handleShowMore = async () => {
+    setIsExpanding(true);
+    // Add a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setVisibleCount(prev => Math.min(prev + 5, allCompletedHolidays.length));
+    setIsExpanding(false);
+  };
+
+  // Show less function
+  const handleShowLess = async () => {
+    setIsExpanding(true);
+    // Add a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setVisibleCount(5);
+    setIsExpanding(false);
+  };
 
   const getTypeIcon = (type: Holiday['type']) => {
     switch (type) {
@@ -286,23 +301,52 @@ export function CompletedHolidays({
               );
             })}
 
-            {/* Show more link if there are more completed holidays */}
-            {holidays.filter(h => 
-              new Date(h.endDate) < now && h.status === 'approved'
-            ).length > 15 && (
-              <div className="text-center pt-2 border-t">
-                <Button variant="ghost" size="sm" className="text-xs">
-                  {locale === 'it' ? `Vedi altre (${holidays.filter(h => 
-                    new Date(h.endDate) < now && h.status === 'approved'
-                  ).length - 15})` :
-                   locale === 'es' ? `Ver más (${holidays.filter(h => 
-                    new Date(h.endDate) < now && h.status === 'approved'
-                   ).length - 15})` :
-                   `Show more (${holidays.filter(h => 
-                    new Date(h.endDate) < now && h.status === 'approved'
-                   ).length - 15})`}
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
+            {/* Show more/less buttons */}
+            {(hasMore || visibleCount > 5) && (
+              <div className="text-center pt-4 border-t border-gray-100 space-y-2">
+                {hasMore && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowMore}
+                    disabled={isExpanding}
+                    className="text-xs text-green-600 hover:text-green-800 hover:bg-green-50 transition-colors mr-2"
+                  >
+                    {isExpanding ? (
+                      <>
+                        <div className="w-3 h-3 mr-2 animate-spin rounded-full border border-current border-t-transparent" />
+                        {locale === 'it' ? 'Caricamento...' : locale === 'es' ? 'Cargando...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        {t('dashboard.stats.showMore')} ({remainingCount})
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {visibleCount > 5 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowLess}
+                    disabled={isExpanding}
+                    className="text-xs text-green-600 hover:text-green-800 hover:bg-green-50 transition-colors"
+                  >
+                    {isExpanding ? (
+                      <>
+                        <div className="w-3 h-3 mr-2 animate-spin rounded-full border border-current border-t-transparent" />
+                        {locale === 'it' ? 'Caricamento...' : locale === 'es' ? 'Cargando...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        {locale === 'it' ? 'Mostra meno' : locale === 'es' ? 'Mostrar menos' : 'Show less'}
+                        <ChevronRight className="h-3 w-3 ml-1 rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             )}
           </div>

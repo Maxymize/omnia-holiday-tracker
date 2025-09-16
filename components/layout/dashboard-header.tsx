@@ -6,7 +6,9 @@ import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { LanguageSelector } from "@/components/layout/language-selector"
+import { LiveClock } from "@/components/ui/live-clock"
 import { useTranslation } from "@/lib/i18n/provider"
+import { useTimezoneClockProps } from "@/lib/hooks/useTimezoneSettings"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +47,8 @@ export function DashboardHeader({
   className,
 }: DashboardHeaderProps) {
   const { t } = useTranslation()
-  
+  const timezoneProps = useTimezoneClockProps()
+
   return (
     <header className={`flex items-center justify-between px-4 py-3 bg-background border-b ${className}`}>
       {/* Left side - Logo and menu toggle */}
@@ -79,11 +82,21 @@ export function DashboardHeader({
         </div>
       </div>
 
-      {/* Right side - Notifications and user menu */}
-      <div className="flex items-center space-x-2">
+      {/* Right side - Clock, notifications and user menu */}
+      <div className="flex items-center space-x-3">
+        {/* Live Clock */}
+        <div className="hidden lg:block">
+          <LiveClock
+            compact
+            showSeconds={false}
+            showTimezone={true}
+            {...timezoneProps}
+          />
+        </div>
+
         {/* Language Selector */}
         <LanguageSelector />
-        
+
         {/* Notifications */}
         <Button variant="ghost" size="sm" className="relative">
           <Bell className="h-5 w-5" />

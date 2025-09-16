@@ -27,6 +27,10 @@ const commonTranslations = {
       closeNotification: 'Cerrar notificación',
     },
   },
+  clock: {
+    currentTime: 'Hora actual',
+    timezone: 'Zona horaria',
+  },
 };
 
 export default commonTranslations;

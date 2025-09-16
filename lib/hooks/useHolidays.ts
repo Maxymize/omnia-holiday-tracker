@@ -191,6 +191,16 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
           if (currentParams.limit) params.append('limit', currentParams.limit.toString());
           if (currentParams.offset) params.append('offset', currentParams.offset.toString());
 
+          // Debug: log the parameters being sent
+          console.log('🔍 DEBUG API params:', {
+            viewMode: currentParams.viewMode,
+            status: currentParams.status,
+            year: currentParams.year,
+            limit: currentParams.limit,
+            offset: currentParams.offset,
+            url: `${getBaseUrl()}/.netlify/functions/get-holidays?${params}`
+          });
+
           const response = await fetch(
             `${getBaseUrl()}/.netlify/functions/get-holidays?${params}`,
             {
@@ -240,12 +250,12 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
                     // Legacy fields for backward compatibility (combined vacation + personal)
                     totalAllowance: summaryData.totalAllowance,
                     usedDays: summaryData.totalUsedDays,
-                    takenDays: leaveTypesData.vacation.takenDays + leaveTypesData.personal.takenDays,
-                    bookedDays: leaveTypesData.vacation.bookedDays + leaveTypesData.personal.bookedDays,
-                    pendingDays: summaryData.totalPendingDays,
-                    availableDays: summaryData.totalAvailableDays,
+                    takenDays: leaveTypesData.vacation.takenDays + leaveTypesData.personal.takenDays + leaveTypesData.sick.takenDays,
+                    bookedDays: leaveTypesData.vacation.bookedDays + leaveTypesData.personal.bookedDays + leaveTypesData.sick.bookedDays,
+                    pendingDays: leaveTypesData.vacation.pendingDays + leaveTypesData.personal.pendingDays + leaveTypesData.sick.pendingDays,
+                    availableDays: leaveTypesData.vacation.availableDays + leaveTypesData.personal.availableDays + (leaveTypesData.sick.allowance === -1 ? 0 : leaveTypesData.sick.availableDays),
                     remainingDays: summaryData.totalAvailableDays, // For backward compatibility
-                    upcomingHolidays: leaveTypesData.vacation.upcomingRequests + leaveTypesData.personal.upcomingRequests,
+                    upcomingHolidays: leaveTypesData.vacation.upcomingRequests + leaveTypesData.personal.upcomingRequests + leaveTypesData.sick.upcomingRequests,
                     totalRequests: leaveTypesData.vacation.totalRequests + leaveTypesData.personal.totalRequests + leaveTypesData.sick.totalRequests,
                     approvedRequests: leaveTypesData.vacation.approvedRequests + leaveTypesData.personal.approvedRequests + leaveTypesData.sick.approvedRequests,
                     pendingRequests: leaveTypesData.vacation.pendingRequests + leaveTypesData.personal.pendingRequests + leaveTypesData.sick.pendingRequests,
@@ -255,6 +265,13 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
                     leaveTypes: leaveTypesData,
                     year: statsData.data.year
                   };
+
+                  // Debug logging for stats
+                  console.log('📊 DEBUG Stats from server:');
+                  console.log('vacation.takenDays:', leaveTypesData.vacation.takenDays);
+                  console.log('personal.takenDays:', leaveTypesData.personal.takenDays);
+                  console.log('sick.takenDays:', leaveTypesData.sick.takenDays);
+                  console.log('Total takenDays (card):', flexibleStats.takenDays);
 
                   setStats(flexibleStats);
                 } else {
@@ -370,6 +387,157 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
       .slice(0, limit);
   }, [holidays]);
 
+  // State for completed holidays from all years
+  const [completedHolidaysFromAllYears, setCompletedHolidaysFromAllYears] = useState<Holiday[]>([]);
+
+  // Function to fetch completed holidays from all years
+  const fetchCompletedHolidaysFromAllYears = useCallback(async () => {
+    // If we already have completed holidays from current data, don't fetch
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const normalizeDate = (dateString: string) => {
+      return new Date(dateString + 'T00:00:00');
+    };
+
+    const currentCompleted = holidays
+      .filter(holiday => {
+        const endDate = normalizeDate(holiday.endDate);
+        return holiday.status === 'approved' && endDate <= today;
+      });
+
+    // If we have completed holidays in current data or no stats showing taken days, return
+    if (currentCompleted.length > 0 || !stats || stats.takenDays === 0) {
+      setCompletedHolidaysFromAllYears([]);
+      return;
+    }
+
+    console.log('🔍 No completed holidays in current year, fetching all years...');
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      // Fetch holidays from all years without year filter
+      const fetchUrl = `${getBaseUrl()}/.netlify/functions/get-holidays?limit=100`;
+      console.log('🔍 Fetching from URL:', fetchUrl);
+
+      const response = await fetch(fetchUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+
+      console.log('🔍 Fetch response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Fetch response data FULL:', data);
+        console.log('🔍 Fetch response data:', {
+          success: data.success,
+          holidaysCount: data.data?.holidays?.length,
+          sampleHolidays: data.data?.holidays?.slice(0, 3)
+        });
+
+        if (data.success && data.data && data.data.holidays) {
+          const allHolidays = data.data.holidays;
+          console.log('🔍 Processing', allHolidays.length, 'holidays from fetch...');
+
+          const allCompleted = allHolidays
+            .filter((holiday: any) => {
+              const endDate = normalizeDate(holiday.endDate);
+              const isApproved = holiday.status === 'approved';
+              const isEnded = endDate <= today;
+
+              console.log(`🔍 Holiday ${holiday.id}: ${holiday.type} ${holiday.startDate}-${holiday.endDate} status:${holiday.status} approved:${isApproved} ended:${isEnded}`);
+
+              return isApproved && isEnded;
+            })
+            .sort((a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+
+          console.log('🔍 Found completed holidays from all years:', allCompleted.length);
+          console.log('🔍 Completed holidays details:', allCompleted.map(h => ({ id: h.id, type: h.type, dates: `${h.startDate}-${h.endDate}`, status: h.status })));
+
+          setCompletedHolidaysFromAllYears(allCompleted);
+        } else {
+          console.log('🔍 No data.success or data.holidays');
+        }
+      } else {
+        console.log('🔍 Fetch failed with status:', response.status);
+      }
+    } catch (error) {
+      console.error('Error fetching all years holidays:', error);
+    }
+  }, [holidays, stats]);
+
+  // Trigger fetch when stats are loaded and no current completed holidays
+  useEffect(() => {
+    if (stats && stats.takenDays > 0) {
+      fetchCompletedHolidaysFromAllYears();
+    }
+  }, [stats, fetchCompletedHolidaysFromAllYears]);
+
+  const getCompletedHolidays = useCallback((limit = 15) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Helper function to normalize date strings for comparison
+    const normalizeDate = (dateString: string) => {
+      const date = new Date(dateString + 'T00:00:00'); // Force local timezone
+      date.setHours(0, 0, 0, 0); // Ensure clean comparison
+      return date;
+    };
+
+    // First try with current holidays (might be filtered by year)
+    const currentCompleted = holidays
+      .filter(holiday => {
+        const endDate = normalizeDate(holiday.endDate);
+        const isApproved = holiday.status === 'approved';
+        const isEnded = endDate <= today;
+
+        // Remove debug logs now that issue is resolved
+
+        return isApproved && isEnded;
+      })
+      .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+
+    // If we have current completed holidays, use them
+    let completed = currentCompleted;
+
+    // Otherwise, use the fetched holidays from all years
+    if (currentCompleted.length === 0 && completedHolidaysFromAllYears.length > 0) {
+      completed = completedHolidaysFromAllYears;
+      console.log('🔍 Using completed holidays from all years:', completed.length);
+    }
+
+    // Debug logging
+    console.log('🔍 DEBUG getCompletedHolidays:');
+    console.log('Today:', today.toISOString().split('T')[0]);
+    console.log('Total holidays in memory:', holidays.length);
+    console.log('Current completed:', currentCompleted.length);
+    console.log('All years completed:', completedHolidaysFromAllYears.length);
+    console.log('Final completed holidays:', completed.length);
+
+    if (holidays.length > 0) {
+      // Show sample of current holidays with their status and dates
+      const sampleHolidays = holidays.slice(0, 5).map(h => ({
+        id: h.id,
+        type: h.type,
+        startDate: h.startDate,
+        endDate: h.endDate,
+        status: h.status,
+        endDateNormalized: normalizeDate(h.endDate).toISOString().split('T')[0],
+        isApproved: h.status === 'approved',
+        isEnded: normalizeDate(h.endDate) <= today
+      }));
+      console.table(sampleHolidays);
+    }
+
+    return completed.slice(0, limit);
+  }, [holidays, completedHolidaysFromAllYears]);
+
   return {
     holidays,
     stats,
@@ -380,5 +548,6 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
     getHolidaysByType,
     getUpcomingHolidays,
     getRecentHolidays,
+    getCompletedHolidays,
   };
 }

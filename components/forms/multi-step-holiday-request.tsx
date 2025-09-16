@@ -259,9 +259,10 @@ export function MultiStepHolidayRequest({
       title?: string
     }> = []
 
-    // Use only userHolidays since existingHolidays prop is not being passed anymore
+    // Prioritize existingHolidays prop over userHolidays hook
+    const safeExistingHolidays = Array.isArray(existingHolidays) ? existingHolidays : []
     const safeUserHolidays = Array.isArray(userHolidays) ? userHolidays : []
-    const combinedHolidays = safeUserHolidays
+    const combinedHolidays = safeExistingHolidays.length > 0 ? safeExistingHolidays : safeUserHolidays
 
     for (const holiday of combinedHolidays) {
       if (!holiday || !holiday.startDate || !holiday.endDate) continue
@@ -286,7 +287,7 @@ export function MultiStepHolidayRequest({
     }
 
     return occupiedDates
-  }, [userHolidays])
+  }, [userHolidays, existingHolidays])
 
   const checkForConflicts = useCallback(async (start: Date, end: Date) => {
     // Create current check ID to prevent stale checks
@@ -296,8 +297,10 @@ export function MultiStepHolidayRequest({
     setConflictWarning(null)
 
     try {
-      // Use userHolidays instead of existingHolidays
-      const holidaysArray = Array.isArray(userHolidays) ? userHolidays : []
+      // Prioritize existingHolidays prop over userHolidays hook
+      const safeExistingHolidays = Array.isArray(existingHolidays) ? existingHolidays : []
+      const safeUserHolidays = Array.isArray(userHolidays) ? userHolidays : []
+      const holidaysArray = safeExistingHolidays.length > 0 ? safeExistingHolidays : safeUserHolidays
       
       // Check against existing holidays prop first
       const hasLocalConflict = holidaysArray.some(holiday => {
@@ -351,7 +354,7 @@ export function MultiStepHolidayRequest({
     } finally {
       setIsCheckingConflicts(false)
     }
-  }, [userHolidays, user?.id])
+  }, [userHolidays, existingHolidays, user?.id])
 
   // Debounced conflict checking to prevent infinite loops
   React.useEffect(() => {

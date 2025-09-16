@@ -21,16 +21,18 @@ interface UpcomingHolidaysProps {
   className?: string;
 }
 
-export function UpcomingHolidays({ 
-  holidays, 
-  loading = false, 
+export function UpcomingHolidays({
+  holidays,
+  loading = false,
   showTeam = false,
   onCreateRequest,
   onHolidayClick,
-  className 
+  className
 }: UpcomingHolidaysProps) {
   const { t, locale } = useTranslation();
   const [viewMode, setViewMode] = useState<'own' | 'team'>('own');
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [isExpanding, setIsExpanding] = useState(false);
 
   // Get date-fns locale
   const getDateLocale = () => {
@@ -43,7 +45,7 @@ export function UpcomingHolidays({
 
   // Filter and sort upcoming holidays (including pending requests)
   const now = new Date();
-  const upcomingHolidays = holidays
+  const allUpcomingHolidays = holidays
     .filter(holiday => {
       const startDate = new Date(holiday.startDate);
       // Include both approved future holidays AND pending requests
@@ -51,9 +53,9 @@ export function UpcomingHolidays({
         (holiday.status === 'approved' && startDate >= now) ||
         holiday.status === 'pending'
       );
-      
+
       if (!showTeam) return isRelevant;
-      
+
       // If showing team, filter based on view mode
       if (viewMode === 'own') {
         return isRelevant && holiday.employeeId === 'current_user'; // Should be replaced with actual user ID
@@ -65,8 +67,30 @@ export function UpcomingHolidays({
       if (a.status === 'pending' && b.status !== 'pending') return -1;
       if (b.status === 'pending' && a.status !== 'pending') return 1;
       return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    })
-    .slice(0, 15); // Show max 15 items (more room for pending + approved)
+    });
+
+  // Get visible holidays based on pagination
+  const upcomingHolidays = allUpcomingHolidays.slice(0, visibleCount);
+  const hasMore = allUpcomingHolidays.length > visibleCount;
+  const remainingCount = allUpcomingHolidays.length - visibleCount;
+
+  // Show more function
+  const handleShowMore = async () => {
+    setIsExpanding(true);
+    // Add a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setVisibleCount(prev => Math.min(prev + 5, allUpcomingHolidays.length));
+    setIsExpanding(false);
+  };
+
+  // Show less function
+  const handleShowLess = async () => {
+    setIsExpanding(true);
+    // Add a small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setVisibleCount(5);
+    setIsExpanding(false);
+  };
 
   const getTypeIcon = (type: Holiday['type']) => {
     switch (type) {
@@ -332,15 +356,52 @@ export function UpcomingHolidays({
               );
             })}
 
-            {/* Show more link if there are more holidays */}
-            {holidays.filter(h => 
-              (new Date(h.startDate) >= now && h.status === 'approved') || h.status === 'pending'
-            ).length > 15 && (
-              <div className="text-center pt-2 border-t">
-                <Button variant="ghost" size="sm" className="text-xs">
-                  {`${t('dashboard.stats.showMore')} (${holidays.length - 15})`}
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
+            {/* Show more/less buttons */}
+            {(hasMore || visibleCount > 5) && (
+              <div className="text-center pt-4 border-t border-gray-100 space-y-2">
+                {hasMore && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowMore}
+                    disabled={isExpanding}
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors mr-2"
+                  >
+                    {isExpanding ? (
+                      <>
+                        <div className="w-3 h-3 mr-2 animate-spin rounded-full border border-current border-t-transparent" />
+                        {locale === 'it' ? 'Caricamento...' : locale === 'es' ? 'Cargando...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        {t('dashboard.stats.showMore')} ({remainingCount})
+                        <ChevronRight className="h-3 w-3 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                )}
+
+                {visibleCount > 5 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShowLess}
+                    disabled={isExpanding}
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                  >
+                    {isExpanding ? (
+                      <>
+                        <div className="w-3 h-3 mr-2 animate-spin rounded-full border border-current border-t-transparent" />
+                        {locale === 'it' ? 'Caricamento...' : locale === 'es' ? 'Cargando...' : 'Loading...'}
+                      </>
+                    ) : (
+                      <>
+                        {locale === 'it' ? 'Mostra meno' : locale === 'es' ? 'Mostrar menos' : 'Show less'}
+                        <ChevronRight className="h-3 w-3 ml-1 rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             )}
           </div>
