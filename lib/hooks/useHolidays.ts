@@ -458,7 +458,7 @@ export function useHolidays(options: UseHolidaysOptions = {}) {
             .sort((a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
 
           console.log('🔍 Found completed holidays from all years:', allCompleted.length);
-          console.log('🔍 Completed holidays details:', allCompleted.map(h => ({ id: h.id, type: h.type, dates: `${h.startDate}-${h.endDate}`, status: h.status })));
+          console.log('🔍 Completed holidays details:', allCompleted.map((h: any) => ({ id: h.id, type: h.type, dates: `${h.startDate}-${h.endDate}`, status: h.status })));
 
           setCompletedHolidaysFromAllYears(allCompleted);
         } else {
