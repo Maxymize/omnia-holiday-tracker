@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/provider';
+import { useAnalytics } from '@/lib/analytics/tracking-hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,7 @@ export function HolidayRequestsManagement({
   onRefresh 
 }: HolidayRequestsManagementProps) {
   const { t } = useTranslation();
+  const { track } = useAnalytics();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'vacation' | 'sick' | 'personal'>('all');
@@ -232,6 +234,11 @@ export function HolidayRequestsManagement({
     try {
       const success = await onApproveRequest(request.id);
       if (success) {
+        // Track admin approval action
+        track('admin_action_performed', {
+          action: 'approve',
+          request_type: request.type || 'unknown'
+        });
         // Refresh data to show updated status
         onRefresh();
       }
@@ -264,6 +271,11 @@ export function HolidayRequestsManagement({
     try {
       const success = await onRejectRequest(requestToReject.id, rejectionReason);
       if (success) {
+        // Track admin rejection action
+        track('admin_action_performed', {
+          action: 'reject',
+          request_type: requestToReject.type || 'unknown'
+        });
         setShowRejectDialog(false);
         setRequestToReject(null);
         setRejectionReason('');

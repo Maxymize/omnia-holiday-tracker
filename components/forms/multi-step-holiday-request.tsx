@@ -22,6 +22,7 @@ import { useHolidays } from "@/lib/hooks/useHolidays"
 import { useTranslation } from "@/lib/i18n/provider"
 import { toast } from "@/lib/utils/toast"
 import { validateFileUpload, formatFileSize } from "@/lib/utils/netlify-blobs-limits"
+import { useHolidayTracking } from "@/lib/analytics/tracking-hooks"
 
 // Enhanced validation schema for multi-step form
 const createHolidayRequestSchema = (t: any) => z.object({
@@ -133,6 +134,7 @@ export function MultiStepHolidayRequest({
   const { user } = useAuth()
   const { stats } = useHolidays({ viewMode: 'own' }) // Get real holiday stats
   const { t, locale } = useTranslation()
+  const { trackHolidayRequestStarted, trackHolidayRequestCompleted } = useHolidayTracking()
 
   const form = useForm<HolidayRequestFormData>({
     resolver: zodResolver(createHolidayRequestSchema(t)),
@@ -168,6 +170,13 @@ export function MultiStepHolidayRequest({
       setMedicalCertOption('upload')
     }
   }, [holidayType, medicalCertificateOptionValue, form])
+
+  // Track holiday request started
+  React.useEffect(() => {
+    if (currentStep === 1 && user) {
+      trackHolidayRequestStarted(holidayType, currentStep)
+    }
+  }, [user, trackHolidayRequestStarted, holidayType, currentStep])
 
   // Fetch storage usage on component mount
   React.useEffect(() => {
@@ -641,6 +650,9 @@ export function MultiStepHolidayRequest({
           console.log('Holiday request and upload completed successfully');
         }
         
+        // Track successful holiday request completion
+        trackHolidayRequestCompleted(holidayType, workingDays, result?.data?.autoApproved || false);
+
         // FIXED: Call the onSubmit callback only after successful API operations
         // This prevents duplicate submissions
         await onSubmit({

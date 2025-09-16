@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { NavigationGuard } from '@/components/navigation/navigation-guard';
+import { PostHogProvider } from '@/lib/analytics/posthog-provider';
 
 export const metadata: Metadata = {
   title: 'Omnia Holiday Tracker',
@@ -113,9 +114,11 @@ export default function RootLayout({
         <meta name="msapplication-square310x310logo" content="/images/icon-512x512.png" />
       </head>
       <body className="antialiased" suppressHydrationWarning={true}>
-        <NavigationGuard>
-          {children}
-        </NavigationGuard>
+        <PostHogProvider>
+          <NavigationGuard>
+            {children}
+          </NavigationGuard>
+        </PostHogProvider>
       </body>
     </html>
   );

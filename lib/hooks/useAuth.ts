@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAnalytics } from '@/lib/analytics/tracking-hooks';
 
 interface User {
   id: string;
@@ -31,6 +32,7 @@ export function useAuth() {
     error: null
   });
   const router = useRouter();
+  const { identify, track } = useAnalytics();
 
   // Check for existing token on mount
   useEffect(() => {
@@ -48,6 +50,9 @@ export function useAuth() {
           loading: false,
           error: null
         });
+
+        // Identify user in analytics
+        identify(user);
       } catch (error) {
         console.error('❌ Error parsing stored user data:', error);
         localStorage.removeItem('accessToken');
@@ -58,7 +63,7 @@ export function useAuth() {
       // Silent - no session found
       setAuthState(prev => ({ ...prev, loading: false }));
     }
-  }, []);
+  }, [identify]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
@@ -118,6 +123,14 @@ export function useAuth() {
           error: null
         });
 
+        // Track successful login and identify user
+        identify(user);
+        track('user_login', {
+          role: user.role,
+          department: user.departmentName || 'unknown',
+          language: user.preferredLanguage || 'it'
+        });
+
         return true;
       } else {
         setAuthState(prev => ({
@@ -140,7 +153,15 @@ export function useAuth() {
 
   const logout = async () => {
     console.log('🚪 Logging out user');
-    
+
+    // Track logout event before clearing data
+    if (authState.user) {
+      track('user_logout', {
+        role: authState.user.role,
+        session_duration: Date.now() - (Date.now() - 1000 * 60 * 30) // Approximate session duration
+      });
+    }
+
     try {
       // Call logout endpoint to clear cookies
       const baseUrl = process.env.NODE_ENV === 'development' 
