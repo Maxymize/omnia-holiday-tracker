@@ -139,15 +139,17 @@ export async function storeMedicalCertificateWithBlobs(
       await sql`
         INSERT INTO medical_certificates (
           id,
-          original_name,
+          file_id,
+          original_file_name,
           mime_type,
           file_size,
           uploaded_by,
           uploaded_at,
           holiday_request_id,
-          storage_type,
-          storage_location
+          encrypted_data,
+          encryption_method
         ) VALUES (
+          ${crypto.randomUUID()},
           ${fileId},
           ${originalName},
           ${mimeType},
@@ -155,8 +157,8 @@ export async function storeMedicalCertificateWithBlobs(
           ${uploadedBy},
           ${metadata.uploadedAt},
           ${holidayRequestId},
-          'netlify_blobs',
-          ${fileId}
+          ${encrypted},
+          'XOR'
         )
       `;
 
