@@ -83,15 +83,19 @@ export const handler: Handler = async (event, context) => {
 
     const holiday = holidayToDelete[0];
 
-    // Verify the holiday request belongs to the authenticated user
-    // (Only the user who created the request can delete it)
-    if (holiday.userId !== user.id) {
+    // Check permissions:
+    // - Admin can delete any request
+    // - Regular users can only delete their own requests
+    const isAdmin = user.role === 'admin';
+    const isOwner = holiday.userId === user.id;
+
+    if (!isAdmin && !isOwner) {
       return {
         statusCode: 403,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           success: false,
-          error: 'Non hai i permessi per eliminare questa richiesta ferie' 
+          error: 'Non hai i permessi per eliminare questa richiesta ferie'
         })
       };
     }
@@ -106,7 +110,7 @@ export const handler: Handler = async (event, context) => {
     try {
       await createAuditLog(
         'holiday_deleted', // action
-        user.id, // userId (employee who deleted the request)
+        user.id, // userId (who performed the deletion)
         {
           previousHolidayData: {
             startDate: holiday.startDate,
@@ -117,9 +121,11 @@ export const handler: Handler = async (event, context) => {
             notes: holiday.notes,
             createdAt: holiday.createdAt?.toISOString()
           },
-          reason: 'Employee self-deletion'
+          reason: isAdmin ? 'Admin deletion' : 'Employee self-deletion',
+          deletedBy: user.email,
+          isAdminAction: isAdmin
         }, // details
-        user.id, // targetUserId (same as userId for self-action)
+        holiday.userId, // targetUserId (owner of the holiday request)
         validatedData.holidayId, // targetResourceId
         'holiday', // resourceType
         ipAddress, // ipAddress
@@ -134,6 +140,8 @@ export const handler: Handler = async (event, context) => {
     console.log('Holiday request deleted successfully:', {
       holidayId: validatedData.holidayId,
       deletedBy: userToken.email,
+      isAdminDeletion: isAdmin,
+      originalOwner: holiday.userId,
       timestamp: new Date().toISOString()
     });
 
