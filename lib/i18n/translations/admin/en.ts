@@ -393,7 +393,158 @@ const adminTranslations = {
       year: 'Year',
       export: 'Export',
     },
-    
+
+    // Export functionality
+    export: {
+      title: 'Export Report',
+      description: 'Download reports in PDF or Excel format with all data and statistics',
+      format: 'Format',
+      content: 'Content',
+      options: 'Export options',
+      generating: 'Generating report...',
+      error: 'Error during report generation',
+
+      // Format options
+      formatOptions: {
+        pdf: 'PDF - Professional Report',
+        excel: 'Excel - Analyzable Data',
+        both: 'Both - Complete Package',
+        charts: 'Charts',
+        formulas: 'Formulas',
+        recommended: 'Recommended',
+      },
+
+      // Content options
+      contentOptions: {
+        charts: 'Charts and Statistics',
+        employeeDetails: 'Employee Details',
+        departmentAnalysis: 'Department Analysis',
+        requestHistory: 'Request History',
+      },
+
+      // PDF specific options
+      pdfOptions: {
+        title: 'PDF Options',
+        orientation: 'Orientation',
+        orientationVertical: 'Portrait',
+        orientationHorizontal: 'Landscape',
+        pageFormat: 'Page Format',
+        coverPage: 'Cover Page',
+        signature: 'Digital Signature',
+      },
+
+      // Excel specific options
+      excelOptions: {
+        title: 'Excel Options',
+        formulas: 'Excel Formulas',
+        pivotTables: 'Pivot Tables',
+        conditionalFormatting: 'Conditional Formatting',
+        separateSheets: 'Separate Sheets',
+      },
+
+      // Progress messages
+      progress: {
+        generating: 'Generating Report...',
+        creating: 'Creating',
+        bothFormats: 'PDF and Excel',
+      },
+
+      // Success messages
+      success: {
+        title: 'Report Generated Successfully!',
+        description: 'Download started automatically. This window will close in a few seconds.',
+      },
+
+      // Actions
+      actions: {
+        export: 'Export',
+        cancel: 'Cancel',
+        close: 'Close',
+      },
+    },
+
+    // Report periods
+    periods: {
+      title: 'Analysis Period',
+      thisMonth: 'This Month',
+      thisQuarter: 'This Quarter',
+      thisYear: 'This Year',
+      previousYear: 'Previous Year',
+      custom: 'Custom Period',
+      last30: 'Last 30 days',
+      last60: 'Last 60 days',
+      last90: 'Last 90 days',
+
+      // Descriptions
+      descriptions: {
+        currentMonth: 'Current month',
+        currentQuarter: 'Current quarter',
+        currentYear: 'Current year',
+        previousYear: 'Previous year',
+        last30: '30-day rolling period',
+        last60: '60-day rolling period',
+        last90: '90-day rolling period',
+        custom: 'Select specific dates'
+      },
+
+      // Badges
+      badges: {
+        current: 'Current',
+        quarter: 'Quarter',
+        year: 'Year',
+        previous: 'Previous',
+        days30: '30d',
+        days60: '60d',
+        days90: '90d',
+        custom: 'Custom'
+      },
+
+      // Duration
+      duration: {
+        days: 'days',
+        years: 'years'
+      },
+
+      // Custom period
+      customTitle: 'Select Custom Period',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      selectStartDate: 'Select start date',
+      selectEndDate: 'Select end date',
+      preview: 'Period Preview',
+      longPeriod: 'Long period',
+
+      // Errors
+      errors: {
+        selectionError: 'Error selecting period',
+        invalidDates: 'Invalid dates selected',
+        startAfterEnd: 'Start date must be before end date',
+        tooLong: 'Selected period cannot exceed 2 years',
+        customCreationError: 'Error creating custom period'
+      },
+
+      // Tips
+      tips: {
+        title: 'Suggestions:',
+        currentMonth: {
+          title: 'Current month:',
+          desc: 'Ideal for weekly reports'
+        },
+        quarterYear: {
+          title: 'Quarter/Year:',
+          desc: 'Great for periodic analysis'
+        },
+        rollingPeriods: {
+          title: 'Last 30/60/90 days:',
+          desc: 'For recent trends'
+        },
+        customRange: {
+          title: 'Custom range:',
+          desc: 'For specific comparisons'
+        }
+      },
+    },
+
     // Error states
     errors: {
       loadingError: 'Error loading data',

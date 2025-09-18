@@ -63,7 +63,7 @@ const nextConfig = {
     unoptimized: false, // Enable Next.js image optimization
     domains: ['localhost'], // Add any external image domains here
   },
-  serverExternalPackages: ['@neondatabase/serverless', 'bcryptjs'],
+  serverExternalPackages: ['@neondatabase/serverless', 'bcryptjs', 'canvas', 'chartjs-node-canvas'],
   reactStrictMode: true,
   transpilePackages: ['framer-motion'], // FIXED: Force transpilation of framer-motion for Next.js 15
   experimental: {
@@ -74,7 +74,7 @@ const nextConfig = {
     ppr: false,
     reactCompiler: false,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // FIXED: Additional webpack config to handle framer-motion properly
     if (!isServer) {
       config.resolve.alias = {
@@ -82,6 +82,26 @@ const nextConfig = {
         'framer-motion': require.resolve('framer-motion'),
       };
     }
+
+    // Fix Radix UI vendor chunks issues in development
+    if (dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks.cacheGroups,
+            'radix-ui': {
+              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
+              name: 'radix-ui',
+              chunks: 'all',
+              enforce: true,
+            },
+          },
+        },
+      };
+    }
+
     return config;
   },
   async headers() {

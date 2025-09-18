@@ -464,6 +464,7 @@ export default function AdminDashboard() {
             <AdminReports
               employees={employees}
               requests={pendingRequests}
+              systemSettings={systemSettings}
               loading={adminLoading}
               error={adminError}
             />

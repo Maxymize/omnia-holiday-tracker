@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/provider';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { ReportExportDialog } from './report-export-dialog';
+import { PeriodRangeSelector } from './period-range-selector';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -25,19 +28,109 @@ import {
   CalendarDays,
   Hourglass
 } from 'lucide-react';
-import { Employee, PendingHolidayRequest } from '@/lib/hooks/useAdminData';
+import { Employee, PendingHolidayRequest, SystemSettings } from '@/lib/hooks/useAdminData';
+import {
+  prepareReportData,
+  createReportPeriod
+} from '@/lib/export/report-data';
+import { ReportPeriod, ExportOptions, PDFExportOptions, ExcelExportOptions } from '@/lib/export/types';
+import { generatePDFReport, downloadPDFReport } from '@/lib/export/pdf-generator';
+import { generateExcelReport, downloadExcelReport } from '@/lib/export/excel-generator';
+// Logo utilities removed - using only company name
 
 interface AdminReportsProps {
   employees: Employee[];
   requests: PendingHolidayRequest[];
+  systemSettings?: Partial<SystemSettings>;
   loading: boolean;
   error: string | null;
 }
 
-export function AdminReports({ employees, requests, loading, error }: AdminReportsProps) {
-  const { t } = useTranslation();
-  const [selectedPeriod, setSelectedPeriod] = useState<'month' | 'quarter' | 'year'>('month');
+export function AdminReports({ employees, requests, systemSettings = {}, loading, error }: AdminReportsProps) {
+  const { t, locale } = useTranslation();
+  const { user } = useAuth();
+
+  // Legacy state for compatibility
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+
+  // New export functionality states
+  const [currentPeriod, setCurrentPeriod] = useState<ReportPeriod>(() =>
+    createReportPeriod('month', undefined, undefined, locale)
+  );
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  // Update period when locale changes
+  useEffect(() => {
+    setCurrentPeriod(prev => createReportPeriod(
+      prev.type as any,
+      prev.type === 'custom' ? prev.startDate : undefined,
+      prev.type === 'custom' ? prev.endDate : undefined,
+      locale
+    ));
+  }, [locale]);
+
+  // Export functionality
+  const handleExport = async (options: ExportOptions) => {
+    if (!user) {
+      setExportError('User not authenticated');
+      return;
+    }
+
+    setExportLoading(true);
+    setExportError(null);
+
+    try {
+      // Prepare report data with current period, system settings, and user info
+      const reportData = prepareReportData(
+        employees,
+        requests,
+        options.period,
+        { name: user.name, email: user.email },
+        systemSettings,
+        locale
+      );
+
+      // Skip logo loading - using company name only
+      console.log('Skipping logo loading, using company name only');
+
+      // Generate and download reports based on format
+      if (options.format === 'pdf' || options.format === 'both') {
+        const pdfOptions = options as PDFExportOptions;
+        await downloadPDFReport(reportData, {
+          ...pdfOptions,
+          orientation: pdfOptions.orientation || 'portrait',
+          pageSize: pdfOptions.pageSize || 'a4',
+          includeCoverPage: pdfOptions.includeCoverPage !== false,
+          includeSignature: pdfOptions.includeSignature !== false
+        });
+      }
+
+      if (options.format === 'excel' || options.format === 'both') {
+        const excelOptions = options as ExcelExportOptions;
+        await downloadExcelReport(reportData, {
+          ...excelOptions,
+          includeFormulas: excelOptions.includeFormulas !== false,
+          includePivotTables: excelOptions.includePivotTables || false,
+          includeConditionalFormatting: excelOptions.includeConditionalFormatting !== false,
+          separateSheets: excelOptions.separateSheets !== false
+        });
+      }
+
+    } catch (error) {
+      console.error('Export failed:', error);
+      setExportError(error instanceof Error ? error.message : 'Export failed');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // Handle period change
+  const handlePeriodChange = (newPeriod: ReportPeriod) => {
+    setCurrentPeriod(newPeriod);
+    setExportError(null);
+  };
 
   // Helper function to safely get numeric value
   const safeNumber = (value: any): number => {
@@ -187,21 +280,25 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           </p>
         </div>
         <div className="flex gap-2">
-          <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month">{t('admin.reports.actions.month')}</SelectItem>
-              <SelectItem value="quarter">{t('admin.reports.actions.quarter')}</SelectItem>
-              <SelectItem value="year">{t('admin.reports.actions.year')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            {t('admin.reports.actions.export')}
+          <Button
+            variant="default"
+            onClick={() => setIsExportDialogOpen(true)}
+            disabled={loading || exportLoading}
+            className="flex items-center space-x-2"
+          >
+            <Download className="h-4 w-4" />
+            <span>{exportLoading ? 'Esportazione...' : t('admin.reports.actions.export')}</span>
           </Button>
         </div>
+      </div>
+
+      {/* Period Range Selector */}
+      <div className="mb-6">
+        <PeriodRangeSelector
+          value={currentPeriod}
+          onChange={handlePeriodChange}
+          language={locale}
+        />
       </div>
 
       {/* Enhanced Overview Statistics with Temporal Vacation Metrics */}
@@ -480,6 +577,19 @@ export function AdminReports({ employees, requests, loading, error }: AdminRepor
           )}
         </CardContent>
       </Card>
+
+      {/* Export Dialog */}
+      <ReportExportDialog
+        isOpen={isExportDialogOpen}
+        onClose={() => {
+          setIsExportDialogOpen(false);
+          setExportError(null);
+        }}
+        onExport={handleExport}
+        period={currentPeriod}
+        loading={exportLoading}
+        error={exportError}
+      />
     </div>
   );
 }

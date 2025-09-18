@@ -393,7 +393,158 @@ const adminTranslations = {
       year: 'Año',
       export: 'Exportar',
     },
-    
+
+    // Export functionality
+    export: {
+      title: 'Exportar Reporte',
+      description: 'Descargar reportes en formato PDF o Excel con todos los datos y estadísticas',
+      format: 'Formato',
+      content: 'Contenido',
+      options: 'Opciones de exportación',
+      generating: 'Generando reporte...',
+      error: 'Error durante la generación del reporte',
+
+      // Format options
+      formatOptions: {
+        pdf: 'PDF - Reporte Profesional',
+        excel: 'Excel - Datos Analizables',
+        both: 'Ambos - Paquete Completo',
+        charts: 'Gráficos',
+        formulas: 'Fórmulas',
+        recommended: 'Recomendado',
+      },
+
+      // Content options
+      contentOptions: {
+        charts: 'Gráficos y Estadísticas',
+        employeeDetails: 'Detalles de Empleados',
+        departmentAnalysis: 'Análisis de Departamentos',
+        requestHistory: 'Historial de Solicitudes',
+      },
+
+      // PDF specific options
+      pdfOptions: {
+        title: 'Opciones PDF',
+        orientation: 'Orientación',
+        orientationVertical: 'Vertical',
+        orientationHorizontal: 'Horizontal',
+        pageFormat: 'Formato de Página',
+        coverPage: 'Página de Portada',
+        signature: 'Firma Digital',
+      },
+
+      // Excel specific options
+      excelOptions: {
+        title: 'Opciones Excel',
+        formulas: 'Fórmulas Excel',
+        pivotTables: 'Tablas Dinámicas',
+        conditionalFormatting: 'Formato Condicional',
+        separateSheets: 'Hojas Separadas',
+      },
+
+      // Progress messages
+      progress: {
+        generating: 'Generando Reporte...',
+        creating: 'Creando',
+        bothFormats: 'PDF y Excel',
+      },
+
+      // Success messages
+      success: {
+        title: '¡Reporte Generado Exitosamente!',
+        description: 'La descarga comenzó automáticamente. Esta ventana se cerrará en unos segundos.',
+      },
+
+      // Actions
+      actions: {
+        export: 'Exportar',
+        cancel: 'Cancelar',
+        close: 'Cerrar',
+      },
+    },
+
+    // Report periods
+    periods: {
+      title: 'Período de Análisis',
+      thisMonth: 'Este Mes',
+      thisQuarter: 'Este Trimestre',
+      thisYear: 'Este Año',
+      previousYear: 'Año Anterior',
+      custom: 'Período Personalizado',
+      last30: 'Últimos 30 días',
+      last60: 'Últimos 60 días',
+      last90: 'Últimos 90 días',
+
+      // Descriptions
+      descriptions: {
+        currentMonth: 'Mes actual',
+        currentQuarter: 'Trimestre actual',
+        currentYear: 'Año actual',
+        previousYear: 'Año anterior',
+        last30: 'Período deslizante de 30 días',
+        last60: 'Período deslizante de 60 días',
+        last90: 'Período deslizante de 90 días',
+        custom: 'Selecciona fechas específicas'
+      },
+
+      // Badges
+      badges: {
+        current: 'Actual',
+        quarter: 'Trimestre',
+        year: 'Año',
+        previous: 'Anterior',
+        days30: '30d',
+        days60: '60d',
+        days90: '90d',
+        custom: 'Personalizado'
+      },
+
+      // Duration
+      duration: {
+        days: 'días',
+        years: 'años'
+      },
+
+      // Custom period
+      customTitle: 'Seleccionar Período Personalizado',
+      startDate: 'Fecha Inicio',
+      endDate: 'Fecha Fin',
+      selectStartDate: 'Seleccionar fecha inicio',
+      selectEndDate: 'Seleccionar fecha fin',
+      preview: 'Vista Previa del Período',
+      longPeriod: 'Período largo',
+
+      // Errors
+      errors: {
+        selectionError: 'Error en la selección del período',
+        invalidDates: 'Fechas inválidas seleccionadas',
+        startAfterEnd: 'La fecha de inicio debe ser anterior a la fecha de fin',
+        tooLong: 'El período seleccionado no puede exceder 2 años',
+        customCreationError: 'Error creando el período personalizado'
+      },
+
+      // Tips
+      tips: {
+        title: 'Sugerencias:',
+        currentMonth: {
+          title: 'Mes actual:',
+          desc: 'Ideal para reportes semanales'
+        },
+        quarterYear: {
+          title: 'Trimestre/Año:',
+          desc: 'Excelente para análisis periódicos'
+        },
+        rollingPeriods: {
+          title: 'Últimos 30/60/90 días:',
+          desc: 'Para tendencias recientes'
+        },
+        customRange: {
+          title: 'Rango personalizado:',
+          desc: 'Para comparaciones específicas'
+        }
+      },
+    },
+
     // Error states
     errors: {
       loadingError: 'Error al cargar datos',
